@@ -1,0 +1,12 @@
+language: perl
+perl:
+  - "5.18"
+  - "5.16"
+branches:
+  only:
+    - master
+    - develop
+install:
+  - "cpanm -n --installdeps ."
+notifications:
+  email: sugama@jamadam.com
