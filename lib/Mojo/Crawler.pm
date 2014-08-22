@@ -15,6 +15,11 @@ has fix => sub { {} };
 has keep_credentials => 1;
 has on_refer => sub { sub { shift->() } };
 has on_res => sub { sub { shift->() } };
+has on_empty => sub {
+    sub {
+        print STDERR "Queue is drained out.\n";
+    }
+}
 has on_error => sub {
     sub {
         my ($self, $msg) = @_;
@@ -56,7 +61,10 @@ sub crawl {
     my $loop_id;
     $loop_id = Mojo::IOLoop->recurring(1 => sub {
         
-        return unless (my $queue = shift @{$self->{queues}});
+        unless (my $queue = shift @{$self->{queues}}) {
+            $self->on_empty->();
+            return;
+        }
         
         my $url = $queue->resolved_uri;
         my $tx = $self->ua->get($url);
