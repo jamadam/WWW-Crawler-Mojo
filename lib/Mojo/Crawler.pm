@@ -8,8 +8,8 @@ use Mojo::UserAgent;
 use Mojo::Util qw{md5_sum xml_escape};
 our $VERSION = '0.01';
 
-has 'ua';
-has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-crawler)";
+has conn_max => 4;
+has conn_active => 0;
 has credentials => sub { {} };
 has depth => 10;
 has fix => sub { {} };
@@ -27,6 +27,8 @@ has on_error => sub {
     }
 };
 has queues => sub { [] };
+has 'ua';
+has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-crawler)";
 
 sub new {
     my $class = shift;
@@ -61,25 +63,32 @@ sub crawl {
     my $loop_id;
     $loop_id = Mojo::IOLoop->recurring(1 => sub {
         
-        my $queue = shift @{$self->{queues}};
-        
-        if (!$queue) {
-            $self->on_empty->();
-            return;
-        }
-        
-        $self->ua->get($queue->resolved_uri, sub {
-            my ($ua, $tx) = @_;
-            if ($tx->res->error) {
-                my $msg = $tx->res->error->{message};
-                my $url = $queue->resolved_uri;
-                $self->on_error->("An error occured during crawling $url: $msg");
-            } else {
-                $self->on_res->(sub {
-                    $self->discover($tx, $queue);
-                }, $queue, $tx);
+        for ($self->conn_active + 1 .. $self->conn_max) {
+            
+            my $queue = shift @{$self->{queues}};
+            
+            if (!$queue) {
+                $self->on_empty->();
+                return;
             }
-        });
+            
+            ++$self->{conn_active};
+            
+            $self->ua->get($queue->resolved_uri, sub {
+                --$self->{conn_active};
+                
+                my ($ua, $tx) = @_;
+                if ($tx->res->error) {
+                    my $msg = $tx->res->error->{message};
+                    my $url = $queue->resolved_uri;
+                    $self->on_error->("An error occured during crawling $url: $msg");
+                } else {
+                    $self->on_res->(sub {
+                        $self->discover($tx, $queue);
+                    }, $queue, $tx);
+                }
+            });
+        }
     });
     
     Mojo::IOLoop->start;
