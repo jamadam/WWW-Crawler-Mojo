@@ -50,8 +50,6 @@ sub new {
     return $self;
 }
 
-our $NEW_QUEUE = {};
-
 sub crawl {
     my ($self) = @_;
     
@@ -106,36 +104,26 @@ sub find_queue {
             
             $newurl = resolve_href($base, $newurl);
             
-            local $NEW_QUEUE = Mojo::Crawler::Queue->new(
+            my $new_queue = Mojo::Crawler::Queue->new(
                 resolved_uri    => $newurl,
                 literal_uri     => $newurl,
                 parent          => $queue,
             );
             
-            my $append_cb = sub {
-                $self->enqueue($_[0] || $newurl)
-            };
-            
-            $self->on_refer->(
-                $append_cb, $NEW_QUEUE, $queue, $dom || $queue->resolved_uri);
+            $self->on_refer->(sub {
+                $self->enqueue($_[0] || $new_queue);
+            }, $new_queue, $queue, $dom || $queue->resolved_uri);
         });
     }
 };
 
 sub enqueue {
-    my ($self, @url) = @_;
-    
-    my @queues;
-    
-    if (scalar @url) {
-        @queues = map {
-            Mojo::Crawler::Queue->new(literal_uri => $_, resolved_uri => $_);
-        } @url;
-    } else {
-        @queues = ($NEW_QUEUE);
-    }
+    my ($self, @queues) = @_;
     
     for (@queues) {
+        unless (ref $_ && ref $_ eq 'Mojo::Crawler::Queue') {
+            $_ = Mojo::Crawler::Queue->new(literal_uri => $_, resolved_uri => $_);
+        }
         my $md5 = md5_sum($_->resolved_uri);
         
         if (! exists $self->fix->{$md5}) {
