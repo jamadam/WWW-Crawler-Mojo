@@ -70,13 +70,10 @@ sub crawl {
             
             my $queue = shift @{$self->{queues}};
             
+            return if (!$queue);
+            
             if ($self->host_busy($queue->resolved_uri)) {
                 unshift(@{$self->{queues}}, $queue);
-                return;
-            }
-            
-            if (!$queue) {
-                $self->on_empty->();
                 return;
             }
             
@@ -96,6 +93,12 @@ sub crawl {
                     }, $queue, $tx);
                 }
             });
+        }
+    });
+    
+    Mojo::IOLoop->recurring(5 => sub {
+        if (! scalar @{$self->{queues}}) {
+            $self->on_empty->();
         }
     });
     
@@ -281,7 +284,7 @@ sub resolve_href {
 
 sub host_busy {
     my ($self, $uri) = @_;
-    my $host = Mojo::URL->new($uri)->host;
+    my $host = ($uri =~ qr{^\w+://([^/]+)})[0];
     my $key = inet_ntoa(inet_aton($host)) || $host;
     my $now = time();
     my $last = $self->host_busyness->{$key};
