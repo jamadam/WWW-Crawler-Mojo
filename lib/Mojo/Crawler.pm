@@ -6,7 +6,7 @@ use Mojo::Base 'Mojo::IOLoop';
 use Mojo::Crawler::Queue;
 use Mojo::UserAgent;
 use Mojo::Message::Request;
-use Mojo::Util qw{md5_sum xml_escape};
+use Mojo::Util qw{md5_sum xml_escape dumper};
 use Socket qw(inet_ntoa inet_aton);
 our $VERSION = '0.01';
 
@@ -108,23 +108,32 @@ sub crawl {
     
     if ($self->peeking_port) {
         Mojo::IOLoop->server({port => $self->peeking_port} => sub {
-            my ($loop, $stream) = @_;
-            $stream->on(read => sub {
-                my ($stream, $bytes) = @_;
-                my $path = Mojo::Message::Request->new->parse($bytes)->url->path;
-                if ($path =~ qr{/queues}) {
-                    my $res = sprintf('%s Queues are left.', scalar @{$self->queues});
-                    $stream->write("HTTP/1.1 200 OK\n\n");
-                    $stream->write($res, sub {shift->close});
-                    return;
-                }
-                
-                $stream->write("HTTP/1.1 404 OK\n\nNOT FOUND", sub {shift->close});
-            });
+            $self->peeking_handler(@_);
         });
     }
     
     Mojo::IOLoop->start;
+}
+
+sub peeking_handler {
+    my ($self, $loop, $stream) = @_;
+    $stream->on(read => sub {
+        my ($stream, $bytes) = @_;
+        my $path = Mojo::Message::Request->new->parse($bytes)->url->path;
+        if ($path =~ qr{/queues}) {
+            my $res = sprintf('%s Queues are left.', scalar @{$self->queues});
+            $stream->write("HTTP/1.1 200 OK\n\n");
+            $stream->write($res, sub {shift->close});
+            return;
+        }
+        if ($path =~ qr{/dumper/(\w+)} && $self->{$1}) {
+            $stream->write("HTTP/1.1 200 OK\n\n");
+            $stream->write(dumper($self->{$1}), sub {shift->close});
+            return;
+        }
+        
+        $stream->write("HTTP/1.1 404 OK\n\nNOT FOUND", sub {shift->close});
+    });
 }
 
 sub discover {
