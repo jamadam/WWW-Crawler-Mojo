@@ -19,10 +19,10 @@ has on_empty => sub {
     sub {
         print STDERR "Queue is drained out.\n";
     }
-}
+};
 has on_error => sub {
     sub {
-        my ($self, $msg) = @_;
+        my ($msg) = @_;
         print STDERR "$msg\n";
     }
 };
@@ -61,26 +61,25 @@ sub crawl {
     my $loop_id;
     $loop_id = Mojo::IOLoop->recurring(1 => sub {
         
-        unless (my $queue = shift @{$self->{queues}}) {
+        my $queue = shift @{$self->{queues}};
+        
+        if (!$queue) {
             $self->on_empty->();
             return;
         }
         
-        my $url = $queue->resolved_uri;
-        my $tx = $self->ua->get($url);
-        
-        if ($tx->res->error) {
-            my $msg = $tx->res->error->{message};
-            $self->on_error->($self, "An error occured during crawling $url: $msg");
-            return;
-        } elsif ($@) {
-            $self->on_error->($self, "An error occured during crawling $url: $@");
-            return;
-        }
-        
-        $self->on_res->(sub {
-            $self->discover($tx, $queue);
-        }, $queue, $tx);
+        $self->ua->get($queue->resolved_uri, sub {
+            my ($ua, $tx) = @_;
+            if ($tx->res->error) {
+                my $msg = $tx->res->error->{message};
+                my $url = $queue->resolved_uri;
+                $self->on_error->("An error occured during crawling $url: $msg");
+            } else {
+                $self->on_res->(sub {
+                    $self->discover($tx, $queue);
+                }, $queue, $tx);
+            }
+        });
     });
     
     Mojo::IOLoop->start;
@@ -89,8 +88,8 @@ sub crawl {
 sub discover {
     my ($self, $tx, $queue) = @_;
     
-    return if ($tx->res->code == 200);
-    return if (! $self->depth || $queue->depth < $self->depth));
+    return if ($tx->res->code != 200);
+    return if ($self->depth && $queue->depth >= $self->depth);
     
     my $base;
     
