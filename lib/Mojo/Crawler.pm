@@ -73,55 +73,59 @@ sub crawl {
             return;
         }
         
-        my $crawl_cb = sub {
-            if ($tx->res->code == 200 &&
-                            (! $self->depth || $queue->depth < $self->depth)) {
-                
-                my $base;
-                
-                if ($tx->res->headers->content_type =~ qr{text/(html|xml)} &&
-                                (my $base_tag = $tx->res->dom->at('base'))) {
-                    $base = $base_tag->attr('href');
-                } else {
-                    # TODO Is this OK for redirected urls?
-                    $base = $tx->req->url->userinfo(undef);
-                }
-                
-                collect_urls($tx, sub {
-                    my ($newurl, $dom) = @_;
-                    
-                    if ($newurl =~ qr{^(\w+):} &&
-                                ! grep {$_ eq $1} qw(http https ftp ws wss)) {
-                        return;
-                    }
-                    
-                    $newurl = resolve_href($base, $newurl);
-                    
-                    local $NEW_QUEUE = Mojo::Crawler::Queue->new(
-                        resolved_uri    => $newurl,
-                        literal_uri     => $newurl,
-                        parent          => $queue,
-                    );
-                    
-                    my $append_cb = sub {
-                        $self->append_queue($_[0] || $newurl)
-                    };
-                    
-                    $self->on_refer->(
-                                $append_cb, $NEW_QUEUE, $queue, $dom || $url);
-                });
-            }
-            
-            $self->after_crawl->($queue, $tx);
-        };
-        
-        $self->on_res->($crawl_cb, $queue, $tx);
+        $self->on_res->(sub {
+            $self->find_queue($tx, $queue);
+        }, $queue, $tx);
     });
     
     Mojo::IOLoop->start;
 }
 
-sub append_queue {
+sub find_queue {
+    my ($self, $tx, $queue) = @_;
+    
+    if ($tx->res->code == 200 &&
+                    (! $self->depth || $queue->depth < $self->depth)) {
+        
+        my $base;
+        
+        if ($tx->res->headers->content_type =~ qr{text/(html|xml)} &&
+                        (my $base_tag = $tx->res->dom->at('base'))) {
+            $base = $base_tag->attr('href');
+        } else {
+            # TODO Is this OK for redirected urls?
+            $base = $tx->req->url->userinfo(undef);
+        }
+        
+        collect_urls($tx, sub {
+            my ($newurl, $dom) = @_;
+            
+            if ($newurl =~ qr{^(\w+):} &&
+                        ! grep {$_ eq $1} qw(http https ftp ws wss)) {
+                return;
+            }
+            
+            $newurl = resolve_href($base, $newurl);
+            
+            local $NEW_QUEUE = Mojo::Crawler::Queue->new(
+                resolved_uri    => $newurl,
+                literal_uri     => $newurl,
+                parent          => $queue,
+            );
+            
+            my $append_cb = sub {
+                $self->enqueue($_[0] || $newurl)
+            };
+            
+            $self->on_refer->(
+                $append_cb, $NEW_QUEUE, $queue, $dom || $queue->resolved_uri);
+        });
+    }
+    
+    $self->after_crawl->($queue, $tx);
+};
+
+sub enqueue {
     my ($self, $url) = @_;
     
     my $queue;
