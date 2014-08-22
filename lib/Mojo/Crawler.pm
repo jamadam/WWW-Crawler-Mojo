@@ -145,24 +145,18 @@ sub collect_urls {
     my ($tx, $cb) = @_;
     my $res     = $tx->res;
     my $type    = $res->headers->content_type;
-    my @hrefs;
     
     if ($type && $type =~ qr{text/(html|xml)}) {
         my $body = Encode::decode(guess_encoding($res) || 'utf-8', $res->body);
         my $dom = Mojo::DOM->new($body);
-        
-        return collect_urls_html($dom, $cb);
+        collect_urls_html(Mojo::DOM->new($body), $cb);
     }
     
     if ($type && $type =~ qr{text/css}) {
         my $encode  = guess_encoding_css($res) || 'utf-8';
         my $body    = Encode::decode($encode, $res->body);
-        collect_urls_css($body, sub {
-            $cb->(shift);
-        })
+        collect_urls_css($body, $cb);
     }
-    
-    return;
 }
 
 ### ---
