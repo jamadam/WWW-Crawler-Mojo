@@ -126,24 +126,27 @@ sub find_queue {
 };
 
 sub enqueue {
-    my ($self, $url) = @_;
+    my ($self, @url) = @_;
     
-    my $queue;
+    my @queues;
     
-    if ($url) {
-        $queue = Mojo::Crawler::Queue->new(
-                                    literal_uri => $url, resolved_uri => $url);
+    if (scalar @url) {
+        @queues = map {
+            Mojo::Crawler::Queue->new(literal_uri => $_, resolved_uri => $_);
+        } @url;
     } else {
-        $queue = $NEW_QUEUE;
+        @queues = ($NEW_QUEUE);
     }
     
-    my $md5 = md5_sum($queue->resolved_uri);
-    
-    if (! exists $self->fix->{$md5}) {
+    for (@queues) {
+        my $md5 = md5_sum($_->resolved_uri);
         
-        $self->fix->{$md5} = undef;
-        
-        push(@{$self->{queues}}, $queue);
+        if (! exists $self->fix->{$md5}) {
+            
+            $self->fix->{$md5} = undef;
+            
+            push(@{$self->{queues}}, $_);
+        }
     }
 }
 
