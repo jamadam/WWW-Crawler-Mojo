@@ -11,6 +11,7 @@ our $VERSION = '0.01';
 
 has conn_max => 4;
 has conn_active => 0;
+has 'crawler_loop_id';
 has credentials => sub { {} };
 has depth => 10;
 has fix => sub { {} };
@@ -63,8 +64,7 @@ sub new {
 sub crawl {
     my ($self) = @_;
     
-    my $loop_id;
-    $loop_id = Mojo::IOLoop->recurring(0 => sub {
+    my $loop_id = Mojo::IOLoop->recurring(0 => sub {
         
         for ($self->conn_active + 1 .. $self->conn_max) {
             
@@ -95,6 +95,8 @@ sub crawl {
             });
         }
     });
+    
+    $self->crawler_loop_id($loop_id);
     
     Mojo::IOLoop->recurring(5 => sub {
         if (! scalar @{$self->{queues}}) {
