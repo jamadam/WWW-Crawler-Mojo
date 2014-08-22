@@ -120,13 +120,13 @@ sub peeking_handler {
     $stream->on(read => sub {
         my ($stream, $bytes) = @_;
         my $path = Mojo::Message::Request->new->parse($bytes)->url->path;
-        if ($path =~ qr{/queues}) {
+        if ($path =~ qr{^/queues}) {
             my $res = sprintf('%s Queues are left.', scalar @{$self->queues});
             $stream->write("HTTP/1.1 200 OK\n\n");
             $stream->write($res, sub {shift->close});
             return;
         }
-        if ($path =~ qr{/dumper/(\w+)} && $self->{$1}) {
+        if ($path =~ qr{^/dumper/(\w+)} && $self->{$1}) {
             $stream->write("HTTP/1.1 200 OK\n\n");
             $stream->write(dumper($self->{$1}), sub {shift->close});
             return;
