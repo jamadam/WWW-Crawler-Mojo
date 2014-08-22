@@ -8,7 +8,7 @@ use Mojo::Util qw{md5_sum xml_escape};
 our $VERSION = '0.01';
 
 has 'ua';
-has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-checkbot)";
+has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-crawler)";
 has credentials => sub { {} };
 has depth => 10;
 has fix => sub { {} };
