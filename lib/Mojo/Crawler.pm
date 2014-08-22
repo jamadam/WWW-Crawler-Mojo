@@ -112,8 +112,9 @@ sub discover {
     return if ($self->depth && $queue->depth >= $self->depth);
     
     my $base;
+    my $type = $tx->res->headers->content_type;
     
-    if ($tx->res->headers->content_type =~ qr{text/(html|xml)} &&
+    if ($type && $type =~ qr{text/(html|xml)} &&
                                 (my $base_tag = $tx->res->dom->at('base'))) {
         $base = $base_tag->attr('href');
     } else {
