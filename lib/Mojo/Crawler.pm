@@ -6,6 +6,7 @@ use Mojo::Base 'Mojo::IOLoop';
 use Mojo::Crawler::Queue;
 use Mojo::UserAgent;
 use Mojo::Util qw{md5_sum xml_escape};
+use Socket qw(inet_ntoa inet_aton);
 our $VERSION = '0.01';
 
 has conn_max => 4;
@@ -13,6 +14,8 @@ has conn_active => 0;
 has credentials => sub { {} };
 has depth => 10;
 has fix => sub { {} };
+has host_busyness => sub { {} };
+has wait_per_host => 1;
 has keep_credentials => 1;
 has on_refer => sub { sub { shift->() } };
 has on_res => sub { sub { shift->() } };
@@ -61,11 +64,16 @@ sub crawl {
     my ($self) = @_;
     
     my $loop_id;
-    $loop_id = Mojo::IOLoop->recurring(1 => sub {
+    $loop_id = Mojo::IOLoop->recurring(0 => sub {
         
         for ($self->conn_active + 1 .. $self->conn_max) {
             
             my $queue = shift @{$self->{queues}};
+            
+            if ($self->host_busy($queue->resolved_uri)) {
+                unshift(@{$self->{queues}}, $queue);
+                return;
+            }
             
             if (!$queue) {
                 $self->on_empty->();
@@ -269,6 +277,17 @@ sub resolve_href {
         shift @{$new->path->parts};
     }
     return $new->to_string;
+}
+
+sub host_busy {
+    my ($self, $uri) = @_;
+    my $host = Mojo::URL->new($uri)->host;
+    my $key = inet_ntoa(inet_aton($host)) || $host;
+    my $now = time();
+    my $last = $self->host_busyness->{$key};
+    return 1 if ($last && $now - $last < $self->wait_per_host);
+    $self->host_busyness->{$key} = $now;
+    return;
 }
 
 1;
