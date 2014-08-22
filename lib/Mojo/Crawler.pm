@@ -5,6 +5,7 @@ use 5.010;
 use Mojo::Base 'Mojo::IOLoop';
 use Mojo::Crawler::Queue;
 use Mojo::UserAgent;
+use Mojo::Message::Request;
 use Mojo::Util qw{md5_sum xml_escape};
 use Socket qw(inet_ntoa inet_aton);
 our $VERSION = '0.01';
@@ -30,6 +31,7 @@ has on_error => sub {
         say shift;
     }
 };
+has 'peeking_port';
 has queues => sub { [] };
 has 'ua';
 has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-crawler)";
@@ -103,6 +105,24 @@ sub crawl {
             $self->on_empty->();
         }
     });
+    
+    if ($self->peeking_port) {
+        Mojo::IOLoop->server({port => $self->peeking_port} => sub {
+            my ($loop, $stream) = @_;
+            $stream->on(read => sub {
+                my ($stream, $bytes) = @_;
+                my $path = Mojo::Message::Request->new->parse($bytes)->url->path;
+                if ($path =~ qr{/queues}) {
+                    my $res = sprintf('%s Queues are left.', scalar @{$self->queues});
+                    $stream->write("HTTP/1.1 200 OK\n\n");
+                    $stream->write($res, sub {shift->close});
+                    return;
+                }
+                
+                $stream->write("HTTP/1.1 404 OK\n\nNOT FOUND", sub {shift->close});
+            });
+        });
+    }
     
     Mojo::IOLoop->start;
 }
