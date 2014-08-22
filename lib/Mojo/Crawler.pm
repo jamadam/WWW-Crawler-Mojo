@@ -71,50 +71,49 @@ sub crawl {
         }
         
         $self->on_res->(sub {
-            $self->find_queue($tx, $queue);
+            $self->discover($tx, $queue);
         }, $queue, $tx);
     });
     
     Mojo::IOLoop->start;
 }
 
-sub find_queue {
+sub discover {
     my ($self, $tx, $queue) = @_;
     
-    if ($tx->res->code == 200 &&
-                    (! $self->depth || $queue->depth < $self->depth)) {
+    return if ($tx->res->code == 200);
+    return if (! $self->depth || $queue->depth < $self->depth));
+    
+    my $base;
+    
+    if ($tx->res->headers->content_type =~ qr{text/(html|xml)} &&
+                                (my $base_tag = $tx->res->dom->at('base'))) {
+        $base = $base_tag->attr('href');
+    } else {
+        # TODO Is this OK for redirected urls?
+        $base = $tx->req->url->userinfo(undef);
+    }
+    
+    collect_urls($tx, sub {
+        my ($newurl, $dom) = @_;
         
-        my $base;
-        
-        if ($tx->res->headers->content_type =~ qr{text/(html|xml)} &&
-                        (my $base_tag = $tx->res->dom->at('base'))) {
-            $base = $base_tag->attr('href');
-        } else {
-            # TODO Is this OK for redirected urls?
-            $base = $tx->req->url->userinfo(undef);
+        if ($newurl =~ qr{^(\w+):} &&
+                    ! grep {$_ eq $1} qw(http https ftp ws wss)) {
+            return;
         }
         
-        collect_urls($tx, sub {
-            my ($newurl, $dom) = @_;
-            
-            if ($newurl =~ qr{^(\w+):} &&
-                        ! grep {$_ eq $1} qw(http https ftp ws wss)) {
-                return;
-            }
-            
-            $newurl = resolve_href($base, $newurl);
-            
-            my $new_queue = Mojo::Crawler::Queue->new(
-                resolved_uri    => $newurl,
-                literal_uri     => $newurl,
-                parent          => $queue,
-            );
-            
-            $self->on_refer->(sub {
-                $self->enqueue($_[0] || $new_queue);
-            }, $new_queue, $queue, $dom || $queue->resolved_uri);
-        });
-    }
+        $newurl = resolve_href($base, $newurl);
+        
+        my $new_queue = Mojo::Crawler::Queue->new(
+            resolved_uri    => $newurl,
+            literal_uri     => $newurl,
+            parent          => $queue,
+        );
+        
+        $self->on_refer->(sub {
+            $self->enqueue($_[0] || $new_queue);
+        }, $new_queue, $queue, $dom || $queue->resolved_uri);
+    });
 };
 
 sub enqueue {
