@@ -7,7 +7,6 @@ use Mojo::UserAgent;
 use Mojo::Util qw{md5_sum xml_escape};
 our $VERSION = '0.01';
 
-has after_crawl => sub { sub {} };
 has 'ua';
 has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-checkbot)";
 has credentials => sub { {} };
@@ -121,8 +120,6 @@ sub find_queue {
                 $append_cb, $NEW_QUEUE, $queue, $dom || $queue->resolved_uri);
         });
     }
-    
-    $self->after_crawl->($queue, $tx);
 };
 
 sub enqueue {
