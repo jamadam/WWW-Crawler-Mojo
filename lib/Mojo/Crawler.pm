@@ -1,6 +1,7 @@
 package Mojo::Crawler;
 use strict;
 use warnings;
+use 5.010;
 use Mojo::Base 'Mojo::IOLoop';
 use Mojo::Crawler::Queue;
 use Mojo::UserAgent;
@@ -17,13 +18,12 @@ has on_refer => sub { sub { shift->() } };
 has on_res => sub { sub { shift->() } };
 has on_empty => sub {
     sub {
-        print STDERR "Queue is drained out.\n";
+        say "Queue is drained out.";
     }
 };
 has on_error => sub {
     sub {
-        my ($msg) = @_;
-        print STDERR "$msg\n";
+        say shift;
     }
 };
 has queues => sub { [] };
