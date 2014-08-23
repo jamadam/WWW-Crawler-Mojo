@@ -7,10 +7,9 @@ use Mojo::Crawler::Queue;
 use Mojo::UserAgent;
 use Mojo::Message::Request;
 use Mojo::Util qw{md5_sum xml_escape dumper};
-use Socket qw(inet_ntoa inet_aton);
 our $VERSION = '0.01';
 
-has conn_max => 4;
+has conn_max => 1;
 has conn_active => 0;
 has 'crawler_loop_id';
 has credentials => sub { {} };
@@ -67,7 +66,7 @@ sub new {
 sub crawl {
     my ($self) = @_;
     
-    my $loop_id = Mojo::IOLoop->recurring(0 => sub {
+    my $loop_id = Mojo::IOLoop->recurring(0.25 => sub {
         
         for ($self->conn_active + 1 .. $self->conn_max) {
             
@@ -320,11 +319,10 @@ sub resolve_href {
 sub host_busy {
     my ($self, $uri) = @_;
     my $host = ($uri =~ qr{^\w+://([^/]+)})[0];
-    my $key = inet_ntoa(inet_aton($host)) || $host;
     my $now = time();
-    my $last = $self->host_busyness->{$key};
+    my $last = $self->host_busyness->{$host};
     return 1 if ($last && $now - $last < $self->wait_per_host);
-    $self->host_busyness->{$key} = $now;
+    $self->host_busyness->{$host} = $now;
     return;
 }
 
