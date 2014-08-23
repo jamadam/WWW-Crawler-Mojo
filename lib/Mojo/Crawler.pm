@@ -156,15 +156,12 @@ sub discover {
     return if ($tx->res->code != 200);
     return if ($self->depth && $queue->depth >= $self->depth);
     
-    my $base;
+    my $base = $tx->req->url->userinfo(undef);;
     my $type = $tx->res->headers->content_type;
     
     if ($type && $type =~ qr{text/(html|xml)} &&
                                 (my $base_tag = $tx->res->dom->at('base'))) {
-        $base = $base_tag->attr('href');
-    } else {
-        # TODO Is this OK for redirected urls?
-        $base = $tx->req->url->userinfo(undef);
+        $base = resolve_href($base, $base_tag->attr('href'));
     }
     
     collect_urls($tx, sub {
