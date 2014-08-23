@@ -134,7 +134,7 @@ sub say_start {
     
     print <<"EOF";
 ----------------------------------------
-Crawling started with @{[ $self->queues->[0]->resolved_uri ]}
+Crawling is starting with @{[ $self->queues->[0]->resolved_uri ]}
 Max Connection  : @{[ $self->conn_max ]}
 Depth           : @{[ $self->depth ]}
 User Agent      : @{[ $self->ua_name ]}
