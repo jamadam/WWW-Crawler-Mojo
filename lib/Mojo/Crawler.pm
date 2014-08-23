@@ -68,35 +68,7 @@ sub crawl {
     my ($self) = @_;
     
     my $loop_id = Mojo::IOLoop->recurring(0.25 => sub {
-        
-        return if ($self->conn_active + 1 > $self->conn_max);
-        
-        my $queue = shift @{$self->{queues}};
-        
-        return if (!$queue);
-        
-        if ($self->host_busy($queue->resolved_uri)) {
-            unshift(@{$self->{queues}}, $queue);
-            return;
-        }
-        
-        ++$self->{conn_active};
-        
-        $self->ua->get($queue->resolved_uri, sub {
-            --$self->{conn_active};
-            
-            my ($ua, $tx) = @_;
-            if (!$tx->res->code) {
-                my $msg = ($tx->res->error)
-                            ? $tx->res->error->{message} : 'Unknown error';
-                my $url = $queue->resolved_uri;
-                $self->on_error->("An error occured during crawling $url: $msg");
-            } else {
-                $self->on_res->(sub {
-                    $self->discover($tx, $queue);
-                }, $queue, $tx);
-            }
-        });
+        $self->process_queue(@_);
     });
     
     $self->crawler_loop_id($loop_id);
@@ -127,6 +99,39 @@ sub crawl {
     $self->say_start;
     
     Mojo::IOLoop->start;
+}
+
+sub process_queue {
+    my $self = shift;
+    
+    return if ($self->conn_active + 1 > $self->conn_max);
+    
+    my $queue = shift @{$self->{queues}};
+    
+    return if (!$queue);
+    
+    if ($self->host_busy($queue->resolved_uri)) {
+        unshift(@{$self->{queues}}, $queue);
+        return;
+    }
+    
+    ++$self->{conn_active};
+    
+    $self->ua->get($queue->resolved_uri, sub {
+        --$self->{conn_active};
+        
+        my ($ua, $tx) = @_;
+        if (!$tx->res->code) {
+            my $msg = ($tx->res->error)
+                        ? $tx->res->error->{message} : 'Unknown error';
+            my $url = $queue->resolved_uri;
+            $self->on_error->("An error occured during crawling $url: $msg");
+        } else {
+            $self->on_res->(sub {
+                $self->discover($tx, $queue);
+            }, $queue, $tx);
+        }
+    });
 }
 
 sub say_start {
