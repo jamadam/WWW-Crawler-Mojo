@@ -100,13 +100,23 @@ sub crawl {
     
     $self->crawler_loop_id($loop_id);
     
+    # notify queue is drained out
     Mojo::IOLoop->recurring(5 => sub {
         if (! scalar @{$self->{queues}}) {
             $self->on_empty->();
         }
     });
     
+    # clean up access log per host
+    Mojo::IOLoop->recurring(30 => sub {
+        for (keys %{$self->host_busyness}) {
+            delete $self->host_busyness->{$_}
+                if (time() - $self->host_busyness->{$_} < $self->wait_per_host);
+        }
+    });
+    
     if ($self->peeking_port) {
+        # peeking API server
         Mojo::IOLoop->server({port => $self->peeking_port} => sub {
             $self->peeking_handler(@_);
         });
