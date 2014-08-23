@@ -111,7 +111,7 @@ sub crawl {
     Mojo::IOLoop->recurring(30 => sub {
         for (keys %{$self->host_busyness}) {
             delete $self->host_busyness->{$_}
-                if (time() - $self->host_busyness->{$_} < $self->wait_per_host);
+                if (time() - $self->host_busyness->{$_} > $self->wait_per_host);
         }
     });
     
