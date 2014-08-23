@@ -85,8 +85,9 @@ sub crawl {
                 --$self->{conn_active};
                 
                 my ($ua, $tx) = @_;
-                if ($tx->res->error) {
-                    my $msg = $tx->res->error->{message};
+                if (!$tx->res->code) {
+                    my $msg = ($tx->res->error)
+                                ? $tx->res->error->{message} : 'Unknown error';
                     my $url = $queue->resolved_uri;
                     $self->on_error->("An error occured during crawling $url: $msg");
                 } else {
