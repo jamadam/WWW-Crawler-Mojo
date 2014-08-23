@@ -30,6 +30,7 @@ has on_error => sub {
         say shift;
     }
 };
+has 'peeking';
 has 'peeking_port';
 has peeking_max_length => 30000;
 has queues => sub { [] };
@@ -115,14 +116,38 @@ sub crawl {
         }
     });
     
-    if ($self->peeking_port) {
+    if ($self->peeking || $self->peeking_port) {
         # peeking API server
-        Mojo::IOLoop->server({port => $self->peeking_port} => sub {
+        my $id = Mojo::IOLoop->server(sub {
             $self->peeking_handler(@_);
         });
+        $self->peeking_port(Mojo::IOLoop->acceptor($id)->handle->sockport);
     }
     
+    $self->say_start;
+    
     Mojo::IOLoop->start;
+}
+
+sub say_start {
+    my $self = shift;
+    
+    print <<"EOF";
+----------------------------------------
+Crawling started with @{[ $self->queues->[0]->resolved_uri ]}
+Max Connection  : @{[ $self->conn_max ]}
+Depth           : @{[ $self->depth ]}
+User Agent      : @{[ $self->ua_name ]}
+EOF
+
+    print <<"EOF" if ($self->peeking_port);
+Peeking API is available at following URL
+    http://127.0.0.1:@{[ $self->peeking_port ]}/
+EOF
+    
+    print <<"EOF";
+----------------------------------------
+EOF
 }
 
 sub peeking_handler {
