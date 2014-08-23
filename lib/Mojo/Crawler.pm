@@ -136,7 +136,7 @@ sub peeking_handler {
             return;
         }
         
-        $stream->write("HTTP/1.1 404 OK\n\nNOT FOUND", sub {shift->close});
+        $stream->write("HTTP/1.1 404 NOT FOUND\n\nNOT FOUND", sub {shift->close});
     });
 }
 
