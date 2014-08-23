@@ -118,7 +118,7 @@ sub crawl {
     
     if ($self->peeking || $self->peeking_port) {
         # peeking API server
-        my $id = Mojo::IOLoop->server(sub {
+        my $id = Mojo::IOLoop->server({port => $self->peeking_port}, sub {
             $self->peeking_handler(@_);
         });
         $self->peeking_port(Mojo::IOLoop->acceptor($id)->handle->sockport);
