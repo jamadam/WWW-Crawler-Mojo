@@ -32,6 +32,7 @@ has on_error => sub {
     }
 };
 has 'peeking_port';
+has peeking_max_length => 30000;
 has queues => sub { [] };
 has 'ua';
 has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-crawler)";
@@ -119,16 +120,20 @@ sub peeking_handler {
     my ($self, $loop, $stream) = @_;
     $stream->on(read => sub {
         my ($stream, $bytes) = @_;
+        
         my $path = Mojo::Message::Request->new->parse($bytes)->url->path;
+        
         if ($path =~ qr{^/queues}) {
             my $res = sprintf('%s Queues are left.', scalar @{$self->queues});
             $stream->write("HTTP/1.1 200 OK\n\n");
             $stream->write($res, sub {shift->close});
             return;
         }
+        
         if ($path =~ qr{^/dumper/(\w+)} && $self->{$1}) {
+            my $res = substr(dumper($self->{$1}), 0, $self->peeking_max_length);
             $stream->write("HTTP/1.1 200 OK\n\n");
-            $stream->write(dumper($self->{$1}), sub {shift->close});
+            $stream->write($res, sub {shift->close});
             return;
         }
         
