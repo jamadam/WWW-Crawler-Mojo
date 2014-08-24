@@ -283,13 +283,15 @@ sub collect_urls_css {
     $cb->($_) for (@urls);
 }
 
+my $charset_re = qr{\bcharset\s*=\s*['"]?([a-zA-Z0-9_\-]+)['"]?}i;
+
 ### ---
 ### Guess encoding for CSS
 ### ---
 sub guess_encoding_css {
     my $res     = shift;
     my $type    = $res->headers->content_type;
-    my $charset = ($type =~ qr{; ?charset=([^;\$]+)})[0];
+    my $charset = ($type =~ $charset_re)[0];
     if (! $charset) {
         $charset = ($res->body =~ qr{^\s*\@charset ['"](.+?)['"];}is)[0];
     }
@@ -302,10 +304,10 @@ sub guess_encoding_css {
 sub guess_encoding {
     my $res     = shift;
     my $type    = $res->headers->content_type;
-    my $charset = ($type =~ qr{; ?charset=([^;\$]+)})[0];
+    my $charset = ($type =~ $charset_re)[0];
     if (! $charset && (my $head = ($res->body =~ qr{<head>(.+)</head>}is)[0])) {
         Mojo::DOM->new($head)->find('meta[http\-equiv=Content-Type]')->each(sub{
-            $charset = (shift->{content} =~ qr{; ?charset=([^;\$]+)})[0];
+            $charset = (shift->{content} =~ $charset_re)[0];
         });
     }
     return $charset;
