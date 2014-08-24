@@ -2,7 +2,7 @@ package Mojo::Crawler;
 use strict;
 use warnings;
 use 5.010;
-use Mojo::Base 'Mojo::IOLoop';
+use Mojo::Base -base;
 use Mojo::Crawler::Queue;
 use Mojo::UserAgent;
 use Mojo::Message::Request;
@@ -20,16 +20,8 @@ has wait_per_host => 1;
 has keep_credentials => 1;
 has on_refer => sub { sub { shift->() } };
 has on_res => sub { sub { shift->() } };
-has on_empty => sub {
-    sub {
-        say "Queue is drained out.";
-    }
-};
-has on_error => sub {
-    sub {
-        say shift;
-    }
-};
+has on_empty => sub { sub { say "Queue is drained out." } };
+has on_error => sub { sub { say shift } };
 has 'peeking';
 has 'peeking_port';
 has peeking_max_length => 30000;
@@ -104,7 +96,7 @@ sub crawl {
 sub process_queue {
     my $self = shift;
     
-    return if ($self->conn_active + 1 > $self->conn_max);
+    return if ($self->conn_active >= $self->conn_max);
     
     my $queue = shift @{$self->{queues}};
     
@@ -197,10 +189,7 @@ sub discover {
     collect_urls($tx, sub {
         my ($url, $dom) = @_;
         
-        if ($url =~ qr{^(\w+):} &&
-                    ! grep {$_ eq $1} qw(http https ftp ws wss)) {
-            return;
-        }
+        return if ($url !~ qr{^(http|https|ftp|ws|wss):});
         
         my $new_queue = Mojo::Crawler::Queue->new(
             resolved_uri    => resolve_href($base, $url),
@@ -219,14 +208,12 @@ sub enqueue {
     
     for (@queues) {
         unless (ref $_ && ref $_ eq 'Mojo::Crawler::Queue') {
-            $_ = Mojo::Crawler::Queue->new(literal_uri => $_, resolved_uri => $_);
+            $_ = Mojo::Crawler::Queue->new(resolved_uri => $_);
         }
         my $md5 = md5_sum($_->resolved_uri);
         
-        if (! exists $self->fix->{$md5}) {
-            
+        if (!exists $self->fix->{$md5}) {
             $self->fix->{$md5} = undef;
-            
             push(@{$self->{queues}}, $_);
         }
     }
@@ -239,7 +226,6 @@ sub collect_urls {
     
     if ($type && $type =~ qr{text/(html|xml)}) {
         my $body = Encode::decode(guess_encoding($res) || 'utf-8', $res->body);
-        my $dom = Mojo::DOM->new($body);
         collect_urls_html(Mojo::DOM->new($body), $cb);
     }
     
@@ -310,10 +296,8 @@ sub guess_encoding {
     my $type    = $res->headers->content_type;
     my $charset = ($type =~ qr{; ?charset=([^;\$]+)})[0];
     if (! $charset && (my $head = ($res->body =~ qr{<head>(.+)</head>}is)[0])) {
-        my $dom = Mojo::DOM->new($head);
-        $dom->find('meta[http\-equiv=Content-Type]')->each(sub{
-            my $meta_dom = shift;
-            $charset = ($meta_dom->{content} =~ qr{; ?charset=([^;\$]+)})[0];
+        Mojo::DOM->new($head)->find('meta[http\-equiv=Content-Type]')->each(sub{
+            $charset = (shift->{content} =~ qr{; ?charset=([^;\$]+)})[0];
         });
     }
     return $charset;
