@@ -29,16 +29,11 @@ has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-crawle
 has wait_per_host => 1;
 has 'shuffle';
 
-sub new {
-    my $class = shift;
-    my $self = $class->SUPER::new(@_);
-    $self->ua->transactor->name($self->ua_name);
-    $self->ua->max_redirects(5);
-    return $self;
-}
-
 sub crawl {
     my ($self) = @_;
+    
+    $self->ua->transactor->name($self->ua_name);
+    $self->ua->max_redirects(5);
     
     my $loop_id = Mojo::IOLoop->recurring(0.25 => sub {
         $self->process_queue(@_);
