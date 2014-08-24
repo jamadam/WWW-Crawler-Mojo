@@ -176,7 +176,10 @@ sub discover {
     collect_urls($tx, sub {
         my ($url, $dom) = @_;
         
-        return if ($url !~ qr{^(http|https|ftp|ws|wss):});
+        if ($url =~ qr{^(\w+):} &&
+                    ! grep {$_ eq $1} qw(http https ftp ws wss)) {
+            return;
+        }
         
         my $new_queue = Mojo::Crawler::Queue->new(
             resolved_uri    => resolve_href($base, $url),
