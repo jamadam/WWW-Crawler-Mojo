@@ -7,6 +7,7 @@ use Mojo::Crawler::Queue;
 use Mojo::UserAgent;
 use Mojo::Message::Request;
 use Mojo::Util qw{md5_sum xml_escape dumper};
+use List::Util;
 our $VERSION = '0.01';
 
 has active_conn => 0;
@@ -28,6 +29,7 @@ has queues => sub { [] };
 has 'ua';
 has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-crawler)";
 has wait_per_host => 1;
+has 'shuffle';
 
 sub new {
     my $class = shift;
@@ -86,6 +88,12 @@ sub crawl {
             $self->peeking_handler(@_);
         });
         $self->peeking_port(Mojo::IOLoop->acceptor($id)->handle->sockport);
+    }
+    
+    if (my $second = $self->shuffle) {
+        Mojo::IOLoop->recurring($self->shuffle => sub {
+            @{$self->{queues}} = List::Util::shuffle @{$self->{queues}};
+        });
     }
     
     $self->say_start;
