@@ -9,15 +9,14 @@ use Mojo::Message::Request;
 use Mojo::Util qw{md5_sum xml_escape dumper};
 our $VERSION = '0.01';
 
-has conn_max => 1;
-has conn_active => 0;
+has active_conn => 0;
 has 'crawler_loop_id';
 has credentials => sub { {} };
 has depth => 10;
 has fix => sub { {} };
 has host_busyness => sub { {} };
-has wait_per_host => 1;
 has keep_credentials => 1;
+has max_conn => 1;
 has on_refer => sub { sub { shift->() } };
 has on_res => sub { sub { shift->() } };
 has on_empty => sub { sub { say "Queue is drained out." } };
@@ -28,6 +27,7 @@ has peeking_max_length => 30000;
 has queues => sub { [] };
 has 'ua';
 has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-crawler)";
+has wait_per_host => 1;
 
 sub new {
     my $class = shift;
@@ -96,7 +96,7 @@ sub crawl {
 sub process_queue {
     my $self = shift;
     
-    return if ($self->conn_active >= $self->conn_max);
+    return if ($self->active_conn >= $self->max_conn);
     
     my $queue = shift @{$self->{queues}};
     
@@ -107,10 +107,10 @@ sub process_queue {
         return;
     }
     
-    ++$self->{conn_active};
+    ++$self->{active_conn};
     
     $self->ua->get($queue->resolved_uri, sub {
-        --$self->{conn_active};
+        --$self->{active_conn};
         
         my ($ua, $tx) = @_;
         if (!$tx->res->code) {
@@ -132,7 +132,7 @@ sub say_start {
     print <<"EOF";
 ----------------------------------------
 Crawling is starting with @{[ $self->queues->[0]->resolved_uri ]}
-Max Connection  : @{[ $self->conn_max ]}
+Max Connection  : @{[ $self->max_conn ]}
 Depth           : @{[ $self->depth ]}
 User Agent      : @{[ $self->ua_name ]}
 EOF
