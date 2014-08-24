@@ -4,7 +4,7 @@ use warnings;
 use 5.010;
 use Mojo::Base -base;
 use Mojo::Crawler::Queue;
-use Mojo::UserAgent;
+use Mojo::Crawler::UserAgent;
 use Mojo::Message::Request;
 use Mojo::Util qw{md5_sum xml_escape dumper};
 use List::Util;
@@ -12,11 +12,9 @@ our $VERSION = '0.01';
 
 has active_conn => 0;
 has 'crawler_loop_id';
-has credentials => sub { {} };
 has depth => 10;
 has fix => sub { {} };
 has host_busyness => sub { {} };
-has keep_credentials => 1;
 has max_conn => 1;
 has on_refer => sub { sub { shift->() } };
 has on_res => sub { sub { shift->() } };
@@ -26,7 +24,7 @@ has 'peeking';
 has 'peeking_port';
 has peeking_max_length => 30000;
 has queues => sub { [] };
-has 'ua';
+has 'ua' => sub { Mojo::Crawler::UserAgent->new };
 has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-crawler)";
 has wait_per_host => 1;
 has 'shuffle';
@@ -34,27 +32,8 @@ has 'shuffle';
 sub new {
     my $class = shift;
     my $self = $class->SUPER::new(@_);
-    
-    my $ua = Mojo::UserAgent->new;
-    $self->ua($ua);
-    $ua->transactor->name($self->ua_name);
-    $ua->max_redirects(5);
-    
-    if ($self->keep_credentials) {
-        $ua->on(start => sub {
-            my ($ua, $tx) = @_;
-            my $url = $tx->req->url;
-            if ($url->is_abs) {
-                my $key = $url->scheme. '://'. $url->host. ':'. ($url->port || 80);
-                if ($url->userinfo) {
-                    $self->credentials->{$key} = $url->userinfo;
-                } else {
-                    $url->userinfo($self->credentials->{$key});
-                }
-            }
-        });
-    }
-    
+    $self->ua->transactor->name($self->ua_name);
+    $self->ua->max_redirects(5);
     return $self;
 }
 
@@ -98,7 +77,7 @@ sub crawl {
     
     $self->say_start;
     
-    Mojo::IOLoop->start;
+    Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 }
 
 sub process_queue {
