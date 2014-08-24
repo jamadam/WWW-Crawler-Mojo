@@ -8,7 +8,6 @@ use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use Mojo::DOM;
 use Mojo::Crawler;
-use Mojo::Transaction::HTTP;
 use Test::More tests => 25;
 
 my $html = <<EOF;
@@ -31,11 +30,8 @@ my $html = <<EOF;
 </html>
 EOF
 
-my $tx = Mojo::Transaction::HTTP->new;
-$tx->res->body($html);
-$tx->res->headers->content_type('text/html');
 my @array;
-Mojo::Crawler::collect_urls($tx, sub {
+Mojo::Crawler::collect_urls_html(Mojo::DOM->new($html), sub {
     push(@array, shift);
     push(@array, shift);
 });

@@ -161,14 +161,15 @@ sub discover {
     return if ($self->depth && $queue->depth >= $self->depth);
     
     my $base = $tx->req->url->userinfo(undef);;
-    my $type = $tx->res->headers->content_type;
+    my $res = $tx->res;
+    my $type = $res->headers->content_type;
     
     if ($type && $type =~ qr{text/(html|xml)} &&
-                                (my $base_tag = $tx->res->dom->at('base'))) {
+                                (my $base_tag = $res->dom->at('base'))) {
         $base = resolve_href($base, $base_tag->attr('href'));
     }
     
-    collect_urls($tx, sub {
+    my $cb = sub {
         my ($url, $dom) = @_;
         
         if ($url =~ qr{^(\w+):} &&
@@ -182,7 +183,19 @@ sub discover {
         $self->on_refer->(sub {
             $self->enqueue($_[0] || $new_queue);
         }, $new_queue, $queue, $dom || $queue->resolved_uri);
-    });
+    };
+    
+    if ($type && $type =~ qr{text/(html|xml)}) {
+        my $encode = guess_encoding($res) || 'utf-8';
+        my $body = Encode::decode($encode, $res->body);
+        collect_urls_html(Mojo::DOM->new($body), $cb);
+    }
+    
+    if ($type && $type =~ qr{text/css}) {
+        my $encode  = guess_encoding_css($res) || 'utf-8';
+        my $body    = Encode::decode($encode, $res->body);
+        collect_urls_css($body, $cb);
+    }
 };
 
 sub enqueue {
@@ -198,23 +211,6 @@ sub enqueue {
             $self->fix->{$md5} = undef;
             push(@{$self->{queues}}, $_);
         }
-    }
-}
-
-sub collect_urls {
-    my ($tx, $cb) = @_;
-    my $res     = $tx->res;
-    my $type    = $res->headers->content_type;
-    
-    if ($type && $type =~ qr{text/(html|xml)}) {
-        my $body = Encode::decode(guess_encoding($res) || 'utf-8', $res->body);
-        collect_urls_html(Mojo::DOM->new($body), $cb);
-    }
-    
-    if ($type && $type =~ qr{text/css}) {
-        my $encode  = guess_encoding_css($res) || 'utf-8';
-        my $body    = Encode::decode($encode, $res->body);
-        collect_urls_css($body, $cb);
     }
 }
 
