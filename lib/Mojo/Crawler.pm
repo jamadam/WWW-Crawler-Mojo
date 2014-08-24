@@ -176,11 +176,8 @@ sub discover {
             return;
         }
         
-        my $new_queue = Mojo::Crawler::Queue->new(
-            resolved_uri    => resolve_href($base, $url),
-            literal_uri     => $url,
-            parent          => $queue,
-        );
+        my $new_queue = $queue->child(
+            resolved_uri => resolve_href($base, $url), literal_uri => $url);
         
         $self->on_refer->(sub {
             $self->enqueue($_[0] || $new_queue);

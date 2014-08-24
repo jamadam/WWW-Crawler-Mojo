@@ -10,15 +10,12 @@ has 'referrer' => '';
 has 'depth' => 0;
 has 'additional_props' => sub { {} };
 
-sub new {
-    my $class = shift;
-    my $self = $class->SUPER::new(@_);
-    if ($self->{parent}) {
-        $self->{referrer} = $self->{parent}->{resolved_uri};
-        $self->{depth} = $self->{parent}->{depth} + 1;
-        delete $self->{parent};
-    }
-    return $self;
+sub child {
+    my $self = shift;
+    my $child = __PACKAGE__->new(@_);
+    $child->{referrer} = $self->{resolved_uri};
+    $child->{depth} = $self->{depth} + 1;
+    return $child;
 }
 
 sub add_props {
