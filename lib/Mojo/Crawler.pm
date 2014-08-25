@@ -102,7 +102,7 @@ sub process_queue {
             my $msg = ($tx->res->error)
                         ? $tx->res->error->{message} : 'Unknown error';
             my $url = $queue->resolved_uri;
-            $self->on_error->("An error occured during crawling $url: $msg");
+            $self->on_error->("An error occured during crawling $url: $msg", $queue);
         } else {
             $self->on_res->(sub {
                 $self->discover($tx, $queue);
