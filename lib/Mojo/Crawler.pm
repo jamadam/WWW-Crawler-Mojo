@@ -48,13 +48,16 @@ sub crawl {
         }
     });
     
-    # clean up access log per host
-    Mojo::IOLoop->recurring(30 => sub {
-        for (keys %{$self->host_busyness}) {
-            delete $self->host_busyness->{$_}
-                if (time() - $self->host_busyness->{$_} > $self->wait_per_host);
-        }
-    });
+    if ($self->wait_per_host) {
+        # clean up access log per host
+        Mojo::IOLoop->recurring(30 => sub {
+            for (keys %{$self->host_busyness}) {
+                delete $self->host_busyness->{$_}
+                    if (time() -
+                            $self->host_busyness->{$_} > $self->wait_per_host);
+            }
+        });
+    }
     
     if ($self->peeping || $self->peeping_port) {
         # peeping API server
@@ -84,7 +87,7 @@ sub process_queue {
     
     return if (!$queue);
     
-    if ($self->host_busy($queue->resolved_uri)) {
+    if ($self->wait_per_host && $self->host_busy($queue->resolved_uri)) {
         unshift(@{$self->{queues}}, $queue);
         return;
     }
