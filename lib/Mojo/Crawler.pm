@@ -2,7 +2,7 @@ package Mojo::Crawler;
 use strict;
 use warnings;
 use 5.010;
-use Mojo::Base -base;
+use Mojo::Base 'Mojo::EventEmitter';
 use Mojo::Crawler::Queue;
 use Mojo::Crawler::UserAgent;
 use Mojo::Message::Request;
@@ -44,7 +44,7 @@ sub crawl {
     # notify queue is drained out
     Mojo::IOLoop->recurring(5 => sub {
         if (! scalar @{$self->{queues}}) {
-            $self->on_empty->();
+            $self->emit('empty');
         }
     });
     
@@ -102,9 +102,9 @@ sub process_queue {
             my $msg = ($tx->res->error)
                         ? $tx->res->error->{message} : 'Unknown error';
             my $url = $queue->resolved_uri;
-            $self->on_error->("An error occured during crawling $url: $msg", $queue);
+            $self->emit('error', "An error occured during crawling $url: $msg", $queue);
         } else {
-            $self->on_res->(sub {
+            $self->emit('res', sub {
                 $self->discover($tx, $queue);
             }, $queue, $tx);
         }
@@ -183,7 +183,7 @@ sub discover {
         my $new_queue = $queue->child(
             resolved_uri => resolve_href($base, $url), literal_uri => $url);
         
-        $self->on_refer->(sub {
+        $self->emit('refer', sub {
             $self->enqueue($_[0] || $new_queue);
         }, $new_queue, $queue, $dom || $queue->resolved_uri);
     };
