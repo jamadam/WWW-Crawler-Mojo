@@ -20,9 +20,9 @@ has on_refer => sub { sub { shift->() } };
 has on_res => sub { sub { shift->() } };
 has on_empty => sub { sub { say "Queue is drained out." } };
 has on_error => sub { sub { say shift } };
-has 'peeking';
-has 'peeking_port';
-has peeking_max_length => 30000;
+has 'peeping';
+has 'peeping_port';
+has peeping_max_length => 30000;
 has queues => sub { [] };
 has 'ua' => sub { Mojo::Crawler::UserAgent->new };
 has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-crawler)";
@@ -56,12 +56,12 @@ sub crawl {
         }
     });
     
-    if ($self->peeking || $self->peeking_port) {
-        # peeking API server
-        my $id = Mojo::IOLoop->server({port => $self->peeking_port}, sub {
-            $self->peeking_handler(@_);
+    if ($self->peeping || $self->peeping_port) {
+        # peeping API server
+        my $id = Mojo::IOLoop->server({port => $self->peeping_port}, sub {
+            $self->peeping_handler(@_);
         });
-        $self->peeking_port(Mojo::IOLoop->acceptor($id)->handle->sockport);
+        $self->peeping_port(Mojo::IOLoop->acceptor($id)->handle->sockport);
     }
     
     if (my $second = $self->shuffle) {
@@ -119,9 +119,9 @@ Depth           : @{[ $self->depth ]}
 User Agent      : @{[ $self->ua_name ]}
 EOF
 
-    print <<"EOF" if ($self->peeking_port);
-Peeking API is available at following URL
-    http://127.0.0.1:@{[ $self->peeking_port ]}/
+    print <<"EOF" if ($self->peeping_port);
+Peeping API is available at following URL
+    http://127.0.0.1:@{[ $self->peeping_port ]}/
 EOF
     
     print <<"EOF";
@@ -129,7 +129,7 @@ EOF
 EOF
 }
 
-sub peeking_handler {
+sub peeping_handler {
     my ($self, $loop, $stream) = @_;
     $stream->on(read => sub {
         my ($stream, $bytes) = @_;
@@ -144,7 +144,7 @@ sub peeking_handler {
         }
         
         if ($path =~ qr{^/dumper/(\w+)} && defined $self->{$1}) {
-            my $res = substr(dumper($self->{$1}), 0, $self->peeking_max_length);
+            my $res = substr(dumper($self->{$1}), 0, $self->peeping_max_length);
             $stream->write("HTTP/1.1 200 OK\n\n");
             $stream->write($res, sub {shift->close});
             return;
