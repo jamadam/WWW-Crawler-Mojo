@@ -23,5 +23,5 @@ $bot->on(refer => sub {
 });
 
 $bot->enqueue('http://google.com/');
-$bot->peeking_port(3001);
+$bot->peeping_port(3001);
 $bot->crawl;
