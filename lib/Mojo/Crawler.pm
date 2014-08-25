@@ -143,7 +143,7 @@ sub peeking_handler {
             return;
         }
         
-        if ($path =~ qr{^/dumper/(\w+)} && $self->{$1}) {
+        if ($path =~ qr{^/dumper/(\w+)} && defined $self->{$1}) {
             my $res = substr(dumper($self->{$1}), 0, $self->peeking_max_length);
             $stream->write("HTTP/1.1 200 OK\n\n");
             $stream->write($res, sub {shift->close});
