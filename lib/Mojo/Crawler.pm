@@ -30,11 +30,11 @@ sub crawl {
     
     $self->on('empty', sub { say "Queue is drained out." })
                                         unless $self->has_subscribers('empty');
-    $self->on('error', sub { say shift })
+    $self->on('error', sub { say $_[1] })
                                         unless $self->has_subscribers('error');
-    $self->on('res', sub { shift->() })
+    $self->on('res', sub { $_[1]->() })
                                         unless $self->has_subscribers('res');
-    $self->on('refer', sub { shift->() })
+    $self->on('refer', sub { $_[1]->() })
                                         unless $self->has_subscribers('refer');
     
     $self->ua->transactor->name($self->ua_name);
@@ -168,7 +168,7 @@ sub discover {
     return if ($tx->res->code != 200);
     return if ($self->depth && $queue->depth >= $self->depth);
     
-    my $base = $tx->req->url->userinfo(undef);;
+    my $base = $tx->req->url->userinfo(undef);
     my $res = $tx->res;
     my $type = $res->headers->content_type;
     
