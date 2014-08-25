@@ -16,10 +16,6 @@ has depth => 10;
 has fix => sub { {} };
 has host_busyness => sub { {} };
 has max_conn => 1;
-has on_refer => sub { sub { shift->() } };
-has on_res => sub { sub { shift->() } };
-has on_empty => sub { sub { say "Queue is drained out." } };
-has on_error => sub { sub { say shift } };
 has 'peeping';
 has 'peeping_port';
 has peeping_max_length => 30000;
@@ -31,6 +27,15 @@ has 'shuffle';
 
 sub crawl {
     my ($self) = @_;
+    
+    $self->on('empty', sub { say "Queue is drained out." })
+                                        unless $self->has_subscribers('empty');
+    $self->on('error', sub { say shift })
+                                        unless $self->has_subscribers('error');
+    $self->on('res', sub { shift->() })
+                                        unless $self->has_subscribers('res');
+    $self->on('refer', sub { shift->() })
+                                        unless $self->has_subscribers('refer');
     
     $self->ua->transactor->name($self->ua_name);
     $self->ua->max_redirects(5);
