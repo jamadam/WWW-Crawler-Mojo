@@ -6,13 +6,13 @@ use 5.10.0;
 
 my $bot = Mojo::Crawler->new;
 $bot->on(res => sub {
-    my ($discover, $queue, $tx) = @_;
+    my ($bot, $discover, $queue, $res) = @_;
     say sprintf('fetching %s resulted status %s',
-                                    $queue->resolved_uri, $tx->res->code);
+                                    $queue->resolved_uri, $res->code);
     $discover->();
 });
 $bot->on(refer => sub {
-    my ($enqueue, $queue, $parent_queue, $context) = @_;
+    my ($bot, $enqueue, $queue, $parent_queue, $context) = @_;
     $enqueue->();
 });
 $bot->on(error => sub {

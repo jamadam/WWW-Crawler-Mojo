@@ -9,7 +9,7 @@ use Test::More;
 use Mojo::DOM;
 use Mojo::Crawler;
 use Mojo::Crawler::Queue;
-use Mojo::Transaction::HTTP;
+use Mojo::Message::Response;
 use Test::More tests => 25;
 
 {
@@ -33,14 +33,14 @@ use Test::More tests => 25;
 </html>
 EOF
     
-    my $tx = Mojo::Transaction::HTTP->new;
-    $tx->req->url(Mojo::URL->new('http://example.com/'));
-    $tx->res->code(200);
-    $tx->res->body($html);
-    $tx->res->headers->content_type('text/html');
+    my $res = Mojo::Message::Response->new;
+    $res->code(200);
+    $res->body($html);
+    $res->headers->content_type('text/html');
     
     my $bot = Mojo::Crawler->new;
-    $bot->discover($tx, Mojo::Crawler::Queue->new);
+    $bot->init;
+    $bot->discover($res, Mojo::Crawler::Queue->new(resolved_uri => 'http://example.com/'));
     
     my $queue;
     $queue = shift @{$bot->{queues}};
@@ -67,8 +67,7 @@ EOF
     $queue = shift @{$bot->{queues}};
     is $queue, undef, 'no more urls';
     
-    $tx->req->url(Mojo::URL->new('http://example.com/a/'));
-    $bot->discover($tx, Mojo::Crawler::Queue->new);
+    $bot->discover($res, Mojo::Crawler::Queue->new(resolved_uri => 'http://example.com/a/a'));
     
     $queue = shift @{$bot->{queues}};
     is $queue->literal_uri, 'css1.css', 'right url';
@@ -93,7 +92,8 @@ EOF
     $tx->res->headers->content_type('text/html');
     
     my $bot = Mojo::Crawler->new;
-    $bot->discover($tx, Mojo::Crawler::Queue->new);
+    $bot->init;
+    $bot->discover($tx->res, Mojo::Crawler::Queue->new(resolved_uri => 'http://example.com/'));
     
     my $queue;
     $queue = shift @{$bot->{queues}};
@@ -101,8 +101,8 @@ EOF
     is $queue->resolved_uri, 'http://example2.com/css1.css', 'right url';
     
     $bot = Mojo::Crawler->new;
-    $tx->req->url(Mojo::URL->new('http://example.com/a/'));
-    $bot->discover($tx, Mojo::Crawler::Queue->new);
+    $bot->init;
+    $bot->discover($tx->res, Mojo::Crawler::Queue->new(resolved_uri => 'http://example.com/a/'));
     
     $queue = shift @{$bot->{queues}};
     is $queue->literal_uri, 'css1.css', 'right url';
@@ -127,16 +127,17 @@ EOF
     $tx->res->headers->content_type('text/html');
     
     my $bot = Mojo::Crawler->new;
-    $bot->discover($tx, Mojo::Crawler::Queue->new);
+    $bot->init;
+    $bot->discover($tx->res, Mojo::Crawler::Queue->new(resolved_uri => 'http://example.com/'));
     
     my $queue;
     $queue = shift @{$bot->{queues}};
     is $queue->literal_uri, 'css1.css', 'right url';
     is $queue->resolved_uri, 'http://example.com/css1.css', 'right url';
     
-    $tx->req->url(Mojo::URL->new('http://example.com/a/'));
     $bot = Mojo::Crawler->new;
-    $bot->discover($tx, Mojo::Crawler::Queue->new);
+    $bot->init;
+    $bot->discover($tx->res, Mojo::Crawler::Queue->new(resolved_uri => 'http://example.com/a/'));
     
     $queue = shift @{$bot->{queues}};
     is $queue->literal_uri, 'css1.css', 'right url';

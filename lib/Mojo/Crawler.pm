@@ -28,6 +28,16 @@ has 'shuffle';
 sub crawl {
     my ($self) = @_;
     
+    $self->init;
+    
+    $self->say_start;
+    
+    Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+}
+
+sub init {
+    my ($self) = @_;
+    
     $self->on('empty', sub { say "Queue is drained out." })
                                         unless $self->has_subscribers('empty');
     $self->on('error', sub { say $_[1] })
@@ -77,10 +87,6 @@ sub crawl {
             @{$self->{queues}} = List::Util::shuffle @{$self->{queues}};
         });
     }
-    
-    $self->say_start;
-    
-    Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 }
 
 sub process_queue {
@@ -106,15 +112,17 @@ sub process_queue {
         
         $queue->redirect(urls_redirect($tx));
         
-        if (!$tx->res->code) {
-            my $msg = ($tx->res->error)
-                        ? $tx->res->error->{message} : 'Unknown error';
+        my $res = $tx->res;
+        
+        if (!$res->code) {
+            my $msg = ($res->error)
+                        ? $res->error->{message} : 'Unknown error';
             my $url = $queue->resolved_uri;
             $self->emit('error', "An error occured during crawling $url: $msg", $queue);
         } else {
             $self->emit('res', sub {
-                $self->discover($tx, $queue);
-            }, $queue, $tx);
+                $self->discover($res, $queue);
+            }, $queue, $res);
         }
     });
 }
@@ -174,13 +182,12 @@ sub peeping_handler {
 }
 
 sub discover {
-    my ($self, $tx, $queue) = @_;
+    my ($self, $res, $queue) = @_;
     
-    return if ($tx->res->code != 200);
+    return if ($res->code != 200);
     return if ($self->depth && $queue->depth >= $self->depth);
     
     my $base = $queue->resolved_uri;
-    my $res = $tx->res;
     my $type = $res->headers->content_type;
     
     if ($type && $type =~ qr{text/(html|xml)} &&
