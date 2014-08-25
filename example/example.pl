@@ -16,7 +16,7 @@ $bot->on_refer(sub {
     $enqueue->();
 });
 $bot->on_error(sub {
-    my ($msg, $queue);
+    my ($msg, $queue) = @_;
     say $msg;
     say "Re-scheduled";
     $bot->enqueue($queue);
