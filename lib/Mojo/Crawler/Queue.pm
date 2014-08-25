@@ -9,6 +9,7 @@ has 'resolved_uri' => '';
 has 'referrer' => '';
 has 'depth' => 0;
 has 'additional_props' => sub { {} };
+has 'redirect_history' => sub { [] };
 
 sub child {
     my $self = shift;
@@ -24,6 +25,12 @@ sub add_props {
     for (keys %hash) {
         $self->additional_props->{$_} = $hash{$_};
     }
+}
+
+sub redirect {
+    my ($self, $last, @history) = @_;
+    $self->resolved_uri($last);
+    $self->redirect_history(\@history);
 }
 
 1;

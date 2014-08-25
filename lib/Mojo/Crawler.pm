@@ -103,6 +103,9 @@ sub process_queue {
         --$self->{active_conn};
         
         my ($ua, $tx) = @_;
+        
+        $queue->redirect(urls_redirect($tx));
+        
         if (!$tx->res->code) {
             my $msg = ($tx->res->error)
                         ? $tx->res->error->{message} : 'Unknown error';
@@ -114,6 +117,14 @@ sub process_queue {
             }, $queue, $tx);
         }
     });
+}
+
+sub urls_redirect {
+    my $tx = shift;
+    my @urls;
+    @urls = urls_redirect($tx->previous) if ($tx->previous);
+    unshift(@urls, $tx->req->url->userinfo(undef)->to_string);
+    return @urls;
 }
 
 sub say_start {
@@ -168,7 +179,7 @@ sub discover {
     return if ($tx->res->code != 200);
     return if ($self->depth && $queue->depth >= $self->depth);
     
-    my $base = $tx->req->url->userinfo(undef);
+    my $base = $queue->resolved_uri;
     my $res = $tx->res;
     my $type = $res->headers->content_type;
     
