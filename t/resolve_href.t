@@ -8,7 +8,7 @@ use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use Mojo::Crawler;
 
-use Test::More tests => 50;
+use Test::More tests => 51;
 
 my $base;
 my $tmp;
@@ -17,6 +17,8 @@ $tmp = Mojo::Crawler::resolve_href($base, '/hoge.html');
 is $tmp, 'http://example.com/hoge.html', 'right url';
 $tmp = Mojo::Crawler::resolve_href($base, './hoge.html');
 is $tmp, 'http://example.com/hoge.html', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, '#a');
+is $tmp, 'http://example.com', 'right url';
 
 $base = Mojo::URL->new('http://example.com');
 $tmp = Mojo::Crawler::resolve_href($base, 'http://example2.com/hoge.html');

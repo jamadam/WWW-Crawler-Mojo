@@ -314,33 +314,14 @@ sub guess_encoding {
 ### ---
 sub resolve_href {
     my ($base, $href) = @_;
-    if (! ref $base) {
-        $base = Mojo::URL->new($base);
+    $href = Mojo::URL->new(ref $href ? $href : Mojo::URL->new($href));
+    $base = Mojo::URL->new(ref $base ? $base : Mojo::URL->new($base));
+    my $abs = $href->to_abs($base)->fragment(undef);
+    while ($abs->path->parts->[0] && $abs->path->parts->[0] =~ /^\./) {
+        shift @{$abs->path->parts};
     }
-    my $new = $base->clone;
-    my $temp = Mojo::URL->new($href);
-    
-    $temp->fragment(undef);
-    if ($temp->scheme) {
-        return $temp->to_string;
-    }
-    
-    if ($temp->path->to_string) {
-        $new->path($temp->path->to_string);
-        $new->path->canonicalize;
-    }
-    
-    if ($temp->host) {
-        $new->host($temp->host);
-    }
-    if ($temp->port) {
-        $new->port($temp->port);
-    }
-    $new->query($temp->query);
-    while ($new->path->parts->[0] && $new->path->parts->[0] =~ /^\./) {
-        shift @{$new->path->parts};
-    }
-    return $new->to_string;
+    $abs->path->trailing_slash($base->path->trailing_slash) if (!$href->path->to_string);
+    return $abs->to_string;
 }
 
 sub host_busy {
