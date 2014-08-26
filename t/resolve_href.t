@@ -8,10 +8,52 @@ use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use Mojo::Crawler;
 
-use Test::More tests => 51;
+use Test::More tests => 70;
 
 my $base;
 my $tmp;
+
+# Resolve RFC 1808 examples
+$base = Mojo::URL->new('http://a/b/c/d?q#f');
+$tmp = Mojo::Crawler::resolve_href($base, 'g');
+is $tmp, 'http://a/b/c/g', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, './g');
+is $tmp, 'http://a/b/c/g', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, 'g/');
+is $tmp, 'http://a/b/c/g/', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, '//g');
+is $tmp, 'http://g', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, '?y');
+is $tmp, 'http://a/b/c/d?y', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, 'g?y');
+is $tmp, 'http://a/b/c/g?y', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, 'g?y/./x');
+is $tmp, 'http://a/b/c/g?y/./x', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, '#s');
+is $tmp, 'http://a/b/c/d?q', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, 'g#s');
+is $tmp, 'http://a/b/c/g', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, 'g#s/./x');
+is $tmp, 'http://a/b/c/g', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, 'g?y#s');
+is $tmp, 'http://a/b/c/g?y', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, '.');
+is $tmp, 'http://a/b/c', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, './');
+is $tmp, 'http://a/b/c/', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, '..');
+is $tmp, 'http://a/b', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, '../');
+is $tmp, 'http://a/b/', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, '../g');
+is $tmp, 'http://a/b/g', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, '../..');
+is $tmp, 'http://a/', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, '../../');
+is $tmp, 'http://a/', 'right url';
+$tmp = Mojo::Crawler::resolve_href($base, '../../g');
+is $tmp, 'http://a/g', 'right url';
+
 $base = Mojo::URL->new('http://example.com');
 $tmp = Mojo::Crawler::resolve_href($base, '/hoge.html');
 is $tmp, 'http://example.com/hoge.html', 'right url';
