@@ -338,13 +338,151 @@ sub host_busy {
 
 =head1 NAME
 
-Mojo::Crawler - 
+Mojo::Crawler - A web crawling framework for Perl
 
 =head1 SYNOPSIS
 
+    use strict;
+    use warnings;
+    use utf8;
+    use Mojo::Crawler;
+    use 5.10.0;
+    
+    my $bot = Mojo::Crawler->new;
+    my %count;
+    
+    $bot->on(res => sub {
+        my ($bot, $discover, $queue, $res) = @_;
+        
+        $count{$res->code}++;
+        
+        if ($res->code == 404) {
+            say sprintf('404 occured! : %s referred by %s',
+                                        $queue->resolved_uri, $queue->referrer);
+        }
+        
+        my @disp_seed;
+        push(@disp_seed, sprintf('%s:%s', $_, $count{$_})) for (keys %count);
+        
+        $| = 1;
+        print(join(' / ', @disp_seed), ' ' x 30);
+        print("\r");
+        
+        $discover->();
+    });
+    
+    $bot->on(refer => sub {
+        my ($bot, $enqueue, $queue, $parent_queue, $context) = @_;
+        $enqueue->();
+    });
+    
+    $bot->enqueue('http://example.com/');
+    $bot->peeping_port(3001);
+    $bot->crawl;
+
 =head1 DESCRIPTION
 
+A web crawling framework for Perl
+
+=head1 ATTRIBUTE
+
+=head2 active_conn
+
+A number of current connections.
+
+=head2 depth
+
+A number of max depth to crawl.
+
+=head2 fix
+
+=head2 host_busyness
+
+A hash contains host name for key and last requested timestamp for value.
+
+=head2 max_conn
+
+A number of Max connections.
+
+=head2 peeping_max_length
+
+Max length of peeping API content.
+
+=head2 queues
+
+FIFO array contains Mojo::Crawler::Queue objects.
+
+=head2 wait_per_host
+
+Interval in second of requests per hosts, not to rush the server.
+
+=head1 EVENTS
+
+=head2 res
+
+=head2 refer
+
+=head2 empty
+
+=head2 error
+
 =head1 METHODS
+
+=head2 crawl
+
+Start crawling loop.
+
+=head2 init
+
+Initialize crawler settings.
+
+=head2 process_queue
+
+Process a queue.
+
+=head2 urls_redirect
+
+Replace the resolved URI of queue and append redirect history into queue
+
+=head2 say_start
+
+Displays starting messages to STDOUT
+
+=head2 peeping_handler
+
+peeping API dispatcher.
+
+=head2 discover
+
+Parses and discovers lins in a web page.
+
+=head2 enqueue
+
+Append a queue with a URI or Mojo::Crawler::Queue object.
+
+=head2 collect_urls_html
+
+Collects URLs out of HTML.
+
+=head2 collect_urls_css
+
+Collects URLs out of CSS.
+
+=head2 guess_encoding_css
+
+Guesses encoding of CSS
+
+=head2 guess_encoding
+
+Guesses encoding of HTML
+
+=head2 resolve_href
+
+Resolves URLs with a base URL.
+
+=head2 host_busy
+
+Checks wether a host is ready or not for crawl.
 
 =head1 AUTHOR
 
