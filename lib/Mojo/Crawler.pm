@@ -382,9 +382,12 @@ Mojo::Crawler - A web crawling framework for Perl
 
 =head1 DESCRIPTION
 
-A web crawling framework for Perl
+Mojo-Crawler is a web crawling framework for Perl.
 
 =head1 ATTRIBUTE
+
+Mojo::Crawler inherits all attributes from Mojo::EventEmitter and implements the
+following new ones.
 
 =head2 active_conn
 
@@ -418,15 +421,61 @@ Interval in second of requests per hosts, not to rush the server.
 
 =head1 EVENTS
 
+Mojo::Crawler inherits all events from Mojo::EventEmitter and implements the
+following new ones.
+
 =head2 res
+
+Emitted when crawler got response from server.
+
+    $bot->on(res => sub {
+        my ($bot, $discover, $queue, $res) = @_;
+        if (...) {
+            $discover->();
+        } else {
+            # DO NOTHING
+        }
+    });
 
 =head2 refer
 
+Emitted when new URI is found. You can enqueue new URIs conditionally with the callback.
+
+    $bot->on(refer => sub {
+        my ($bot, $enqueue, $queue, $parent_queue, $context) = @_;
+        if (...) {
+            $enqueue->();
+        } elseif (...) {
+            $enqueue->(...); # maybe different url
+        } else {
+            # DO NOTHING
+        }
+    });
+
 =head2 empty
+
+Emitted when queue length got zero. The length is checked every 5 second.
+
+    $bot->on(refer => sub {
+        say "Queue is drained out.";
+    });
 
 =head2 error
 
+Emitted when user agent returns no status code for request. Possibly causeed by
+network errors or un-responsible servers.
+
+    $bot->on(refer => sub {
+        say "error: $_[1]";
+    });
+
+Note that server errors such as 404 or 500 cannot be catched with the event.
+Consider res event for the use case instead of this.
+
 =head1 METHODS
+
+Mojo::Crawler inherits all methods from Mojo::EventEmitter and implements the
+following new ones.
 
 =head2 crawl
 

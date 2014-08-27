@@ -32,18 +32,40 @@ sub new {
 
 =head1 NAME
 
-MojoCheckbot::UserAgent - 
+Mojo::Crawler::UserAgent - Mojo::UserAgent sub class for userinfo strage
 
 =head1 SYNOPSIS
 
+    my $ua = Mojo::Crawler::UserAgent->new;
+    $ua->keep_credentials(1);
+    $ua->credentials->{'http://example.com:80'} = 'jamadam:password';
+    my $tx = $ua->get('http://example.com/');
+    say $tx->req->url # http://jamadam:passowrd@example.com/
+
 =head1 DESCRIPTION
 
-This class inherits Mojo::UserAgentand override start method for storing user
+This class inherits Mojo::UserAgent and override start method for storing user
 info
+
+=head1 ATTRIBUTES
+
+Mojo::Crawler::UserAgent inherits all attributes from Mojo::UserAgent.
+
+=head2 keep_credentials
+
+Set true to set the feature on.
+
+    $ua->keep_credentials(1);
+
+=head2 credentials
+
+Storage for credentials.
+
+    $ua->credentials->{'http://example.com:80'} = 'jamadam:password';
 
 =head1 METHODS
 
-=head2 start
+Mojo::Crawler::UserAgent inherits all methods from Mojo::UserAgent.
 
 =head1 AUTHOR
 
@@ -51,7 +73,7 @@ Sugama Keita, E<lt>sugama@jamadam.comE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2011 by Sugama Keita.
+Copyright (C) Sugama Keita.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
