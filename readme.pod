@@ -20,7 +20,7 @@ Mojo::Crawler - A web crawling framework for Perl
         
         if ($res->code == 404) {
             say sprintf('404 occured! : %s referred by %s',
-                                        $queue->resolved_uri, $queue->referrer);
+                        $queue->resolved_uri, $queue->referrer->resolved_uri);
         }
         
         my @disp_seed;
@@ -34,7 +34,7 @@ Mojo::Crawler - A web crawling framework for Perl
     });
     
     $bot->on(refer => sub {
-        my ($bot, $enqueue, $queue, $parent_queue, $context) = @_;
+        my ($bot, $enqueue, $queue, $context) = @_;
         $enqueue->();
     });
     
@@ -104,7 +104,7 @@ Emitted when crawler got response from server.
 Emitted when new URI is found. You can enqueue new URIs conditionally with the callback.
 
     $bot->on(refer => sub {
-        my ($bot, $enqueue, $queue, $parent_queue, $context) = @_;
+        my ($bot, $enqueue, $queue, $context) = @_;
         if (...) {
             $enqueue->();
         } elseif (...) {

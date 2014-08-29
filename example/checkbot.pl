@@ -28,7 +28,7 @@ $bot->on(res => sub {
 });
 
 $bot->on(refer => sub {
-    my ($bot, $enqueue, $queue, $parent_queue, $context) = @_;
+    my ($bot, $enqueue, $queue, $context) = @_;
     $enqueue->();
 });
 

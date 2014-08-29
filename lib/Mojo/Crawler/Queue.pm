@@ -13,9 +13,8 @@ has 'redirect_history' => sub { [] };
 
 sub child {
     my $self = shift;
-    my $child = __PACKAGE__->new(@_);
-    $child->{referrer} = $self->{resolved_uri};
-    $child->{depth} = $self->{depth} + 1;
+    my $child = __PACKAGE__->new(@_,
+                                referrer => $self, depth => $self->{depth} + 1);
     return $child;
 }
 

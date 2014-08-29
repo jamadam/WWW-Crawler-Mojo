@@ -203,12 +203,12 @@ sub discover {
             return;
         }
         
-        my $new_queue = $queue->child(
+        my $child = $queue->child(
             resolved_uri => resolve_href($base, $url), literal_uri => $url);
         
         $self->emit('refer', sub {
-            $self->enqueue($_[0] || $new_queue);
-        }, $new_queue, $queue, $dom || $queue->resolved_uri);
+            $self->enqueue($_[0] || $child);
+        }, $child, $dom || $queue->resolved_uri);
     };
     
     if ($type && $type =~ qr{text/(html|xml)}) {
@@ -358,7 +358,7 @@ Mojo::Crawler - A web crawling framework for Perl
         
         if ($res->code == 404) {
             say sprintf('404 occured! : %s referred by %s',
-                                        $queue->resolved_uri, $queue->referrer);
+                        $queue->resolved_uri, $queue->referrer->resolved_uri);
         }
         
         my @disp_seed;
@@ -372,7 +372,7 @@ Mojo::Crawler - A web crawling framework for Perl
     });
     
     $bot->on(refer => sub {
-        my ($bot, $enqueue, $queue, $parent_queue, $context) = @_;
+        my ($bot, $enqueue, $queue, $context) = @_;
         $enqueue->();
     });
     
@@ -442,7 +442,7 @@ Emitted when crawler got response from server.
 Emitted when new URI is found. You can enqueue new URIs conditionally with the callback.
 
     $bot->on(refer => sub {
-        my ($bot, $enqueue, $queue, $parent_queue, $context) = @_;
+        my ($bot, $enqueue, $queue, $context) = @_;
         if (...) {
             $enqueue->();
         } elseif (...) {
