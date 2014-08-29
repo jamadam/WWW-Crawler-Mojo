@@ -30,6 +30,8 @@ sub crawl {
     
     $self->init;
     
+    die 'No queue is given' if (! scalar @{$self->queues});
+    
     $self->say_start;
     
     Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
@@ -321,7 +323,7 @@ sub resolve_href {
         shift @{$abs->path->parts};
     }
     $abs->path->trailing_slash($base->path->trailing_slash) if (!$href->path->to_string);
-    return $abs->to_string;
+    return $abs;
 }
 
 sub host_busy {

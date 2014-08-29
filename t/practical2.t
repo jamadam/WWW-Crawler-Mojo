@@ -6,8 +6,7 @@ use Test::Mojo;
 use utf8;
 use Data::Dumper;
 use Mojo::IOLoop;
-use Mojolicious::Lite;
-use MojoCheckbot;
+use Mojo::Crawler;
 
 use Test::More tests => 1;
 
