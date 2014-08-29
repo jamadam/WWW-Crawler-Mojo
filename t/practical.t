@@ -7,7 +7,7 @@ use Data::Dumper;
 use Mojo::IOLoop;
 use Mojo::Crawler;
 
-use Test::More tests => 8;
+use Test::More tests => 12;
 
 {
     package MockServer;
@@ -39,7 +39,7 @@ $bot->on('res' => sub {
     my ($bot, $discover, $queue, $res) = @_;
     $discover->();
     $urls{$queue->resolved_uri} = $queue;
-    Mojo::IOLoop->stop if (scalar keys %urls >= 6 || time() - $^T > 10);
+    Mojo::IOLoop->stop if (! scalar @{$bot->queues});
 });
 
 $bot->init;
@@ -64,6 +64,9 @@ is $q->referrer, $parent;
 $q = $urls{Mojo::Crawler::resolve_href($base, '/img/png2.png')};
 is $q->depth, 2;
 is $q->referrer, $parent2;
+$q = $urls{Mojo::Crawler::resolve_href($base, '/img/png3.png')};
+is $q->depth, 1;
+is $q->referrer, $parent;
 
 __END__
 

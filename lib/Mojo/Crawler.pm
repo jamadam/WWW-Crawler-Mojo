@@ -269,6 +269,13 @@ sub collect_urls_html {
             $cb->($href, $dom);
         });
     });
+    $dom->find('*[style]')->each(sub {
+        my $dom = shift;
+        collect_urls_css($dom->{style}, sub {
+            my $href = shift;
+            $cb->($href, $dom);
+        });
+    });
 }
 
 ### ---
