@@ -60,9 +60,7 @@ sub init {
     
     # notify queue is drained out
     Mojo::IOLoop->recurring(5 => sub {
-        if (! scalar @{$self->{queues}}) {
-            $self->emit('empty');
-        }
+        $self->emit('empty') if (! scalar @{$self->{queues}});
     });
     
     if ($self->wait_per_host) {
@@ -117,10 +115,10 @@ sub process_queue {
         my $res = $tx->res;
         
         if (!$res->code) {
-            my $msg = ($res->error)
-                        ? $res->error->{message} : 'Unknown error';
+            my $msg = ($res->error) ? $res->error->{message} : 'Unknown error';
             my $url = $queue->resolved_uri;
-            $self->emit('error', "An error occured during crawling $url: $msg", $queue);
+            $self->emit('error',
+                        "An error occured during crawling $url: $msg", $queue);
         } else {
             $self->emit('res', sub {
                 $self->discover($res, $queue);
@@ -179,7 +177,8 @@ sub peeping_handler {
             return;
         }
         
-        $stream->write("HTTP/1.1 404 NOT FOUND\n\nNOT FOUND", sub {shift->close});
+        $stream->write(
+                    "HTTP/1.1 404 NOT FOUND\n\nNOT FOUND", sub {shift->close});
     });
 }
 
@@ -200,8 +199,7 @@ sub discover {
     my $cb = sub {
         my ($url, $dom) = @_;
         
-        if ($url =~ qr{^(\w+):} &&
-                    ! grep {$_ eq $1} qw(http https ftp ws wss)) {
+        if ($url =~ qr{^(\w+):} &&! grep {$_ eq $1} qw(http https ftp ws wss)) {
             return;
         }
         
@@ -297,9 +295,8 @@ sub guess_encoding_css {
     my $res     = shift;
     my $type    = $res->headers->content_type;
     my $charset = ($type =~ $charset_re)[0];
-    if (! $charset) {
-        $charset = ($res->body =~ qr{^\s*\@charset ['"](.+?)['"];}is)[0];
-    }
+    $charset =
+        ($res->body =~ qr{^\s*\@charset ['"](.+?)['"];}is)[0] if (! $charset);
     return $charset;
 }
 
