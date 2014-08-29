@@ -20,7 +20,7 @@ sub child {
 
 sub add_props {
     my $self = shift;
-    my %hash = scalar $_[0] == 1 ? %{$_[0]} : @_;
+    my %hash = scalar @_ == 1 ? %{$_[0]} : @_;
     for (keys %hash) {
         $self->additional_props->{$_} = $hash{$_};
     }
