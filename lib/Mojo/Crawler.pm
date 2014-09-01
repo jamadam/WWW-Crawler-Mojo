@@ -32,7 +32,7 @@ sub crawl {
     
     die 'No queue is given' if (! scalar @{$self->queues});
     
-    $self->say_start;
+    $self->emit('start');
     
     Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 }

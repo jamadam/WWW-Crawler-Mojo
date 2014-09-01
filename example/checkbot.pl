@@ -7,6 +7,10 @@ use 5.10.0;
 my $bot = Mojo::Crawler->new;
 my %count;
 
+$bot->on(start => sub {
+    shift->say_start;
+});
+
 $bot->on(res => sub {
     my ($bot, $discover, $queue, $res) = @_;
     
