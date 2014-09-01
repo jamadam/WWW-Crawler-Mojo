@@ -131,6 +131,15 @@ network errors or un-responsible servers.
         say "error: $_[1]";
     });
 
+=head2 res
+
+Emitted right before crawl is started.
+
+    $bot->on(start => sub {
+        my $self = shift;
+        ...
+    });
+
 Note that server errors such as 404 or 500 cannot be catched with the event.
 Consider res event for the use case instead of this.
 
