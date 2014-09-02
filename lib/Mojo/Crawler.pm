@@ -332,11 +332,22 @@ sub resolve_href {
 
 sub host_busy {
     my ($self, $uri) = @_;
-    my $host = ($uri =~ qr{^\w+://([^/]+)})[0];
+    
+    $uri = ref $uri ? $uri : Mojo::URL->new($uri);
+    
+    my $key = $uri->scheme. '://'. $uri->ihost;
+    
+    if (my $port = $uri->port) {
+        if (($uri->scheme eq 'https' && $port != 443) ||
+                                    ($uri->scheme eq 'http' && $port != 80)) {
+            $key .= ':'. $port;
+        }
+    }
+    
     my $now = time();
-    my $last = $self->host_busyness->{$host};
+    my $last = $self->host_busyness->{$key};
     return 1 if ($last && $now - $last < $self->wait_per_host);
-    $self->host_busyness->{$host} = $now;
+    $self->host_busyness->{$key} = $now;
     return;
 }
 
