@@ -320,8 +320,8 @@ sub guess_encoding {
 ### ---
 sub resolve_href {
     my ($base, $href) = @_;
-    $href = Mojo::URL->new(ref $href ? $href : Mojo::URL->new($href));
-    $base = Mojo::URL->new(ref $base ? $base : Mojo::URL->new($base));
+    $href = ref $href ? $href : Mojo::URL->new($href);
+    $base = ref $base ? $base : Mojo::URL->new($base);
     my $abs = $href->to_abs($base)->fragment(undef);
     while ($abs->path->parts->[0] && $abs->path->parts->[0] =~ /^\./) {
         shift @{$abs->path->parts};
