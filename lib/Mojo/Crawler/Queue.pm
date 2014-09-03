@@ -13,6 +13,13 @@ has 'redirect_history' => sub { [] };
 has 'method' => 'get';
 has 'tx_params' => sub { [] };
 
+sub clone {
+    my $self = shift;
+    my $new = __PACKAGE__->new(%$self);
+    $new->additional_props({%{$self->additional_props}});
+    return $new;
+}
+
 sub child {
     my $self = shift;
     my $child = __PACKAGE__->new(@_,
