@@ -222,9 +222,6 @@ sub enqueue {
     }
 }
 
-### ---
-### Collect URLs
-### ---
 sub collect_urls_html {
     my ($dom, $cb) = @_;
     
@@ -258,9 +255,6 @@ sub collect_urls_html {
     });
 }
 
-### ---
-### Collect URLs from CSS
-### ---
 sub collect_urls_css {
     my ($str, $cb) = @_;
     $str =~ s{/\*.+?\*/}{}gs;
@@ -270,9 +264,6 @@ sub collect_urls_css {
 
 my $charset_re = qr{\bcharset\s*=\s*['"]?([a-zA-Z0-9_\-]+)['"]?}i;
 
-### ---
-### Guess encoding for CSS
-### ---
 sub guess_encoding_css {
     my $res     = shift;
     my $type    = $res->headers->content_type;
@@ -282,9 +273,6 @@ sub guess_encoding_css {
     return $charset;
 }
 
-### ---
-### Guess encoding
-### ---
 sub guess_encoding {
     my $res     = shift;
     my $type    = $res->headers->content_type;
@@ -297,9 +285,6 @@ sub guess_encoding {
     return $charset;
 }
 
-### ---
-### Resolve href
-### ---
 sub resolve_href {
     my ($base, $href) = @_;
     $href = ref $href ? $href : Mojo::URL->new($href);
