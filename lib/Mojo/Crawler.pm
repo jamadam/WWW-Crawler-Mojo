@@ -92,7 +92,10 @@ sub process_queue {
         return;
     }
     
-    $self->ua->get($queue->resolved_uri, sub {
+    my $ua = $self->ua;
+    my $tx = $ua->build_tx($queue->method => $uri => $queue->tx_params);
+    
+    $ua->start($tx, sub {
         $self->_mod_busyness($uri, -1);
         
         my ($ua, $tx) = @_;

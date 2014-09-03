@@ -10,6 +10,8 @@ has 'referrer' => '';
 has 'depth' => 0;
 has 'additional_props' => sub { {} };
 has 'redirect_history' => sub { [] };
+has 'method' => 'get';
+has 'tx_params' => sub { [] };
 
 sub child {
     my $self = shift;
