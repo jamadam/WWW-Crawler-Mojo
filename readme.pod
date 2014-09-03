@@ -122,7 +122,7 @@ Emitted when new URI is found. You can enqueue new URIs conditionally with the c
 
 Emitted when queue length got zero. The length is checked every 5 second.
 
-    $bot->on(refer => sub {
+    $bot->on(empty => sub {
         say "Queue is drained out.";
     });
 
@@ -131,11 +131,11 @@ Emitted when queue length got zero. The length is checked every 5 second.
 Emitted when user agent returns no status code for request. Possibly causeed by
 network errors or un-responsible servers.
 
-    $bot->on(refer => sub {
+    $bot->on(error => sub {
         say "error: $_[1]";
     });
 
-=head2 res
+=head2 start
 
 Emitted right before crawl is started.
 
