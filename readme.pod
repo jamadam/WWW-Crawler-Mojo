@@ -55,19 +55,27 @@ following new ones.
 
 A number of current connections.
 
+=head2 active_conns_per_host
+
+A number of current connections per host.
+
 =head2 depth
 
 A number of max depth to crawl.
 
 =head2 fix
 
-=head2 host_busyness
+=head2 active_conns_per_host
 
 A hash contains host name for key and last requested timestamp for value.
 
 =head2 max_conn
 
 A number of Max connections.
+
+=head2 max_conn_per_host
+
+A number of Max connections per host.
 
 =head2 peeping_max_length
 
@@ -76,10 +84,6 @@ Max length of peeping API content.
 =head2 queues
 
 FIFO array contains Mojo::Crawler::Queue objects.
-
-=head2 wait_per_host
-
-Interval in second of requests per hosts, not to rush the server.
 
 =head1 EVENTS
 
@@ -199,10 +203,6 @@ Guesses encoding of HTML
 =head2 resolve_href
 
 Resolves URLs with a base URL.
-
-=head2 host_busy
-
-Checks wether a host is ready or not for crawl.
 
 =head1 AUTHOR
 

@@ -14,15 +14,15 @@ has active_conn => 0;
 has 'crawler_loop_id';
 has depth => 10;
 has fix => sub { {} };
-has host_busyness => sub { {} };
+has active_conns_per_host => sub { {} };
 has max_conn => 1;
+has max_conn_per_host => 1;
 has 'peeping';
 has 'peeping_port';
 has peeping_max_length => 30000;
 has queues => sub { [] };
 has 'ua' => sub { Mojo::Crawler::UserAgent->new };
 has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-crawler)";
-has wait_per_host => 1;
 has 'shuffle';
 
 sub crawl {
@@ -63,17 +63,6 @@ sub init {
         $self->emit('empty') if (! scalar @{$self->{queues}});
     });
     
-    if ($self->wait_per_host) {
-        # clean up access log per host
-        Mojo::IOLoop->recurring(30 => sub {
-            for (keys %{$self->host_busyness}) {
-                delete $self->host_busyness->{$_}
-                    if (time() -
-                            $self->host_busyness->{$_} > $self->wait_per_host);
-            }
-        });
-    }
-    
     if ($self->peeping || $self->peeping_port) {
         # peeping API server
         my $id = Mojo::IOLoop->server({port => $self->peeping_port}, sub {
@@ -92,21 +81,19 @@ sub init {
 sub process_queue {
     my $self = shift;
     
-    return if ($self->active_conn >= $self->max_conn);
-    
     my $queue = shift @{$self->{queues}};
     
     return if (!$queue);
     
-    if ($self->wait_per_host && $self->host_busy($queue->resolved_uri)) {
+    my $uri = $queue->resolved_uri;
+    
+    if ($self->_mod_busyness($uri, 1)) {
         unshift(@{$self->{queues}}, $queue);
         return;
     }
     
-    ++$self->{active_conn};
-    
     $self->ua->get($queue->resolved_uri, sub {
-        --$self->{active_conn};
+        $self->_mod_busyness($uri, -1);
         
         my ($ua, $tx) = @_;
         
@@ -330,11 +317,25 @@ sub resolve_href {
     return $abs;
 }
 
-sub host_busy {
-    my ($self, $uri) = @_;
+sub _mod_busyness {
+    my ($self, $uri, $inc) = @_;
+    my $key = _host_key($uri);
+    my $hosts = $self->active_conns_per_host;
     
-    $uri = ref $uri ? $uri : Mojo::URL->new($uri);
+    if ($inc > 0 &&
+        ($self->active_conn >= $self->max_conn ||
+         ($hosts->{$key} || 0) >= $self->max_conn_per_host)) {
+        return;
+    }
     
+    $self->{active_conn} += $inc;
+    $hosts->{$key} += $inc;
+    delete($hosts->{$key}) unless ($hosts->{$key});
+    return 1;
+}
+
+sub _host_key {
+    my $uri = ref $_[0] ? $_[0] : Mojo::URL->new($_[0]);
     my $key = $uri->scheme. '://'. $uri->ihost;
     
     if (my $port = $uri->port) {
@@ -344,11 +345,7 @@ sub host_busy {
         }
     }
     
-    my $now = time();
-    my $last = $self->host_busyness->{$key};
-    return 1 if ($last && $now - $last < $self->wait_per_host);
-    $self->host_busyness->{$key} = $now;
-    return;
+    return $key;
 }
 
 1;
@@ -410,19 +407,27 @@ following new ones.
 
 A number of current connections.
 
+=head2 active_conns_per_host
+
+A number of current connections per host.
+
 =head2 depth
 
 A number of max depth to crawl.
 
 =head2 fix
 
-=head2 host_busyness
+=head2 active_conns_per_host
 
 A hash contains host name for key and last requested timestamp for value.
 
 =head2 max_conn
 
 A number of Max connections.
+
+=head2 max_conn_per_host
+
+A number of Max connections per host.
 
 =head2 peeping_max_length
 
@@ -431,10 +436,6 @@ Max length of peeping API content.
 =head2 queues
 
 FIFO array contains Mojo::Crawler::Queue objects.
-
-=head2 wait_per_host
-
-Interval in second of requests per hosts, not to rush the server.
 
 =head1 EVENTS
 
@@ -554,10 +555,6 @@ Guesses encoding of HTML
 =head2 resolve_href
 
 Resolves URLs with a base URL.
-
-=head2 host_busy
-
-Checks wether a host is ready or not for crawl.
 
 =head1 AUTHOR
 
