@@ -71,7 +71,7 @@ sub init {
         $self->peeping_port(Mojo::IOLoop->acceptor($id)->handle->sockport);
     }
     
-    if (my $second = $self->shuffle) {
+    if ($self->shuffle) {
         Mojo::IOLoop->recurring($self->shuffle => sub {
             @{$self->{queues}} = List::Util::shuffle @{$self->{queues}};
         });
@@ -101,11 +101,10 @@ sub process_queue {
             my $url = $queue->resolved_uri;
             $self->emit('error',
                         "An error occured during crawling $url: $msg", $queue);
-        } else {
-            $self->emit('res', sub {
-                $self->discover($res, $queue);
-            }, $queue, $res);
+            return;
         }
+        
+        $self->emit('res', sub { $self->discover($res, $queue) }, $queue, $res);
     });
 }
 
@@ -181,9 +180,10 @@ sub discover {
     my $cb = sub {
         my ($url, $dom) = @_;
         
-        if ($url =~ qr{^(\w+):} &&! grep {$_ eq $1} qw(http https ftp ws wss)) {
-            return;
-        }
+        $url = Mojo::URL->new($url);
+        
+        return unless
+                (!$url->scheme || $url->scheme =~ qr{http|https|ftp|ws|wss});
         
         my $child = $queue->child(
             resolved_uri => resolve_href($base, $url), literal_uri => $url);
@@ -210,9 +210,9 @@ sub enqueue {
     my ($self, @queues) = @_;
     
     for (@queues) {
-        unless (ref $_ && ref $_ eq 'Mojo::Crawler::Queue') {
-            $_ = Mojo::Crawler::Queue->new(resolved_uri => $_);
-        }
+        $_ = Mojo::Crawler::Queue->new(resolved_uri => $_)
+                        unless (ref $_ && ref $_ eq 'Mojo::Crawler::Queue');
+        
         my $md5 = md5_sum($_->resolved_uri);
         
         if (!exists $self->fix->{$md5}) {
@@ -235,23 +235,15 @@ sub collect_urls_html {
     });
     $dom->find('form')->each(sub {
         my $dom = shift;
-        if (my $href = $dom->{action}) {
-            $cb->($href, $dom);
-        }
+        $cb->($dom->{action}, $dom) if ($dom->{action});
     });
     $dom->find('style')->each(sub {
         my $dom = shift;
-        collect_urls_css($dom->content || '', sub {
-            my $href = shift;
-            $cb->($href, $dom);
-        });
+        collect_urls_css($dom->content || '', sub { $cb->(shift, $dom) });
     });
     $dom->find('*[style]')->each(sub {
         my $dom = shift;
-        collect_urls_css($dom->{style}, sub {
-            my $href = shift;
-            $cb->($href, $dom);
-        });
+        collect_urls_css($dom->{style}, sub { $cb->(shift, $dom) });
     });
 }
 
@@ -302,11 +294,8 @@ sub _mod_busyness {
     my $key = _host_key($uri);
     my $hosts = $self->active_conns_per_host;
     
-    if ($inc > 0 &&
-        ($self->active_conn >= $self->max_conn ||
-         ($hosts->{$key} || 0) >= $self->max_conn_per_host)) {
-        return;
-    }
+    return if ($inc > 0 && ($self->active_conn >= $self->max_conn ||
+                        ($hosts->{$key} || 0) >= $self->max_conn_per_host));
     
     $self->{active_conn} += $inc;
     $hosts->{$key} += $inc;
