@@ -81,18 +81,13 @@ sub init {
 sub process_queue {
     my $self = shift;
     
+    return unless ($self->{queues}->[0] &&
+                $self->_mod_busyness($self->{queues}->[0]->resolved_uri, 1));
+    
     my $queue = shift @{$self->{queues}};
-    
-    return if (!$queue);
-    
     my $uri = $queue->resolved_uri;
     
-    if ($self->_mod_busyness($uri, 1)) {
-        unshift(@{$self->{queues}}, $queue);
-        return;
-    }
-    
-    $self->ua->get($queue->resolved_uri, sub {
+    $self->ua->get($uri, sub {
         $self->_mod_busyness($uri, -1);
         
         my ($ua, $tx) = @_;
