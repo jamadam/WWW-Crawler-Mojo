@@ -44,12 +44,21 @@ WWW::Crawler::Mojo - A web crawling framework for Perl
 
 =head1 DESCRIPTION
 
-WWW::Crawler::Mojo is a web crawling framework for Perl.
+WWW::Crawler::Mojo is a web crawling framework for those who familier to
+Mojo::* APIs.
 
 =head1 ATTRIBUTE
 
 WWW::Crawler::Mojo inherits all attributes from Mojo::EventEmitter and
 implements the following new ones.
+
+=head2 ua
+
+A Mojo::UserAgent instance.
+
+=head2 ua_name
+
+Name of crawler for User-Agent header.
 
 =head2 active_conn
 
@@ -62,12 +71,6 @@ A number of current connections per host.
 =head2 depth
 
 A number of max depth to crawl.
-
-=head2 fix
-
-=head2 active_conns_per_host
-
-A hash contains host name for key and last requested timestamp for value.
 
 =head2 max_conn
 
