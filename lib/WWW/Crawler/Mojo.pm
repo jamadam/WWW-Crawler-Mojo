@@ -1,10 +1,10 @@
-package Mojo::Crawler;
+package WWW::Crawler::Mojo;
 use strict;
 use warnings;
 use 5.010;
 use Mojo::Base 'Mojo::EventEmitter';
-use Mojo::Crawler::Queue;
-use Mojo::Crawler::UserAgent;
+use WWW::Crawler::Mojo::Queue;
+use WWW::Crawler::Mojo::UserAgent;
 use Mojo::Message::Request;
 use Mojo::Util qw{md5_sum xml_escape dumper};
 use List::Util;
@@ -21,8 +21,9 @@ has 'peeping';
 has 'peeping_port';
 has peeping_max_length => 30000;
 has queues => sub { [] };
-has 'ua' => sub { Mojo::Crawler::UserAgent->new };
-has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-crawler)";
+has 'ua' => sub { WWW::Crawler::Mojo::UserAgent->new };
+has 'ua_name' =>
+    "www-crawler-mojo/$VERSION (+https://github.com/jamadam/www-crawler-mojo)";
 has 'shuffle';
 
 sub crawl {
@@ -210,8 +211,8 @@ sub enqueue {
     my ($self, @queues) = @_;
     
     for (@queues) {
-        $_ = Mojo::Crawler::Queue->new(resolved_uri => $_)
-                        unless (ref $_ && ref $_ eq 'Mojo::Crawler::Queue');
+        $_ = WWW::Crawler::Mojo::Queue->new(resolved_uri => $_)
+                    unless (ref $_ && ref $_ eq 'WWW::Crawler::Mojo::Queue');
         
         my $md5 = md5_sum($_->resolved_uri);
         
@@ -321,17 +322,17 @@ sub _host_key {
 
 =head1 NAME
 
-Mojo::Crawler - A web crawling framework for Perl
+WWW::Crawler::Mojo - A web crawling framework for Perl
 
 =head1 SYNOPSIS
 
     use strict;
     use warnings;
     use utf8;
-    use Mojo::Crawler;
+    use WWW::Crawler::Mojo;
     use 5.10.0;
     
-    my $bot = Mojo::Crawler->new;
+    my $bot = WWW::Crawler::Mojo->new;
     my %count;
     
     $bot->on(res => sub {
@@ -365,12 +366,12 @@ Mojo::Crawler - A web crawling framework for Perl
 
 =head1 DESCRIPTION
 
-Mojo-Crawler is a web crawling framework for Perl.
+WWW::Crawler::Mojo is a web crawling framework for Perl.
 
 =head1 ATTRIBUTE
 
-Mojo::Crawler inherits all attributes from Mojo::EventEmitter and implements the
-following new ones.
+WWW::Crawler::Mojo inherits all attributes from Mojo::EventEmitter and
+implements the following new ones.
 
 =head2 active_conn
 
@@ -404,12 +405,12 @@ Max length of peeping API content.
 
 =head2 queues
 
-FIFO array contains Mojo::Crawler::Queue objects.
+FIFO array contains WWW::Crawler::Mojo::Queue objects.
 
 =head1 EVENTS
 
-Mojo::Crawler inherits all events from Mojo::EventEmitter and implements the
-following new ones.
+WWW::Crawler::Mojo inherits all events from Mojo::EventEmitter and implements
+the following new ones.
 
 =head2 res
 
@@ -470,8 +471,8 @@ Consider res event for the use case instead of this.
 
 =head1 METHODS
 
-Mojo::Crawler inherits all methods from Mojo::EventEmitter and implements the
-following new ones.
+WWW::Crawler::Mojo inherits all methods from Mojo::EventEmitter and implements
+the following new ones.
 
 =head2 crawl
 
@@ -503,7 +504,7 @@ Parses and discovers lins in a web page.
 
 =head2 enqueue
 
-Append a queue with a URI or Mojo::Crawler::Queue object.
+Append a queue with a URI or WWW::Crawler::Mojo::Queue object.
 
 =head2 collect_urls_html
 

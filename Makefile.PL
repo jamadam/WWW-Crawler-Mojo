@@ -3,7 +3,7 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 my %params = (
-    NAME          => 'Mojo-Crawler',
+    NAME          => 'WWW-Crawler-Mojo',
     AUTHOR        => 'sugama <sugama@jamadam.com>',
     VERSION_FROM  => 'lib/Mojo/Crawler.pm',
     ABSTRACT_FROM => 'lib/Mojo/Crawler.pm',

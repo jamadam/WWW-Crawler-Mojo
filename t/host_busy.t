@@ -6,11 +6,11 @@ use File::Spec::Functions qw{catdir};
 use lib catdir(dirname(__FILE__), '../lib');
 use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
-use Mojo::Crawler;
+use WWW::Crawler::Mojo;
 
 use Test::More tests => 42;
 
-my $bot = Mojo::Crawler->new;
+my $bot = WWW::Crawler::Mojo->new;
 $bot->max_conn(100);
 $bot->max_conn_per_host(1);
 
