@@ -230,11 +230,12 @@ our %tag_attributes = (
     link    => ['href'],
     a       => ['href'],
     img     => ['src'],
-    area    => ['href'],
+    area    => ['href', 'ping'],
     embed   => ['src'],
     frame   => ['src'],
     iframe  => ['src'],
     input   => ['src'],
+    object  => ['data'],
 );
 
 sub collect_urls_html {
