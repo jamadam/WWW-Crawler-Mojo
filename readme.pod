@@ -44,7 +44,7 @@ WWW::Crawler::Mojo - A web crawling framework for Perl
 
 =head1 DESCRIPTION
 
-WWW::Crawler::Mojo is a web crawling framework for those who familier to
+WWW::Crawler::Mojo is a web crawling framework for those who familier with
 Mojo::* APIs.
 
 =head1 ATTRIBUTE
