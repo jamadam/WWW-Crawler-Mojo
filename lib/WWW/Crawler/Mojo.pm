@@ -225,14 +225,30 @@ sub enqueue {
     }
 }
 
+our %tag_attributes = (
+    script  => ['src'],
+    link    => ['href'],
+    a       => ['href'],
+    img     => ['src'],
+    area    => ['href'],
+    embed   => ['src'],
+    frame   => ['src'],
+    iframe  => ['src'],
+    input   => ['src'],
+);
+
 sub collect_urls_html {
     my ($dom, $cb) = @_;
     
-    $dom->find('script, link, a, img, area, embed, frame, iframe, input,
-                                    meta[http\-equiv=Refresh]')->each(sub {
+    $dom->find(join(',', keys %tag_attributes))->each(sub {
         my $dom = shift;
-        if (my $href = $dom->{href} || $dom->{src} ||
-            $dom->{content} && ($dom->{content} =~ qr{URL=(.+)}i)[0]) {
+        for (@{$tag_attributes{$dom->type}}) {
+            $cb->($dom->{$_}, $dom) if ($dom->{$_});
+        }
+    });
+    $dom->find('meta[http\-equiv=Refresh]')->each(sub {
+        my $dom = shift;
+        if (my $href = $dom->{content} && ($dom->{content} =~ qr{URL=(.+)}i)[0]) {
             $cb->($href, $dom);
         }
     });
