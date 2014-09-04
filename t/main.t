@@ -7,8 +7,8 @@ use lib catdir(dirname(__FILE__), '../lib');
 use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use Mojo::DOM;
-use Mojo::Crawler;
-use Mojo::Crawler::Queue;
+use WWW::Crawler::Mojo;
+use WWW::Crawler::Mojo::Queue;
 use Mojo::Message::Response;
 use Test::More tests => 25;
 
@@ -38,9 +38,9 @@ EOF
     $res->body($html);
     $res->headers->content_type('text/html');
     
-    my $bot = Mojo::Crawler->new;
+    my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->discover($res, Mojo::Crawler::Queue->new(resolved_uri => 'http://example.com/'));
+    $bot->discover($res, WWW::Crawler::Mojo::Queue->new(resolved_uri => 'http://example.com/'));
     
     my $queue;
     $queue = shift @{$bot->{queues}};
@@ -67,7 +67,7 @@ EOF
     $queue = shift @{$bot->{queues}};
     is $queue, undef, 'no more urls';
     
-    $bot->discover($res, Mojo::Crawler::Queue->new(resolved_uri => 'http://example.com/a/a'));
+    $bot->discover($res, WWW::Crawler::Mojo::Queue->new(resolved_uri => 'http://example.com/a/a'));
     
     $queue = shift @{$bot->{queues}};
     is $queue->literal_uri, 'css1.css', 'right url';
@@ -91,18 +91,18 @@ EOF
     $tx->res->body($html);
     $tx->res->headers->content_type('text/html');
     
-    my $bot = Mojo::Crawler->new;
+    my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->discover($tx->res, Mojo::Crawler::Queue->new(resolved_uri => 'http://example.com/'));
+    $bot->discover($tx->res, WWW::Crawler::Mojo::Queue->new(resolved_uri => 'http://example.com/'));
     
     my $queue;
     $queue = shift @{$bot->{queues}};
     is $queue->literal_uri, 'css1.css', 'right url';
     is $queue->resolved_uri, 'http://example2.com/css1.css', 'right url';
     
-    $bot = Mojo::Crawler->new;
+    $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->discover($tx->res, Mojo::Crawler::Queue->new(resolved_uri => 'http://example.com/a/'));
+    $bot->discover($tx->res, WWW::Crawler::Mojo::Queue->new(resolved_uri => 'http://example.com/a/'));
     
     $queue = shift @{$bot->{queues}};
     is $queue->literal_uri, 'css1.css', 'right url';
@@ -126,18 +126,18 @@ EOF
     $tx->res->body($html);
     $tx->res->headers->content_type('text/html');
     
-    my $bot = Mojo::Crawler->new;
+    my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->discover($tx->res, Mojo::Crawler::Queue->new(resolved_uri => 'http://example.com/'));
+    $bot->discover($tx->res, WWW::Crawler::Mojo::Queue->new(resolved_uri => 'http://example.com/'));
     
     my $queue;
     $queue = shift @{$bot->{queues}};
     is $queue->literal_uri, 'css1.css', 'right url';
     is $queue->resolved_uri, 'http://example.com/css1.css', 'right url';
     
-    $bot = Mojo::Crawler->new;
+    $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->discover($tx->res, Mojo::Crawler::Queue->new(resolved_uri => 'http://example.com/a/'));
+    $bot->discover($tx->res, WWW::Crawler::Mojo::Queue->new(resolved_uri => 'http://example.com/a/'));
     
     $queue = shift @{$bot->{queues}};
     is $queue->literal_uri, 'css1.css', 'right url';

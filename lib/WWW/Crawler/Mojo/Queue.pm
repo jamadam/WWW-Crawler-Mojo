@@ -1,4 +1,4 @@
-package Mojo::Crawler::Queue;
+package WWW::Crawler::Mojo::Queue;
 use strict;
 use warnings;
 use utf8;
@@ -45,11 +45,11 @@ sub redirect {
 
 =head1 NAME
 
-Mojo::Crawler::Queue - Single crawler queue
+WWW::Crawler::Mojo::Queue - Single crawler queue
 
 =head1 SYNOPSIS
 
-    my $ua = Mojo::Crawler::Queue->new;
+    my $ua = WWW::Crawler::Mojo::Queue->new;
 
 =head1 DESCRIPTION
 
@@ -79,7 +79,7 @@ Add propeties for queue.
 
 Initiate a child queue by parent queue. The parent uri is set to child referrer.
 
-    my $queue1 = Mojo::Crawler::Queue->new(resolved_uri => 'http://a/1');
+    my $queue1 = WWW::Crawler::Mojo::Queue->new(resolved_uri => 'http://a/1');
     my $queue2 = $queue1->child(resolved_uri => 'http://a/2');
     say $queue2->referrer # 'http://a/1'
 
@@ -89,7 +89,7 @@ Initiate a child queue by parent queue. The parent uri is set to child referrer.
 
 Replaces the resolved URI and history at once.
 
-    my $queue = Mojo::Crawler::Queue->new;
+    my $queue = WWW::Crawler::Mojo::Queue->new;
     $queue->resolved_uri($url1);
     $queue->redirect($url2, $url3);
     say $queue->resolved_uri # $url2

@@ -1,4 +1,4 @@
-package Mojo::Crawler::UserAgent;
+package WWW::Crawler::Mojo::UserAgent;
 use strict;
 use warnings;
 use Mojo::Base 'Mojo::UserAgent';
@@ -32,11 +32,11 @@ sub new {
 
 =head1 NAME
 
-Mojo::Crawler::UserAgent - Mojo::UserAgent sub class for userinfo strage
+WWW::Crawler::Mojo::UserAgent - Mojo::UserAgent sub class for userinfo strage
 
 =head1 SYNOPSIS
 
-    my $ua = Mojo::Crawler::UserAgent->new;
+    my $ua = WWW::Crawler::Mojo::UserAgent->new;
     $ua->keep_credentials(1);
     $ua->credentials->{'http://example.com:80'} = 'jamadam:password';
     my $tx = $ua->get('http://example.com/');
@@ -49,7 +49,7 @@ info
 
 =head1 ATTRIBUTES
 
-Mojo::Crawler::UserAgent inherits all attributes from Mojo::UserAgent.
+WWW::Crawler::Mojo::UserAgent inherits all attributes from Mojo::UserAgent.
 
 =head2 keep_credentials
 
@@ -65,7 +65,7 @@ Storage for credentials.
 
 =head1 METHODS
 
-Mojo::Crawler::UserAgent inherits all methods from Mojo::UserAgent.
+WWW::Crawler::Mojo::UserAgent inherits all methods from Mojo::UserAgent.
 
 =head1 AUTHOR
 

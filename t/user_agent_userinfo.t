@@ -5,13 +5,13 @@ use File::Spec;
 use lib join '/', File::Spec->splitdir(dirname(__FILE__)), '../extlib';
 use lib join '/', File::Spec->splitdir(dirname(__FILE__)), '../lib';
 use Mojo::IOLoop;
-use Mojo::Crawler::UserAgent;
+use WWW::Crawler::Mojo::UserAgent;
 use Test::More;
 use Test::Mojo;
 
 use Test::More tests => 5;
 
-my $ua = Mojo::Crawler::UserAgent->new(ioloop => Mojo::IOLoop->singleton);
+my $ua = WWW::Crawler::Mojo::UserAgent->new(ioloop => Mojo::IOLoop->singleton);
 my $port;
 my $port2;
 my $port3;

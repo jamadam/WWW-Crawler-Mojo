@@ -1,10 +1,10 @@
 use strict;
 use warnings;
 use utf8;
-use Mojo::Crawler;
+use WWW::Crawler::Mojo;
 use 5.10.0;
 
-my $bot = Mojo::Crawler->new;
+my $bot = WWW::Crawler::Mojo->new;
 my %count;
 
 $bot->on(start => sub {

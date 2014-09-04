@@ -1,10 +1,10 @@
-package Mojo::Crawler;
+package WWW::Crawler::Mojo;
 use strict;
 use warnings;
 use 5.010;
 use Mojo::Base 'Mojo::EventEmitter';
-use Mojo::Crawler::Queue;
-use Mojo::Crawler::UserAgent;
+use WWW::Crawler::Mojo::Queue;
+use WWW::Crawler::Mojo::UserAgent;
 use Mojo::Message::Request;
 use Mojo::Util qw{md5_sum xml_escape dumper};
 use List::Util;
@@ -21,8 +21,9 @@ has 'peeping';
 has 'peeping_port';
 has peeping_max_length => 30000;
 has queues => sub { [] };
-has 'ua' => sub { Mojo::Crawler::UserAgent->new };
-has 'ua_name' => "mojo-crawler/$VERSION (+https://github.com/jamadam/mojo-crawler)";
+has 'ua' => sub { WWW::Crawler::Mojo::UserAgent->new };
+has 'ua_name' =>
+    "www-crawler-mojo/$VERSION (+https://github.com/jamadam/www-crawler-mojo)";
 has 'shuffle';
 
 sub crawl {
@@ -71,7 +72,7 @@ sub init {
         $self->peeping_port(Mojo::IOLoop->acceptor($id)->handle->sockport);
     }
     
-    if (my $second = $self->shuffle) {
+    if ($self->shuffle) {
         Mojo::IOLoop->recurring($self->shuffle => sub {
             @{$self->{queues}} = List::Util::shuffle @{$self->{queues}};
         });
@@ -81,17 +82,11 @@ sub init {
 sub process_queue {
     my $self = shift;
     
+    return unless ($self->{queues}->[0] &&
+                $self->_mod_busyness($self->{queues}->[0]->resolved_uri, 1));
+    
     my $queue = shift @{$self->{queues}};
-    
-    return if (!$queue);
-    
     my $uri = $queue->resolved_uri;
-    
-    if ($self->_mod_busyness($uri, 1)) {
-        unshift(@{$self->{queues}}, $queue);
-        return;
-    }
-    
     my $ua = $self->ua;
     my $tx = $ua->build_tx($queue->method => $uri => $queue->tx_params);
     
@@ -109,11 +104,10 @@ sub process_queue {
             my $url = $queue->resolved_uri;
             $self->emit('error',
                         "An error occured during crawling $url: $msg", $queue);
-        } else {
-            $self->emit('res', sub {
-                $self->discover($res, $queue);
-            }, $queue, $res);
+            return;
         }
+        
+        $self->emit('res', sub { $self->discover($res, $queue) }, $queue, $res);
     });
 }
 
@@ -189,9 +183,10 @@ sub discover {
     my $cb = sub {
         my ($url, $dom) = @_;
         
-        if ($url =~ qr{^(\w+):} &&! grep {$_ eq $1} qw(http https ftp ws wss)) {
-            return;
-        }
+        $url = Mojo::URL->new($url);
+        
+        return unless
+                (!$url->scheme || $url->scheme =~ qr{http|https|ftp|ws|wss});
         
         my $child = $queue->child(
             resolved_uri => resolve_href($base, $url), literal_uri => $url);
@@ -218,9 +213,9 @@ sub enqueue {
     my ($self, @queues) = @_;
     
     for (@queues) {
-        unless (ref $_ && ref $_ eq 'Mojo::Crawler::Queue') {
-            $_ = Mojo::Crawler::Queue->new(resolved_uri => $_);
-        }
+        $_ = WWW::Crawler::Mojo::Queue->new(resolved_uri => $_)
+                    unless (ref $_ && ref $_ eq 'WWW::Crawler::Mojo::Queue');
+        
         my $md5 = md5_sum($_->resolved_uri);
         
         if (!exists $self->fix->{$md5}) {
@@ -230,9 +225,6 @@ sub enqueue {
     }
 }
 
-### ---
-### Collect URLs
-### ---
 sub collect_urls_html {
     my ($dom, $cb) = @_;
     
@@ -246,29 +238,18 @@ sub collect_urls_html {
     });
     $dom->find('form')->each(sub {
         my $dom = shift;
-        if (my $href = $dom->{action}) {
-            $cb->($href, $dom);
-        }
+        $cb->($dom->{action}, $dom) if ($dom->{action});
     });
     $dom->find('style')->each(sub {
         my $dom = shift;
-        collect_urls_css($dom->content || '', sub {
-            my $href = shift;
-            $cb->($href, $dom);
-        });
+        collect_urls_css($dom->content || '', sub { $cb->(shift, $dom) });
     });
     $dom->find('*[style]')->each(sub {
         my $dom = shift;
-        collect_urls_css($dom->{style}, sub {
-            my $href = shift;
-            $cb->($href, $dom);
-        });
+        collect_urls_css($dom->{style}, sub { $cb->(shift, $dom) });
     });
 }
 
-### ---
-### Collect URLs from CSS
-### ---
 sub collect_urls_css {
     my ($str, $cb) = @_;
     $str =~ s{/\*.+?\*/}{}gs;
@@ -278,9 +259,6 @@ sub collect_urls_css {
 
 my $charset_re = qr{\bcharset\s*=\s*['"]?([a-zA-Z0-9_\-]+)['"]?}i;
 
-### ---
-### Guess encoding for CSS
-### ---
 sub guess_encoding_css {
     my $res     = shift;
     my $type    = $res->headers->content_type;
@@ -290,9 +268,6 @@ sub guess_encoding_css {
     return $charset;
 }
 
-### ---
-### Guess encoding
-### ---
 sub guess_encoding {
     my $res     = shift;
     my $type    = $res->headers->content_type;
@@ -305,9 +280,6 @@ sub guess_encoding {
     return $charset;
 }
 
-### ---
-### Resolve href
-### ---
 sub resolve_href {
     my ($base, $href) = @_;
     $href = ref $href ? $href : Mojo::URL->new($href);
@@ -325,11 +297,8 @@ sub _mod_busyness {
     my $key = _host_key($uri);
     my $hosts = $self->active_conns_per_host;
     
-    if ($inc > 0 &&
-        ($self->active_conn >= $self->max_conn ||
-         ($hosts->{$key} || 0) >= $self->max_conn_per_host)) {
-        return;
-    }
+    return if ($inc > 0 && ($self->active_conn >= $self->max_conn ||
+                        ($hosts->{$key} || 0) >= $self->max_conn_per_host));
     
     $self->{active_conn} += $inc;
     $hosts->{$key} += $inc;
@@ -355,17 +324,17 @@ sub _host_key {
 
 =head1 NAME
 
-Mojo::Crawler - A web crawling framework for Perl
+WWW::Crawler::Mojo - A web crawling framework for Perl
 
 =head1 SYNOPSIS
 
     use strict;
     use warnings;
     use utf8;
-    use Mojo::Crawler;
+    use WWW::Crawler::Mojo;
     use 5.10.0;
     
-    my $bot = Mojo::Crawler->new;
+    my $bot = WWW::Crawler::Mojo->new;
     my %count;
     
     $bot->on(res => sub {
@@ -399,12 +368,21 @@ Mojo::Crawler - A web crawling framework for Perl
 
 =head1 DESCRIPTION
 
-Mojo-Crawler is a web crawling framework for Perl.
+WWW::Crawler::Mojo is a web crawling framework for those who familier to
+Mojo::* APIs.
 
 =head1 ATTRIBUTE
 
-Mojo::Crawler inherits all attributes from Mojo::EventEmitter and implements the
-following new ones.
+WWW::Crawler::Mojo inherits all attributes from Mojo::EventEmitter and
+implements the following new ones.
+
+=head2 ua
+
+A Mojo::UserAgent instance.
+
+=head2 ua_name
+
+Name of crawler for User-Agent header.
 
 =head2 active_conn
 
@@ -417,12 +395,6 @@ A number of current connections per host.
 =head2 depth
 
 A number of max depth to crawl.
-
-=head2 fix
-
-=head2 active_conns_per_host
-
-A hash contains host name for key and last requested timestamp for value.
 
 =head2 max_conn
 
@@ -438,12 +410,12 @@ Max length of peeping API content.
 
 =head2 queues
 
-FIFO array contains Mojo::Crawler::Queue objects.
+FIFO array contains WWW::Crawler::Mojo::Queue objects.
 
 =head1 EVENTS
 
-Mojo::Crawler inherits all events from Mojo::EventEmitter and implements the
-following new ones.
+WWW::Crawler::Mojo inherits all events from Mojo::EventEmitter and implements
+the following new ones.
 
 =head2 res
 
@@ -504,8 +476,8 @@ Consider res event for the use case instead of this.
 
 =head1 METHODS
 
-Mojo::Crawler inherits all methods from Mojo::EventEmitter and implements the
-following new ones.
+WWW::Crawler::Mojo inherits all methods from Mojo::EventEmitter and implements
+the following new ones.
 
 =head2 crawl
 
@@ -537,7 +509,7 @@ Parses and discovers lins in a web page.
 
 =head2 enqueue
 
-Append a queue with a URI or Mojo::Crawler::Queue object.
+Append a queue with a URI or WWW::Crawler::Mojo::Queue object.
 
 =head2 collect_urls_html
 

@@ -7,7 +7,7 @@ use lib catdir(dirname(__FILE__), '../lib');
 use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use Mojo::DOM;
-use Mojo::Crawler;
+use WWW::Crawler::Mojo;
 use Test::More tests => 25;
 
 my $html = <<EOF;
@@ -31,7 +31,7 @@ my $html = <<EOF;
 EOF
 
 my @array;
-Mojo::Crawler::collect_urls_html(Mojo::DOM->new($html), sub {
+WWW::Crawler::Mojo::collect_urls_html(Mojo::DOM->new($html), sub {
     push(@array, shift);
     push(@array, shift);
 });
@@ -69,7 +69,7 @@ div {
 EOF
 
     my @array;
-    Mojo::Crawler::collect_urls_css($css, sub {
+    WWW::Crawler::Mojo::collect_urls_css($css, sub {
         push(@array, shift);
         push(@array, shift);
     });

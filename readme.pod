@@ -1,16 +1,16 @@
 =head1 NAME
 
-Mojo::Crawler - A web crawling framework for Perl
+WWW::Crawler::Mojo - A web crawling framework for Perl
 
 =head1 SYNOPSIS
 
     use strict;
     use warnings;
     use utf8;
-    use Mojo::Crawler;
+    use WWW::Crawler::Mojo;
     use 5.10.0;
     
-    my $bot = Mojo::Crawler->new;
+    my $bot = WWW::Crawler::Mojo->new;
     my %count;
     
     $bot->on(res => sub {
@@ -44,12 +44,21 @@ Mojo::Crawler - A web crawling framework for Perl
 
 =head1 DESCRIPTION
 
-Mojo-Crawler is a web crawling framework for Perl.
+WWW::Crawler::Mojo is a web crawling framework for those who familier to
+Mojo::* APIs.
 
 =head1 ATTRIBUTE
 
-Mojo::Crawler inherits all attributes from Mojo::EventEmitter and implements the
-following new ones.
+WWW::Crawler::Mojo inherits all attributes from Mojo::EventEmitter and
+implements the following new ones.
+
+=head2 ua
+
+A Mojo::UserAgent instance.
+
+=head2 ua_name
+
+Name of crawler for User-Agent header.
 
 =head2 active_conn
 
@@ -62,12 +71,6 @@ A number of current connections per host.
 =head2 depth
 
 A number of max depth to crawl.
-
-=head2 fix
-
-=head2 active_conns_per_host
-
-A hash contains host name for key and last requested timestamp for value.
 
 =head2 max_conn
 
@@ -83,12 +86,12 @@ Max length of peeping API content.
 
 =head2 queues
 
-FIFO array contains Mojo::Crawler::Queue objects.
+FIFO array contains WWW::Crawler::Mojo::Queue objects.
 
 =head1 EVENTS
 
-Mojo::Crawler inherits all events from Mojo::EventEmitter and implements the
-following new ones.
+WWW::Crawler::Mojo inherits all events from Mojo::EventEmitter and implements
+the following new ones.
 
 =head2 res
 
@@ -149,8 +152,8 @@ Consider res event for the use case instead of this.
 
 =head1 METHODS
 
-Mojo::Crawler inherits all methods from Mojo::EventEmitter and implements the
-following new ones.
+WWW::Crawler::Mojo inherits all methods from Mojo::EventEmitter and implements
+the following new ones.
 
 =head2 crawl
 
@@ -182,7 +185,7 @@ Parses and discovers lins in a web page.
 
 =head2 enqueue
 
-Append a queue with a URI or Mojo::Crawler::Queue object.
+Append a queue with a URI or WWW::Crawler::Mojo::Queue object.
 
 =head2 collect_urls_html
 

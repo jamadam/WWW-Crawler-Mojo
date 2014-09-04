@@ -6,11 +6,11 @@ use File::Spec::Functions qw{catdir splitdir rel2abs canonpath};
 use lib catdir(dirname(__FILE__), '../lib');
 use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
-use Mojo::Crawler::Queue;
+use WWW::Crawler::Mojo::Queue;
 
 use Test::More tests => 3;
 
-my $queue = Mojo::Crawler::Queue->new(resolved_uri => 'foo');
+my $queue = WWW::Crawler::Mojo::Queue->new(resolved_uri => 'foo');
 $queue->add_props(add_baz => 'add_baz_value');
 my $queue2 = $queue->clone;
 is $queue2->resolved_uri, 'foo', 'right result';

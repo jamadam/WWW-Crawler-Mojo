@@ -3,10 +3,10 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 my %params = (
-    NAME          => 'Mojo-Crawler',
+    NAME          => 'WWW-Crawler-Mojo',
     AUTHOR        => 'sugama <sugama@jamadam.com>',
-    VERSION_FROM  => 'lib/Mojo/Crawler.pm',
-    ABSTRACT_FROM => 'lib/Mojo/Crawler.pm',
+    VERSION_FROM  => 'lib/WWW/Crawler/Mojo.pm',
+    ABSTRACT_FROM => 'lib/WWW/Crawler/Mojo.pm',
     LICENSE       => 'perl',
     PREREQ_PM     => {
         'Mojolicious' => '5.31',

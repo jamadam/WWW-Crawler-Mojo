@@ -6,7 +6,7 @@ use File::Spec::Functions qw{catdir splitdir rel2abs canonpath};
 use lib catdir(dirname(__FILE__), '../lib');
 use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
-use Mojo::Crawler;
+use WWW::Crawler::Mojo;
 use Mojo::Message::Response;
 
 use Test::More tests => 4;
@@ -38,28 +38,28 @@ utf8::encode($html2);
     my $res = Mojo::Message::Response->new;
     $res->body($html);
     $res->headers->content_type('text/html');
-    is Mojo::Crawler::guess_encoding($res), undef, 'right encoding';
+    is WWW::Crawler::Mojo::guess_encoding($res), undef, 'right encoding';
 }
 
 {
     my $res = Mojo::Message::Response->new;
     $res->body($html2);
     $res->headers->content_type('text/html');
-    is Mojo::Crawler::guess_encoding($res), 'cp932', 'right encoding';
+    is WWW::Crawler::Mojo::guess_encoding($res), 'cp932', 'right encoding';
 }
 
 {
     my $res = Mojo::Message::Response->new;
     $res->body($html);
     $res->headers->content_type('text/html; charset=cp932');
-    is Mojo::Crawler::guess_encoding($res), 'cp932', 'right encoding';
+    is WWW::Crawler::Mojo::guess_encoding($res), 'cp932', 'right encoding';
 }
 
 {
     my $res = Mojo::Message::Response->new;
     $res->body($html);
     $res->headers->content_type('text/html; charset=cp932; hoge');
-    is Mojo::Crawler::guess_encoding($res), 'cp932', 'right encoding';
+    is WWW::Crawler::Mojo::guess_encoding($res), 'cp932', 'right encoding';
 }
 
 1;
