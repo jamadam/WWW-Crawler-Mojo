@@ -236,6 +236,7 @@ our %tag_attributes = (
     iframe  => ['src'],
     input   => ['src'],
     object  => ['data'],
+    form    => ['action'],
 );
 
 sub collect_urls_html {
@@ -252,10 +253,6 @@ sub collect_urls_html {
         if (my $href = $dom->{content} && ($dom->{content} =~ qr{URL=(.+)}i)[0]) {
             $cb->($href, $dom);
         }
-    });
-    $dom->find('form')->each(sub {
-        my $dom = shift;
-        $cb->($dom->{action}, $dom) if ($dom->{action});
     });
     $dom->find('style')->each(sub {
         my $dom = shift;
