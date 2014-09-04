@@ -408,15 +408,17 @@ A number of current connections per host.
 
 =head2 depth
 
-A number of max depth to crawl.
+A number of max depth to crawl. Note that the depth is the number of HTTP
+requests to get to URI starting with the first queue. This doesn't mean the
+deepness of URI path detected with slash.
 
 =head2 max_conn
 
-A number of Max connections.
+A number of max connections.
 
 =head2 max_conn_per_host
 
-A number of Max connections per host.
+A number of max connections per host.
 
 =head2 peeping_max_length
 
@@ -446,7 +448,8 @@ Emitted when crawler got response from server.
 
 =head2 refer
 
-Emitted when new URI is found. You can enqueue new URIs conditionally with the callback.
+Emitted when new URI is found. You can enqueue the URI conditionally with
+the callback.
 
     $bot->on(refer => sub {
         my ($bot, $enqueue, $queue, $context) = @_;
@@ -461,20 +464,25 @@ Emitted when new URI is found. You can enqueue new URIs conditionally with the c
 
 =head2 empty
 
-Emitted when queue length got zero. The length is checked every 5 second.
+Emitted when queue length got zero. The length is checked every 5 seconds.
 
     $bot->on(empty => sub {
+        my ($bot) = @_;
         say "Queue is drained out.";
     });
 
 =head2 error
 
-Emitted when user agent returns no status code for request. Possibly causeed by
+Emitted when user agent returns no status code for request. Possibly caused by
 network errors or un-responsible servers.
 
     $bot->on(error => sub {
+        my ($bot, $error, $queue) = @_;
         say "error: $_[1]";
     });
+
+Note that server errors such as 404 or 500 cannot be catched with the event.
+Consider res event for the use case instead of this.
 
 =head2 start
 
@@ -484,9 +492,6 @@ Emitted right before crawl is started.
         my $self = shift;
         ...
     });
-
-Note that server errors such as 404 or 500 cannot be catched with the event.
-Consider res event for the use case instead of this.
 
 =head1 METHODS
 
