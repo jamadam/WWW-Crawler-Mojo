@@ -384,17 +384,20 @@ WWW::Crawler::Mojo - A web crawling framework for Perl
 
 =head1 DESCRIPTION
 
-WWW::Crawler::Mojo is a web crawling framework for those who familier with
-Mojo::* APIs.
+L<WWW::Crawler::Mojo> is a web crawling framework for those who familier with
+L<Mojo>::* APIs.
+
+Note that the module is aimed at trivial use cases of crawling within a
+moderate range of web pages so DO NOT use it for persistent crawler jobs.
 
 =head1 ATTRIBUTE
 
-WWW::Crawler::Mojo inherits all attributes from Mojo::EventEmitter and
+L<WWW::Crawler::Mojo> inherits all attributes from L<Mojo::EventEmitter> and
 implements the following new ones.
 
 =head2 ua
 
-A Mojo::UserAgent instance.
+A L<Mojo::UserAgent> instance.
 
     my $ua = $bot->ua;
     $bot->ua(Mojo::UserAgent->new);
@@ -452,15 +455,15 @@ Max length of peeping API content.
 
 =head2 queues
 
-FIFO array contains WWW::Crawler::Mojo::Queue objects.
+FIFO array contains L<WWW::Crawler::Mojo::Queue> objects.
 
     push(@{$bot->queues}, WWW::Crawler::Mojo::Queue->new(...));
     my $queue = shift @{$bot->queues};
 
 =head1 EVENTS
 
-WWW::Crawler::Mojo inherits all events from Mojo::EventEmitter and implements
-the following new ones.
+L<WWW::Crawler::Mojo> inherits all events from L<Mojo::EventEmitter> and
+implements the following new ones.
 
 =head2 res
 
@@ -524,8 +527,8 @@ Emitted right before crawl is started.
 
 =head1 METHODS
 
-WWW::Crawler::Mojo inherits all methods from Mojo::EventEmitter and implements
-the following new ones.
+L<WWW::Crawler::Mojo> inherits all methods from L<Mojo::EventEmitter> and
+implements the following new ones.
 
 =head2 crawl
 
@@ -565,7 +568,7 @@ Parses and discovers links in a web page. Each links are appended to FIFO array.
 
 =head2 enqueue
 
-Append a queue with a URI or WWW::Crawler::Mojo::Queue object.
+Append a queue with a URI or L<WWW::Crawler::Mojo::Queue> object.
 
     $bot->enqueue($queue);
 
@@ -587,7 +590,7 @@ Collects URLs out of CSS.
 
 =head2 guess_encoding
 
-Guesses encoding of HTML or CSS with given Mojo::Message::Response instance.
+Guesses encoding of HTML or CSS with given L<Mojo::Message::Response> instance.
 
     $encode = WWW::Crawler::Mojo::guess_encoding($res) || 'utf-8'
 
@@ -596,6 +599,10 @@ Guesses encoding of HTML or CSS with given Mojo::Message::Response instance.
 Resolves URLs with a base URL.
 
     WWW::Crawler::Mojo::resolve_href($base, $uri);
+
+=head1 EXAMPLE
+
+L<https://github.com/jamadam/WWW-Flatten>
 
 =head1 AUTHOR
 
