@@ -195,7 +195,7 @@ sub discover {
     }
     
     if ($type && $type =~ qr{text/css}) {
-        my $encode  = guess_encoding_css($res) || 'utf-8';
+        my $encode  = guess_encoding($res) || 'utf-8';
         my $body    = Encode::decode($encode, $res->body);
         collect_urls_css($body, $cb);
     }
@@ -265,24 +265,26 @@ sub collect_urls_css {
 
 my $charset_re = qr{\bcharset\s*=\s*['"]?([a-zA-Z0-9_\-]+)['"]?}i;
 
-sub guess_encoding_css {
-    my $res     = shift;
-    my $type    = $res->headers->content_type;
-    my $charset = ($type =~ $charset_re)[0];
-    $charset =
-        ($res->body =~ qr{^\s*\@charset ['"](.+?)['"];}is)[0] if (! $charset);
-    return $charset;
-}
-
 sub guess_encoding {
     my $res     = shift;
     my $type    = $res->headers->content_type;
+    return unless ($type);
     my $charset = ($type =~ $charset_re)[0];
-    if (! $charset && (my $head = ($res->body =~ qr{<head>(.+)</head>}is)[0])) {
-        Mojo::DOM->new($head)->find('meta[http\-equiv=Content-Type]')->each(sub{
-            $charset = (shift->{content} =~ $charset_re)[0];
-        });
-    }
+    return $charset if ($charset);
+    return _guess_encoding_html($res->body) if ($type =~ qr{text/(html|xml)});
+    return _guess_encoding_css($res->body) if ($type =~ qr{text/css});
+}
+
+sub _guess_encoding_css {
+    return (shift =~ qr{^\s*\@charset ['"](.+?)['"];}is)[0];
+}
+
+sub _guess_encoding_html {
+    my $head = (shift =~ qr{<head>(.+)</head>}is)[0] or return;
+    my $charset;
+    Mojo::DOM->new($head)->find('meta[http\-equiv=Content-Type]')->each(sub{
+        $charset = (shift->{content} =~ $charset_re)[0];
+    });
     return $charset;
 }
 
@@ -583,17 +585,11 @@ Collects URLs out of CSS.
         my $uri = shift;
     });
 
-=head2 guess_encoding_css
-
-Guesses encoding of CSS
-
-    WWW::Crawler::Mojo::guess_encoding_css($res)
-
 =head2 guess_encoding
 
-Guesses encoding of HTML
+Guesses encoding of HTML or CSS with given Mojo::Message::Response instance.
 
-    WWW::Crawler::Mojo::guess_encoding($res)
+    $encode = WWW::Crawler::Mojo::guess_encoding($res) || 'utf-8'
 
 =head2 resolve_href
 

@@ -245,17 +245,11 @@ Collects URLs out of CSS.
         my $uri = shift;
     });
 
-=head2 guess_encoding_css
-
-Guesses encoding of CSS
-
-    WWW::Crawler::Mojo::guess_encoding_css($res)
-
 =head2 guess_encoding
 
-Guesses encoding of HTML
+Guesses encoding of HTML or CSS with given Mojo::Message::Response instance.
 
-    WWW::Crawler::Mojo::guess_encoding($res)
+    $encode = WWW::Crawler::Mojo::guess_encoding($res) || 'utf-8'
 
 =head2 resolve_href
 
