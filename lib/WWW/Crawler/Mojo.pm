@@ -206,8 +206,8 @@ sub enqueue {
     
     for my $queue (@queues) {
         if (! ref $queue || ref $queue ne 'WWW::Crawler::Mojo::Queue') {
-            my $url = Mojo::URL->new($queue) unless (ref $queue);
-            $queue = WWW::Crawler::Mojo::Queue->new(resolved_uri => $queue);
+            my $url = !ref $queue ? Mojo::URL->new($queue) : $queue;
+            $queue = WWW::Crawler::Mojo::Queue->new(resolved_uri => $url);
         }
         
         my $md5 = md5_sum($queue->resolved_uri->to_string);
