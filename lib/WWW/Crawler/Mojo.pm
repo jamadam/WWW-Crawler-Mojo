@@ -208,7 +208,7 @@ sub enqueue {
         $_ = WWW::Crawler::Mojo::Queue->new(resolved_uri => $_)
                     unless (ref $_ && ref $_ eq 'WWW::Crawler::Mojo::Queue');
         
-        my $md5 = md5_sum($_->resolved_uri);
+        my $md5 = md5_sum($_->resolved_uri->to_string);
         
         if (!exists $self->fix->{$md5}) {
             $self->fix->{$md5} = undef;
