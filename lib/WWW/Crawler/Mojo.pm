@@ -204,15 +204,17 @@ sub discover {
 sub enqueue {
     my ($self, @queues) = @_;
     
-    for (@queues) {
-        $_ = WWW::Crawler::Mojo::Queue->new(resolved_uri => $_)
-                    unless (ref $_ && ref $_ eq 'WWW::Crawler::Mojo::Queue');
+    for my $queue (@queues) {
+        if (! ref $queue || ref $queue ne 'WWW::Crawler::Mojo::Queue') {
+            my $url = Mojo::URL->new($queue) unless (ref $queue);
+            $queue = WWW::Crawler::Mojo::Queue->new(resolved_uri => $queue);
+        }
         
-        my $md5 = md5_sum($_->resolved_uri->to_string);
+        my $md5 = md5_sum($queue->resolved_uri->to_string);
         
         if (!exists $self->fix->{$md5}) {
             $self->fix->{$md5} = undef;
-            push(@{$self->{queues}}, $_);
+            push(@{$self->{queues}}, $queue);
         }
     }
 }
