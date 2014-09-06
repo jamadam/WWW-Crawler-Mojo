@@ -95,7 +95,7 @@ sub process_queue {
         
         my ($ua, $tx) = @_;
         
-        $queue->redirect(urls_redirect($tx));
+        $queue->redirect(_urls_redirect($tx));
         
         my $res = $tx->res;
         
@@ -109,14 +109,6 @@ sub process_queue {
         
         $self->emit('res', sub { $self->discover($res, $queue) }, $queue, $res);
     });
-}
-
-sub urls_redirect {
-    my $tx = shift;
-    my @urls;
-    @urls = urls_redirect($tx->previous) if ($tx->previous);
-    unshift(@urls, $tx->req->url->userinfo(undef)->to_string);
-    return @urls;
 }
 
 sub say_start {
@@ -306,6 +298,14 @@ sub resolve_href {
     return $abs;
 }
 
+sub _urls_redirect {
+    my $tx = shift;
+    my @urls;
+    @urls = _urls_redirect($tx->previous) if ($tx->previous);
+    unshift(@urls, $tx->req->url->userinfo(undef)->to_string);
+    return @urls;
+}
+
 sub _mod_busyness {
     my ($self, $uri, $inc) = @_;
     my $key = _host_key($uri);
@@ -394,17 +394,29 @@ implements the following new ones.
 
 A Mojo::UserAgent instance.
 
+    my $ua = $bot->ua;
+    $bot->ua(Mojo::UserAgent->new);
+
 =head2 ua_name
 
 Name of crawler for User-Agent header.
+
+    $bot->ua_name('my-bot/0.01 (+https://example.com/)');
+    say $bot->ua_name; # 'my-bot/0.01 (+https://example.com/)'
 
 =head2 active_conn
 
 A number of current connections.
 
+    $bot->active_conn($bot->active_conn + 1);
+    say $bot->active_conn;
+
 =head2 active_conns_per_host
 
 A number of current connections per host.
+
+    $bot->active_conns_per_host($bot->active_conns_per_host + 1);
+    say $bot->active_conns_per_host;
 
 =head2 depth
 
@@ -412,21 +424,36 @@ A number of max depth to crawl. Note that the depth is the number of HTTP
 requests to get to URI starting with the first queue. This doesn't mean the
 deepness of URI path detected with slash.
 
+    $bot->depth(5);
+    say $bot->depth; # 5
+
 =head2 max_conn
 
 A number of max connections.
+
+    $bot->max_conn(5);
+    say $bot->max_conn; # 5
 
 =head2 max_conn_per_host
 
 A number of max connections per host.
 
+    $bot->max_conn_per_host(5);
+    say $bot->max_conn_per_host; # 5
+
 =head2 peeping_max_length
 
 Max length of peeping API content.
 
+    $bot->peeping_max_length(100000);
+    say $bot->peeping_max_length; # 100000
+
 =head2 queues
 
 FIFO array contains WWW::Crawler::Mojo::Queue objects.
+
+    push(@{$bot->queues}, WWW::Crawler::Mojo::Queue->new(...));
+    my $queue = shift @{$bot->queues};
 
 =head1 EVENTS
 
@@ -502,53 +529,77 @@ the following new ones.
 
 Start crawling loop.
 
+    $bot->crawl;
+
 =head2 init
 
 Initialize crawler settings.
+
+    $bot->init;
 
 =head2 process_queue
 
 Process a queue.
 
-=head2 urls_redirect
-
-Replace the resolved URI of queue and append redirect history into queue
+    $bot->process_queue;
 
 =head2 say_start
 
 Displays starting messages to STDOUT
 
+    $bot->say_start;
+
 =head2 peeping_handler
 
 peeping API dispatcher.
 
+    $bot->peeping_handler($loop, $stream);
+
 =head2 discover
 
-Parses and discovers lins in a web page.
+Parses and discovers links in a web page. Each links are appended to FIFO array.
+
+    $bot->discover($res, $queue);
 
 =head2 enqueue
 
 Append a queue with a URI or WWW::Crawler::Mojo::Queue object.
 
+    $bot->enqueue($queue);
+
 =head2 collect_urls_html
 
 Collects URLs out of HTML.
+
+    WWW::Crawler::Mojo::collect_urls_html($dom, sub {
+        my ($uri, $dom) = @_;
+    });
 
 =head2 collect_urls_css
 
 Collects URLs out of CSS.
 
+    WWW::Crawler::Mojo::collect_urls_css($dom, sub {
+        my $uri = shift;
+    });
+
 =head2 guess_encoding_css
 
 Guesses encoding of CSS
+
+    WWW::Crawler::Mojo::guess_encoding_css($res)
 
 =head2 guess_encoding
 
 Guesses encoding of HTML
 
+    WWW::Crawler::Mojo::guess_encoding($res)
+
 =head2 resolve_href
 
 Resolves URLs with a base URL.
+
+    WWW::Crawler::Mojo::resolve_href($base, $uri);
 
 =head1 AUTHOR
 
