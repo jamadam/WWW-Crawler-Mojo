@@ -202,29 +202,28 @@ sub discover {
 };
 
 sub enqueue {
-    my ($self, @queues) = @_;
+    shift->_enqueue([@_]);
+}
+
+sub requeue {
+    shift->_enqueue([@_], 1);
+}
+
+sub _enqueue {
+    my ($self, $queues, $requeue) = @_;
     
-    for my $queue (@queues) {
+    for my $queue (@$queues) {
         if (! ref $queue || ref $queue ne 'WWW::Crawler::Mojo::Queue') {
             my $url = !ref $queue ? Mojo::URL->new($queue) : $queue;
             $queue = WWW::Crawler::Mojo::Queue->new(resolved_uri => $url);
         }
         
         my $md5 = md5_sum($queue->resolved_uri->to_string);
-        
-        if (!exists $self->fix->{$md5}) {
+        if ($requeue || !exists $self->fix->{$md5}) {
             $self->fix->{$md5} = undef;
             push(@{$self->{queues}}, $queue);
         }
     }
-}
-
-sub requeue {
-    my ($self, @queues) = @_;
-    for (@queues) {
-        delete $self->fix->{md5_sum($_->resolved_uri->to_string)};
-    }
-    $self->enqueue(@queues);
 }
 
 our %tag_attributes = (
