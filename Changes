@@ -1,6 +1,9 @@
 Revision history for WWW-Crawler-Mojo
 
 0.03 2014/09/07
+  - Improved that resolved URIs are alway a Mojo::URL instance.
+  - Added original_uri to retrieve original uri from redirect history.
+  - Added requeue method to re-try in case an error occured.
 
 0.02 2014/09/07
   - Recovering failing release
