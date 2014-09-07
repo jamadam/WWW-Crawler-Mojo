@@ -306,7 +306,7 @@ sub _urls_redirect {
     my $tx = shift;
     my @urls;
     @urls = _urls_redirect($tx->previous) if ($tx->previous);
-    unshift(@urls, $tx->req->url->userinfo(undef)->to_string);
+    unshift(@urls, $tx->req->url->userinfo(undef));
     return @urls;
 }
 
