@@ -219,6 +219,14 @@ sub enqueue {
     }
 }
 
+sub requeue {
+    my ($self, @queues) = @_;
+    for (@queues) {
+        delete $self->fix->{md5_sum($_->resolved_uri->to_string)};
+    }
+    $self->enqueue(@queues);
+}
+
 our %tag_attributes = (
     script  => ['src'],
     link    => ['href'],
@@ -573,6 +581,17 @@ Parses and discovers links in a web page. Each links are appended to FIFO array.
 Append a queue with a URI or L<WWW::Crawler::Mojo::Queue> object.
 
     $bot->enqueue($queue);
+
+=head2 requeue
+
+Append a queue for re-try.
+
+    $self->on(error => sub {
+        my ($self, $msg, $queue) = @_;
+        if (...) { # until failur occures 3 times
+            $bot->requeue($queue);
+        }
+    });
 
 =head2 collect_urls_html
 
