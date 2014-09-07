@@ -80,7 +80,7 @@ is $q->additional_props->{context},
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/img/png2.png')};
 is $q->depth, 2;
 is $q->referrer, $parent2;
-is ref $q->additional_props->{context}, '';
+is ref $q->additional_props->{context}, 'Mojo::URL';
 is $q->additional_props->{context},
     qq{http://127.0.0.1:$port/css/css1.css};
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/img/png3.png')};
