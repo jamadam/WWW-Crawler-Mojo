@@ -32,7 +32,7 @@ sub new {
 
 =head1 NAME
 
-WWW::Crawler::Mojo::UserAgent - Mojo::UserAgent sub class for userinfo strage
+WWW::Crawler::Mojo::UserAgent - Mojo::UserAgent sub class for userinfo storage
 
 =head1 SYNOPSIS
 

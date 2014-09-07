@@ -171,6 +171,9 @@ network errors or un-responsible servers.
     $bot->on(error => sub {
         my ($bot, $error, $queue) = @_;
         say "error: $_[1]";
+        if (...) { # until failur occures 3 times
+            $bot->requeue($queue);
+        }
     });
 
 Note that server errors such as 404 or 500 cannot be catched with the event.
@@ -231,6 +234,17 @@ Parses and discovers links in a web page. Each links are appended to FIFO array.
 Append a queue with a URI or L<WWW::Crawler::Mojo::Queue> object.
 
     $bot->enqueue($queue);
+
+=head2 requeue
+
+Append a queue for re-try.
+
+    $self->on(error => sub {
+        my ($self, $msg, $queue) = @_;
+        if (...) { # until failur occures 3 times
+            $bot->requeue($queue);
+        }
+    });
 
 =head2 collect_urls_html
 

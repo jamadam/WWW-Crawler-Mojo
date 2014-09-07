@@ -521,6 +521,9 @@ network errors or un-responsible servers.
     $bot->on(error => sub {
         my ($bot, $error, $queue) = @_;
         say "error: $_[1]";
+        if (...) { # until failur occures 3 times
+            $bot->requeue($queue);
+        }
     });
 
 Note that server errors such as 404 or 500 cannot be catched with the event.
