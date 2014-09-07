@@ -1,5 +1,7 @@
 Revision history for WWW-Crawler-Mojo
 
+0.04 2014/09/07
+
 0.03 2014/09/07
   - Improved that resolved URIs are alway a Mojo::URL instance.
   - Added original_uri to retrieve original uri from redirect history.
