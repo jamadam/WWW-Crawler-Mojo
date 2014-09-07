@@ -41,6 +41,13 @@ sub redirect {
     $self->redirect_history(\@history);
 }
 
+sub original_uri {
+    my $self = shift;
+    my @histry = @{$self->redirect_history};
+    return $self->resolved_uri unless (@histry);
+    return $histry[$#histry];
+}
+
 1;
 
 =head1 NAME
