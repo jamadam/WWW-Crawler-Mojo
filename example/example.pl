@@ -26,7 +26,7 @@ $bot->on(error => sub {
     my ($msg, $queue) = @_;
     say $msg;
     say "Re-scheduled";
-    $bot->enqueue($queue);
+    $bot->requeue($queue);
 });
 
 $bot->enqueue('http://example.com/');
