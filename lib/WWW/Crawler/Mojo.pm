@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.010;
 use Mojo::Base 'Mojo::EventEmitter';
-use WWW::Crawler::Mojo::Queue;
+use WWW::Crawler::Mojo::Job;
 use WWW::Crawler::Mojo::UserAgent;
 use Mojo::Message::Request;
 use Mojo::Util qw{md5_sum xml_escape dumper};
@@ -20,7 +20,7 @@ has max_conn_per_host => 1;
 has 'peeping';
 has 'peeping_port';
 has peeping_max_length => 30000;
-has queues => sub { [] };
+has queue => sub { [] };
 has 'ua' => sub { WWW::Crawler::Mojo::UserAgent->new };
 has 'ua_name' =>
     "www-crawler-mojo/$VERSION (+https://github.com/jamadam/www-crawler-mojo)";
@@ -31,7 +31,7 @@ sub crawl {
     
     $self->init;
     
-    die 'No queue is given' if (! scalar @{$self->queues});
+    die 'No job is given' if (! scalar @{$self->queue});
     
     $self->emit('start');
     
@@ -54,14 +54,14 @@ sub init {
     $self->ua->max_redirects(5);
     
     my $loop_id = Mojo::IOLoop->recurring(0.25 => sub {
-        $self->process_queue(@_);
+        $self->process_job(@_);
     });
     
     $self->crawler_loop_id($loop_id);
     
     # notify queue is drained out
     Mojo::IOLoop->recurring(5 => sub {
-        $self->emit('empty') if (! scalar @{$self->{queues}});
+        $self->emit('empty') if (! scalar @{$self->{queue}});
     });
     
     if ($self->peeping || $self->peeping_port) {
@@ -74,40 +74,40 @@ sub init {
     
     if ($self->shuffle) {
         Mojo::IOLoop->recurring($self->shuffle => sub {
-            @{$self->{queues}} = List::Util::shuffle @{$self->{queues}};
+            @{$self->{queue}} = List::Util::shuffle @{$self->{queue}};
         });
     }
 }
 
-sub process_queue {
+sub process_job {
     my $self = shift;
     
-    return unless ($self->{queues}->[0] &&
-                $self->_mod_busyness($self->{queues}->[0]->resolved_uri, 1));
+    return unless ($self->{queue}->[0] &&
+                $self->_mod_busyness($self->{queue}->[0]->resolved_uri, 1));
     
-    my $queue = shift @{$self->{queues}};
-    my $uri = $queue->resolved_uri;
+    my $job = shift @{$self->{queue}};
+    my $uri = $job->resolved_uri;
     my $ua = $self->ua;
-    my $tx = $ua->build_tx($queue->method => $uri => $queue->tx_params);
+    my $tx = $ua->build_tx($job->method => $uri => $job->tx_params);
     
     $ua->start($tx, sub {
         $self->_mod_busyness($uri, -1);
         
         my ($ua, $tx) = @_;
         
-        $queue->redirect(_urls_redirect($tx));
+        $job->redirect(_urls_redirect($tx));
         
         my $res = $tx->res;
         
         if (!$res->code) {
             my $msg = ($res->error) ? $res->error->{message} : 'Unknown error';
-            my $url = $queue->resolved_uri;
+            my $url = $job->resolved_uri;
             $self->emit('error',
-                        "An error occured during crawling $url: $msg", $queue);
+                        "An error occured during crawling $url: $msg", $job);
             return;
         }
         
-        $self->emit('res', sub { $self->discover($res, $queue) }, $queue, $res);
+        $self->emit('res', sub { $self->discover($res, $job) }, $job, $res);
     });
 }
 
@@ -116,7 +116,7 @@ sub say_start {
     
     print <<"EOF";
 ----------------------------------------
-Crawling is starting with @{[ $self->queues->[0]->resolved_uri ]}
+Crawling is starting with @{[ $self->queue->[0]->resolved_uri ]}
 Max Connection  : @{[ $self->max_conn ]}
 Depth           : @{[ $self->depth ]}
 User Agent      : @{[ $self->ua_name ]}
@@ -139,8 +139,8 @@ sub peeping_handler {
         
         my $path = Mojo::Message::Request->new->parse($bytes)->url->path;
         
-        if ($path =~ qr{^/queues}) {
-            my $res = sprintf('%s Queues are left.', scalar @{$self->queues});
+        if ($path =~ qr{^/queue}) {
+            my $res = sprintf('%s jobs are left.', scalar @{$self->queue});
             $stream->write("HTTP/1.1 200 OK\n\n");
             $stream->write($res, sub {shift->close});
             return;
@@ -159,12 +159,12 @@ sub peeping_handler {
 }
 
 sub discover {
-    my ($self, $res, $queue) = @_;
+    my ($self, $res, $job) = @_;
     
     return if ($res->code != 200);
-    return if ($self->depth && $queue->depth >= $self->depth);
+    return if ($self->depth && $job->depth >= $self->depth);
     
-    my $base = $queue->resolved_uri;
+    my $base = $job->resolved_uri;
     my $type = $res->headers->content_type;
     
     if ($type && $type =~ qr{text/(html|xml)} &&
@@ -180,12 +180,12 @@ sub discover {
         return unless
                 (!$url->scheme || $url->scheme =~ qr{http|https|ftp|ws|wss});
         
-        my $child = $queue->child(
+        my $child = $job->child(
             resolved_uri => resolve_href($base, $url), literal_uri => $url);
         
         $self->emit('refer', sub {
             $self->enqueue($_[0] || $child);
-        }, $child, $dom || $queue->resolved_uri);
+        }, $child, $dom || $job->resolved_uri);
     };
     
     if ($type && $type =~ qr{text/(html|xml)}) {
@@ -210,18 +210,18 @@ sub requeue {
 }
 
 sub _enqueue {
-    my ($self, $queues, $requeue) = @_;
+    my ($self, $jobs, $requeue) = @_;
     
-    for my $queue (@$queues) {
-        if (! ref $queue || ref $queue ne 'WWW::Crawler::Mojo::Queue') {
-            my $url = !ref $queue ? Mojo::URL->new($queue) : $queue;
-            $queue = WWW::Crawler::Mojo::Queue->new(resolved_uri => $url);
+    for my $job (@$jobs) {
+        if (! ref $job || ref $job ne 'WWW::Crawler::Mojo::Job') {
+            my $url = !ref $job ? Mojo::URL->new($job) : $job;
+            $job = WWW::Crawler::Mojo::Job->new(resolved_uri => $url);
         }
         
-        my $md5 = md5_sum($queue->resolved_uri->to_string);
+        my $md5 = md5_sum($job->resolved_uri->to_string);
         if ($requeue || !exists $self->fix->{$md5}) {
             $self->fix->{$md5} = undef;
-            push(@{$self->{queues}}, $queue);
+            push(@{$self->{queue}}, $job);
         }
     }
 }
@@ -362,13 +362,13 @@ WWW::Crawler::Mojo - A web crawling framework for Perl
     my $bot = WWW::Crawler::Mojo->new;
     
     $bot->on(res => sub {
-        my ($bot, $discover, $queue, $res) = @_;
+        my ($bot, $discover, $job, $res) = @_;
         
         $discover->();
     });
     
     $bot->on(refer => sub {
-        my ($bot, $enqueue, $queue, $context) = @_;
+        my ($bot, $enqueue, $job, $context) = @_;
         
         $enqueue->();
     });
@@ -420,7 +420,7 @@ A number of current connections per host.
 =head2 depth
 
 A number of max depth to crawl. Note that the depth is the number of HTTP
-requests to get to URI starting with the first queue. This doesn't mean the
+requests to get to URI starting with the first job. This doesn't mean the
 deepness of URI path detected with slash.
 
     $bot->depth(5);
@@ -447,12 +447,12 @@ Max length of peeping API content.
     $bot->peeping_max_length(100000);
     say $bot->peeping_max_length; # 100000
 
-=head2 queues
+=head2 queue
 
-FIFO array contains L<WWW::Crawler::Mojo::Queue> objects.
+FIFO array contains L<WWW::Crawler::Mojo::Job> objects.
 
-    push(@{$bot->queues}, WWW::Crawler::Mojo::Queue->new(...));
-    my $queue = shift @{$bot->queues};
+    push(@{$bot->queue}, WWW::Crawler::Mojo::Job->new(...));
+    my $job = shift @{$bot->queue};
 
 =head1 EVENTS
 
@@ -464,7 +464,7 @@ implements the following new ones.
 Emitted when crawler got response from server.
 
     $bot->on(res => sub {
-        my ($bot, $discover, $queue, $res) = @_;
+        my ($bot, $discover, $job, $res) = @_;
         if (...) {
             $discover->();
         } else {
@@ -478,7 +478,7 @@ Emitted when new URI is found. You can enqueue the URI conditionally with
 the callback.
 
     $bot->on(refer => sub {
-        my ($bot, $enqueue, $queue, $context) = @_;
+        my ($bot, $enqueue, $job, $context) = @_;
         if (...) {
             $enqueue->();
         } elseif (...) {
@@ -503,10 +503,10 @@ Emitted when user agent returns no status code for request. Possibly caused by
 network errors or un-responsible servers.
 
     $bot->on(error => sub {
-        my ($bot, $error, $queue) = @_;
+        my ($bot, $error, $job) = @_;
         say "error: $_[1]";
         if (...) { # until failur occures 3 times
-            $bot->requeue($queue);
+            $bot->requeue($job);
         }
     });
 
@@ -539,11 +539,11 @@ Initialize crawler settings.
 
     $bot->init;
 
-=head2 process_queue
+=head2 process_job
 
-Process a queue.
+Process a job.
 
-    $bot->process_queue;
+    $bot->process_job;
 
 =head2 say_start
 
@@ -561,22 +561,22 @@ peeping API dispatcher.
 
 Parses and discovers links in a web page. Each links are appended to FIFO array.
 
-    $bot->discover($res, $queue);
+    $bot->discover($res, $job);
 
 =head2 enqueue
 
-Append a queue with a URI or L<WWW::Crawler::Mojo::Queue> object.
+Append a job with a URI or L<WWW::Crawler::Mojo::Job> object.
 
-    $bot->enqueue($queue);
+    $bot->enqueue($job);
 
 =head2 requeue
 
-Append a queue for re-try.
+Append a job for re-try.
 
     $self->on(error => sub {
-        my ($self, $msg, $queue) = @_;
+        my ($self, $msg, $job) = @_;
         if (...) { # until failur occures 3 times
-            $bot->requeue($queue);
+            $bot->requeue($job);
         }
     });
 

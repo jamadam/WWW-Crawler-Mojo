@@ -1,4 +1,4 @@
-package WWW::Crawler::Mojo::Queue;
+package WWW::Crawler::Mojo::Job;
 use strict;
 use warnings;
 use utf8;
@@ -52,15 +52,15 @@ sub original_uri {
 
 =head1 NAME
 
-WWW::Crawler::Mojo::Queue - Single crawler queue
+WWW::Crawler::Mojo::Job - Single crawler job
 
 =head1 SYNOPSIS
 
-    my $ua = WWW::Crawler::Mojo::Queue->new;
+    my $job = WWW::Crawler::Mojo::Job->new;
 
 =head1 DESCRIPTION
 
-This class represents a single crawler queue.
+This class represents a single crawler job.
 
 =head1 ATTRIBUTES
 
@@ -74,9 +74,9 @@ This class represents a single crawler queue.
 
 =head2 additional_props
 
-Add propeties for queue.
+Add propeties for job.
 
-    $queue->additional_props({key1 => $value1, key2 => $value2});
+    $job->additional_props({key1 => $value1, key2 => $value2});
 
 =head2 redirect_history
 
@@ -84,11 +84,11 @@ Add propeties for queue.
 
 =head2 child
 
-Initiate a child queue by parent queue. The parent uri is set to child referrer.
+Initiate a child job by parent job. The parent uri is set to child referrer.
 
-    my $queue1 = WWW::Crawler::Mojo::Queue->new(resolved_uri => 'http://a/1');
-    my $queue2 = $queue1->child(resolved_uri => 'http://a/2');
-    say $queue2->referrer # 'http://a/1'
+    my $job1 = WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://a/1');
+    my $job2 = $job1->child(resolved_uri => 'http://a/2');
+    say $job2->referrer # 'http://a/1'
 
 =head2 add_props
 
@@ -96,11 +96,11 @@ Initiate a child queue by parent queue. The parent uri is set to child referrer.
 
 Replaces the resolved URI and history at once.
 
-    my $queue = WWW::Crawler::Mojo::Queue->new;
-    $queue->resolved_uri($url1);
-    $queue->redirect($url2, $url3);
-    say $queue->resolved_uri # $url2
-    say $queue->redirect_history # [$url1, $url3]
+    my $job = WWW::Crawler::Mojo::Job->new;
+    $job->resolved_uri($url1);
+    $job->redirect($url2, $url3);
+    say $job->resolved_uri # $url2
+    say $job->redirect_history # [$url1, $url3]
 
 =head1 AUTHOR
 

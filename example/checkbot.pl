@@ -12,13 +12,13 @@ $bot->on(start => sub {
 });
 
 $bot->on(res => sub {
-    my ($bot, $discover, $queue, $res) = @_;
+    my ($bot, $discover, $job, $res) = @_;
     
     $count{$res->code}++;
     
     if ($res->code == 404) {
         say sprintf('404 occured! : %s referred by %s',
-                                    $queue->resolved_uri, $queue->referrer);
+                                    $job->resolved_uri, $job->referrer);
     }
     
     my @disp_seed;
@@ -32,7 +32,7 @@ $bot->on(res => sub {
 });
 
 $bot->on(refer => sub {
-    my ($bot, $enqueue, $queue, $context) = @_;
+    my ($bot, $enqueue, $job, $context) = @_;
     $enqueue->();
 });
 

@@ -35,15 +35,15 @@ $bot->enqueue(WWW::Crawler::Mojo::resolve_href($base, '/index.html'));
 my %urls;
 
 $bot->on('res' => sub {
-    my ($bot, $discover, $queue, $res) = @_;
+    my ($bot, $discover, $job, $res) = @_;
     $discover->();
-    $urls{$queue->resolved_uri} = $queue;
-    Mojo::IOLoop->stop if (! scalar @{$bot->queues});
+    $urls{$job->resolved_uri} = $job;
+    Mojo::IOLoop->stop if (! scalar @{$bot->queue});
 });
 $bot->on('refer' => sub {
-    my ($bot, $enqueue, $queue, $context) = @_;
+    my ($bot, $enqueue, $job, $context) = @_;
     $enqueue->();
-    $queue->add_props(
+    $job->add_props(
         context => $context,
     );
 });
