@@ -1,5 +1,7 @@
 Revision history for WWW-Crawler-Mojo
 
+0.06 2014/09/15
+
 0.05 2014/09/15
   - Fixed a bug on request body generation.
 
