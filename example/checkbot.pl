@@ -12,6 +12,8 @@ $bot->on(start => sub {
 });
 
 $bot->on(res => sub {
+    $| = 1;
+    
     my ($bot, $discover, $job, $res) = @_;
     
     $count{$res->code}++;
@@ -19,11 +21,11 @@ $bot->on(res => sub {
     if ($res->code =~ qr{[54]..}) {
         say sprintf($res->code. ' occured! : %s referred by %s',
                         $job->resolved_uri, $job->referrer->resolved_uri);
+    }
     
     my @disp_seed;
     push(@disp_seed, sprintf('%s:%s', $_, $count{$_})) for (keys %count);
     
-    $| = 1;
     print(join(' / ', @disp_seed), ' ' x 30);
     print("\r");
     
