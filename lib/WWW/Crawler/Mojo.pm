@@ -243,11 +243,20 @@ our %tag_attributes = (
     form    => ['action'],
 );
 
+sub _wrong_dom_detection {
+    my $dom = shift;
+    while ($dom = $dom->parent) {
+        return 1 if ($dom->type eq 'script');
+    }
+    return;
+}
+
 sub collect_urls_html {
     my ($dom, $cb) = @_;
     
     $dom->find(join(',', keys %tag_attributes))->each(sub {
         my $dom = shift;
+        return if ($dom->xml && _wrong_dom_detection($dom));
         for (@{$tag_attributes{$dom->type}}) {
             $cb->($dom->{$_}, $dom) if ($dom->{$_});
         }

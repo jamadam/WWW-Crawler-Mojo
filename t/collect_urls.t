@@ -8,7 +8,7 @@ use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use Mojo::DOM;
 use WWW::Crawler::Mojo;
-use Test::More tests => 25;
+use Test::More tests => 26;
 
 my $html = <<EOF;
 <html>
@@ -26,6 +26,9 @@ my $html = <<EOF;
 <map name="m_map" id="m_map">
     <area href="index3.html" coords="" title="E" />
 </map>
+<script>
+    var a = "<a href='hoge'>a</a>";
+</script>
 </body>
 </html>
 EOF
@@ -80,6 +83,27 @@ EOF
     is shift @array, '/image/c.png', 'right url';
     is shift @array, undef, 'empty';
 }
+
+my $xhtml = <<EOF;
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+</head>
+<body>
+    <script>
+        var a = "<a href='hoge'>a</a>";
+    </script>
+</body>
+</html>
+EOF
+
+@array = ();
+WWW::Crawler::Mojo::collect_urls_html(Mojo::DOM->new($xhtml), sub {
+    push(@array, shift);
+    push(@array, shift);
+});
+is(scalar @array, 0, 'right length');
 
 1;
 
