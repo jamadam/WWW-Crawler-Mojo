@@ -11,22 +11,22 @@ $bot->on(start => sub {
 });
 
 $bot->on(res => sub {
-    my ($bot, $discover, $queue, $res) = @_;
+    my ($bot, $discover, $job, $res) = @_;
     say sprintf('fetching %s resulted status %s',
-                                    $queue->resolved_uri, $res->code);
+                                    $job->resolved_uri, $res->code);
     $discover->();
 });
 
 $bot->on(refer => sub {
-    my ($bot, $enqueue, $queue, $context) = @_;
+    my ($bot, $enqueue, $job, $context) = @_;
     $enqueue->();
 });
 
 $bot->on(error => sub {
-    my ($msg, $queue) = @_;
+    my ($msg, $job) = @_;
     say $msg;
     say "Re-scheduled";
-    $bot->enqueue($queue);
+    $bot->requeue($job);
 });
 
 $bot->enqueue('http://example.com/');

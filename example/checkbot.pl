@@ -12,14 +12,13 @@ $bot->on(start => sub {
 });
 
 $bot->on(res => sub {
-    my ($bot, $discover, $queue, $res) = @_;
+    my ($bot, $discover, $job, $res) = @_;
     
     $count{$res->code}++;
     
     if ($res->code =~ qr{[54]..}) {
         say sprintf($res->code. ' occured! : %s referred by %s',
-                        $queue->resolved_uri, $queue->referrer->resolved_uri);
-    }
+                        $job->resolved_uri, $job->referrer->resolved_uri);
     
     my @disp_seed;
     push(@disp_seed, sprintf('%s:%s', $_, $count{$_})) for (keys %count);
@@ -32,8 +31,8 @@ $bot->on(res => sub {
 });
 
 $bot->on(refer => sub {
-    my ($bot, $enqueue, $queue, $context) = @_;
-    if ($queue->referrer->resolved_uri->host eq 'example.com') {
+    my ($bot, $enqueue, $job, $context) = @_;
+    if ($job->referrer->resolved_uri->host eq 'example.com') {
         $enqueue->();
     }
 });

@@ -7,7 +7,7 @@ use Data::Dumper;
 use Mojo::IOLoop;
 use WWW::Crawler::Mojo;
 
-use Test::More tests => 23;
+use Test::More tests => 24;
 
 {
     package MockServer;
@@ -35,15 +35,15 @@ $bot->enqueue(WWW::Crawler::Mojo::resolve_href($base, '/index.html'));
 my %urls;
 
 $bot->on('res' => sub {
-    my ($bot, $discover, $queue, $res) = @_;
+    my ($bot, $discover, $job, $res) = @_;
     $discover->();
-    $urls{$queue->resolved_uri} = $queue;
-    Mojo::IOLoop->stop if (! scalar @{$bot->queues});
+    $urls{$job->resolved_uri} = $job;
+    Mojo::IOLoop->stop if (! scalar @{$bot->queue});
 });
 $bot->on('refer' => sub {
-    my ($bot, $enqueue, $queue, $context) = @_;
+    my ($bot, $enqueue, $job, $context) = @_;
     $enqueue->();
-    $queue->add_props(
+    $job->add_props(
         context => $context,
     );
 });
@@ -89,5 +89,16 @@ is $q->referrer, $parent;
 is ref $q->additional_props->{context}, 'Mojo::DOM';
 like $q->additional_props->{context},
     qr{<div style="background-image:url\(\./img/png3.png\)">.+</div>}s;
+
+$daemon->stop;
+$base = Mojo::URL->new("http://127.0.0.1:$port");
+$bot = WWW::Crawler::Mojo->new;
+$bot->ua->request_timeout(0.1);
+$bot->enqueue(WWW::Crawler::Mojo::resolve_href($base, '/'));
+my $timeout;
+$bot->on('error' => sub { $timeout = 1; Mojo::IOLoop->stop });
+$bot->init;
+Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+is $timeout, 1, 'error event fired';
 
 __END__

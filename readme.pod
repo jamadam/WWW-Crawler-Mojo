@@ -11,35 +11,20 @@ WWW::Crawler::Mojo - A web crawling framework for Perl
     use 5.10.0;
     
     my $bot = WWW::Crawler::Mojo->new;
-    my %count;
     
     $bot->on(res => sub {
-        my ($bot, $discover, $queue, $res) = @_;
-        
-        $count{$res->code}++;
-        
-        if ($res->code == 404) {
-            say sprintf('404 occured! : %s referred by %s',
-                        $queue->resolved_uri, $queue->referrer->resolved_uri);
-        }
-        
-        my @disp_seed;
-        push(@disp_seed, sprintf('%s:%s', $_, $count{$_})) for (keys %count);
-        
-        $| = 1;
-        print(join(' / ', @disp_seed), ' ' x 30);
-        print("\r");
+        my ($bot, $discover, $job, $res) = @_;
         
         $discover->();
     });
     
     $bot->on(refer => sub {
-        my ($bot, $enqueue, $queue, $context) = @_;
+        my ($bot, $enqueue, $job, $context) = @_;
+        
         $enqueue->();
     });
     
     $bot->enqueue('http://example.com/');
-    $bot->peeping_port(3001);
     $bot->crawl;
 
 =head1 DESCRIPTION
@@ -86,7 +71,7 @@ A number of current connections per host.
 =head2 depth
 
 A number of max depth to crawl. Note that the depth is the number of HTTP
-requests to get to URI starting with the first queue. This doesn't mean the
+requests to get to URI starting with the first job. This doesn't mean the
 deepness of URI path detected with slash.
 
     $bot->depth(5);
@@ -113,12 +98,12 @@ Max length of peeping API content.
     $bot->peeping_max_length(100000);
     say $bot->peeping_max_length; # 100000
 
-=head2 queues
+=head2 queue
 
-FIFO array contains L<WWW::Crawler::Mojo::Queue> objects.
+FIFO array contains L<WWW::Crawler::Mojo::Job> objects.
 
-    push(@{$bot->queues}, WWW::Crawler::Mojo::Queue->new(...));
-    my $queue = shift @{$bot->queues};
+    push(@{$bot->queue}, WWW::Crawler::Mojo::Job->new(...));
+    my $job = shift @{$bot->queue};
 
 =head1 EVENTS
 
@@ -130,7 +115,7 @@ implements the following new ones.
 Emitted when crawler got response from server.
 
     $bot->on(res => sub {
-        my ($bot, $discover, $queue, $res) = @_;
+        my ($bot, $discover, $job, $res) = @_;
         if (...) {
             $discover->();
         } else {
@@ -144,7 +129,7 @@ Emitted when new URI is found. You can enqueue the URI conditionally with
 the callback.
 
     $bot->on(refer => sub {
-        my ($bot, $enqueue, $queue, $context) = @_;
+        my ($bot, $enqueue, $job, $context) = @_;
         if (...) {
             $enqueue->();
         } elseif (...) {
@@ -169,10 +154,10 @@ Emitted when user agent returns no status code for request. Possibly caused by
 network errors or un-responsible servers.
 
     $bot->on(error => sub {
-        my ($bot, $error, $queue) = @_;
+        my ($bot, $error, $job) = @_;
         say "error: $_[1]";
         if (...) { # until failur occures 3 times
-            $bot->requeue($queue);
+            $bot->requeue($job);
         }
     });
 
@@ -205,11 +190,11 @@ Initialize crawler settings.
 
     $bot->init;
 
-=head2 process_queue
+=head2 process_job
 
-Process a queue.
+Process a job.
 
-    $bot->process_queue;
+    $bot->process_job;
 
 =head2 say_start
 
@@ -227,22 +212,22 @@ peeping API dispatcher.
 
 Parses and discovers links in a web page. Each links are appended to FIFO array.
 
-    $bot->discover($res, $queue);
+    $bot->discover($res, $job);
 
 =head2 enqueue
 
-Append a queue with a URI or L<WWW::Crawler::Mojo::Queue> object.
+Append a job with a URI or L<WWW::Crawler::Mojo::Job> object.
 
-    $bot->enqueue($queue);
+    $bot->enqueue($job);
 
 =head2 requeue
 
-Append a queue for re-try.
+Append a job for re-try.
 
     $self->on(error => sub {
-        my ($self, $msg, $queue) = @_;
+        my ($self, $msg, $job) = @_;
         if (...) { # until failur occures 3 times
-            $bot->requeue($queue);
+            $bot->requeue($job);
         }
     });
 
