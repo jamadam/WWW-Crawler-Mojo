@@ -16,9 +16,9 @@ $bot->on(res => sub {
     
     $count{$res->code}++;
     
-    if ($res->code == 404) {
-        say sprintf('404 occured! : %s referred by %s',
-                                    $queue->resolved_uri, $queue->referrer);
+    if ($res->code =~ qr{[54]..}) {
+        say sprintf($res->code. ' occured! : %s referred by %s',
+                        $queue->resolved_uri, $queue->referrer->resolved_uri);
     }
     
     my @disp_seed;
@@ -33,7 +33,9 @@ $bot->on(res => sub {
 
 $bot->on(refer => sub {
     my ($bot, $enqueue, $queue, $context) = @_;
-    $enqueue->();
+    if ($queue->referrer->resolved_uri->host eq 'example.com') {
+        $enqueue->();
+    }
 });
 
 $bot->enqueue('http://example.com/');
