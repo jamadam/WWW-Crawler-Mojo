@@ -175,6 +175,9 @@ sub discover {
     my $cb = sub {
         my ($url, $dom) = @_;
         
+        $url =~ s{^\s*}{}g;
+        $url =~ s{\s*$}{}g;
+        
         $url = Mojo::URL->new($url);
         
         return unless

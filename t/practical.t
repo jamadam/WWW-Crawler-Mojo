@@ -7,7 +7,7 @@ use Data::Dumper;
 use Mojo::IOLoop;
 use WWW::Crawler::Mojo;
 
-use Test::More tests => 24;
+use Test::More tests => 29;
 
 {
     package MockServer;
@@ -52,6 +52,8 @@ $bot->init;
 
 Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+is((scalar keys %urls), 8, 'right length');
+
 my $q;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/index.html')};
 is $q->depth, 0;
@@ -89,6 +91,12 @@ is $q->referrer, $parent;
 is ref $q->additional_props->{context}, 'Mojo::DOM';
 like $q->additional_props->{context},
     qr{<div style="background-image:url\(\./img/png3.png\)">.+</div>}s;
+$q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/space.txt')};
+is $q->depth, 1;
+is $q->referrer, $parent;
+is ref $q->additional_props->{context}, 'Mojo::DOM';
+like $q->additional_props->{context},
+    qr{<a href=" ./space.txt ">foo</a>}s;
 
 $daemon->stop;
 $base = Mojo::URL->new("http://127.0.0.1:$port");
