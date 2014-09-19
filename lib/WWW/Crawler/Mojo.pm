@@ -8,7 +8,7 @@ use WWW::Crawler::Mojo::UserAgent;
 use Mojo::Message::Request;
 use Mojo::Util qw{md5_sum xml_escape dumper};
 use List::Util;
-our $VERSION = '0.04';
+our $VERSION = '0.06';
 
 has active_conn => 0;
 has 'crawler_loop_id';
