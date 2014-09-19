@@ -3,9 +3,12 @@ use warnings;
 use utf8;
 use WWW::Crawler::Mojo;
 use 5.10.0;
+use Mojo::URL;
 
 my $bot = WWW::Crawler::Mojo->new;
 my %count;
+
+my $start = Mojo::URL->new(pop @ARGV);
 
 $bot->on(start => sub {
     shift->say_start;
@@ -34,11 +37,12 @@ $bot->on(res => sub {
 
 $bot->on(refer => sub {
     my ($bot, $enqueue, $job, $context) = @_;
-    if ($job->referrer->resolved_uri->host eq 'example.com') {
+    if ($job->referrer->resolved_uri->host eq $start->host) {
         $enqueue->();
     }
 });
-
-$bot->enqueue('http://example.com/');
+$bot->max_conn_per_host(2);
+$bot->max_conn(5);
+$bot->enqueue($start);
 $bot->peeping_port(3001);
 $bot->crawl;
