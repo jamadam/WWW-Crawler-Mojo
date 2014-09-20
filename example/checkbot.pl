@@ -21,8 +21,7 @@ $bot->on(error => sub {
     
     chomp($msg);
     
-    say sprintf('%s : %s referred by %s',
-                        $msg, $job->resolved_uri, $job->referrer->resolved_uri);
+    report_stdout($msg, $job->resolved_uri, $job->referrer->resolved_uri);
 });
 
 $bot->on(res => sub {
@@ -33,8 +32,8 @@ $bot->on(res => sub {
     $count{$res->code}++;
     
     if ($res->code =~ qr{[54]..}) {
-        say sprintf($res->code. ' occured! : %s referred by %s',
-                        $job->resolved_uri, $job->referrer->resolved_uri);
+        my $msg = $res->code. ' occured!';
+        report_stdout($msg, $job->resolved_uri, $job->referrer->resolved_uri);
     }
     
     my @disp_seed;
@@ -50,11 +49,12 @@ $bot->on(refer => sub {
     my ($bot, $enqueue, $job, $context) = @_;
     
     if (security_warning($job, $context)) {
-        say sprintf('WARNING : Cross-scheme resource found at %s referred by %s',
-                            $job->resolved_uri, $job->referrer->resolved_uri);
+        my $msg = 'WARNING : Cross-scheme resource found';
+        report_stdout($msg, $job->resolved_uri, $job->referrer->resolved_uri);
     }
     
     $enqueue->() if ($job->referrer->resolved_uri->host eq $start->host);
+    #$enqueue->() ;
 });
 
 $bot->shuffle(5);
@@ -63,6 +63,18 @@ $bot->max_conn(5);
 $bot->enqueue($start);
 $bot->peeping_port(3001);
 $bot->crawl;
+
+sub report_stdout {
+    my ($msg, $url1, $url2) = @_;
+    state $index = 1;
+    say sprintf(
+        '%s: %s at %s referred by %s',
+        $index++,
+        $msg,
+        $url2,
+        $url1,
+    );
+}
 
 sub security_warning {
     my ($job, $context) = @_;
