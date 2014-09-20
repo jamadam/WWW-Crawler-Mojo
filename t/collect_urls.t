@@ -8,7 +8,7 @@ use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use Mojo::DOM;
 use WWW::Crawler::Mojo;
-use Test::More tests => 26;
+use Test::More tests => 28;
 
 my $html = <<EOF;
 <html>
@@ -27,8 +27,9 @@ my $html = <<EOF;
     <area href="index3.html" coords="" title="E" />
 </map>
 <script>
-    var a = "<a href='hoge'>a</a>";
+    var a = "<a href='hoge'>F</a>";
 </script>
+<a href="escaped?foo=bar&amp;baz=yada">G</a>
 </body>
 </html>
 EOF
@@ -56,6 +57,8 @@ is shift @array, 'tel:0000', 'right url';
 is shift(@array)->type, 'a', 'right type';
 is shift @array, 'index3.html', 'right url';
 is shift(@array)->type, 'area', 'right type';
+is shift @array, 'escaped?foo=bar&baz=yada', 'right url';
+is shift(@array)->type, 'a', 'right type';
 is shift @array, undef, 'no more urls';
 
 {
