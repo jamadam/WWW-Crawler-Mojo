@@ -49,6 +49,7 @@ $bot->on(refer => sub {
     my ($bot, $enqueue, $job, $context) = @_;
     
     if (security_warning($job, $context)) {
+        $count{'WARNING'}++;
         my $msg = 'WARNING : Cross-scheme resource found';
         report_stdout($msg, $job->resolved_uri, $job->referrer->resolved_uri);
     }
