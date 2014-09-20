@@ -66,14 +66,14 @@ $bot->peeping_port(3001);
 $bot->crawl;
 
 sub report_stdout {
-    my ($msg, $url1, $url2) = @_;
+    my ($msg, $url, $url_referrer) = @_;
     state $index = 1;
     say sprintf(
         '%s: %s at %s referred by %s',
         $index++,
         $msg,
-        $url2,
-        $url1,
+        $url,
+        $url_referrer,
     );
 }
 
