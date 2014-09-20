@@ -43,7 +43,7 @@ sub init {
     
     $self->on('empty', sub { say "Queue is drained out." })
                                         unless $self->has_subscribers('empty');
-    $self->on('error', sub { say $_[1] })
+    $self->on('error', sub { say "An error occured during crawling $_[0]: $_[1]" })
                                         unless $self->has_subscribers('error');
     $self->on('res', sub { $_[1]->() })
                                         unless $self->has_subscribers('res');
@@ -102,8 +102,7 @@ sub process_job {
         if (!$res->code) {
             my $msg = ($res->error) ? $res->error->{message} : 'Unknown error';
             my $url = $job->resolved_uri;
-            $self->emit('error',
-                        "An error occured during crawling $url: $msg", $job);
+            $self->emit('error', $msg, $job);
             return;
         }
         
