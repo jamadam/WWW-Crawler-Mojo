@@ -36,11 +36,9 @@ $bot->on(res => sub {
         report_stdout($msg, $job->resolved_uri, $job->referrer->resolved_uri);
     }
     
-    my @disp_seed;
-    push(@disp_seed, sprintf('%s:%s', $_, $count{$_})) for (keys %count);
-    
-    print(join(' / ', @disp_seed), ' / QUEUE:'. scalar @{$bot->queue}, ' ' x 30);
-    print("\r");
+    $count{QUEUE} = scalar @{$bot->queue};
+    my @props = map { join(':', $_, $count{$_}) } (sort keys %count);
+    print join(' / ', @props), ' ' x 30, "\r";
     
     $discover->();
 });
