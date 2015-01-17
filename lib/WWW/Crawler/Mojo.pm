@@ -245,7 +245,7 @@ our %tag_attributes = (
 sub _wrong_dom_detection {
     my $dom = shift;
     while ($dom = $dom->parent) {
-        return 1 if ($dom->type eq 'script');
+        return 1 if ($dom->type && $dom->type eq 'script');
     }
     return;
 }
