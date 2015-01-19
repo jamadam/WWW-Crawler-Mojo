@@ -12,13 +12,9 @@ use Test::Mojo;
 use Test::More tests => 5;
 
 my $ua = WWW::Crawler::Mojo::UserAgent->new(ioloop => Mojo::IOLoop->singleton);
-my $port;
-my $port2;
-my $port3;
 
 {
-    $port = Mojo::IOLoop::Server->generate_port;
-    Mojo::IOLoop->server(port => $port, sub {
+    my $id1 = Mojo::IOLoop->server({address => '127.0.0.1'}, sub {
         my ($loop, $stream) = @_;
         $stream->on(read => sub {
             my ($stream, $chunk) = @_;
@@ -31,11 +27,12 @@ my $port3;
         });
     });
     
+    my $port = Mojo::IOLoop->acceptor($id1)->handle->sockport;
+    
     $ua->credentials->{"http://localhost:$port"} = "a:b";
     $ua->get("http://localhost:$port/file1");
 
-    $port2 = Mojo::IOLoop::Server->generate_port;
-    Mojo::IOLoop->server(port => $port2, sub {
+    my $id2 = Mojo::IOLoop->server({address => '127.0.0.1'}, sub {
         my ($loop, $stream) = @_;
         $stream->on(read => sub {
             my ($stream, $chunk) = @_;
@@ -47,11 +44,13 @@ my $port3;
             $stream->close;
         });
     });
+    
+    my $port2 = Mojo::IOLoop->acceptor($id2)->handle->sockport;
+    
     $ua->get("http://localhost:$port2/file2");
     $ua->get("http://localhost:$port/file3");
 
-    $port3 = Mojo::IOLoop::Server->generate_port;
-    Mojo::IOLoop->server(port => $port3, sub {
+    my $id3 = Mojo::IOLoop->server({address => '127.0.0.1'}, sub {
         my ($loop, $stream) = @_;
         $stream->on(read => sub {
             my ($stream, $chunk) = @_;
@@ -63,6 +62,9 @@ my $port3;
             $stream->close;
         });
     });
+    
+    my $port3 = Mojo::IOLoop->acceptor($id3)->handle->sockport;
+    
     my $url = Mojo::URL->new("http://localhost:$port3/file2")->userinfo('a:b');
     $ua->get($url);
     $ua->get($url);
