@@ -343,12 +343,13 @@ sub _mod_busyness {
 }
 
 sub _host_key {
+    state $well_known_ports = {http => 80, https => 443};
+    
     my $uri = ref $_[0] ? $_[0] : Mojo::URL->new($_[0]);
     my $key = $uri->scheme. '://'. $uri->ihost;
     
     if (my $port = $uri->port) {
-        if (($uri->scheme eq 'https' && $port != 443) ||
-                                    ($uri->scheme eq 'http' && $port != 80)) {
+        if ($port ne $well_known_ports->{$uri->scheme}) {
             $key .= ':'. $port;
         }
     }

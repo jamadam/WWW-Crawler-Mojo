@@ -8,7 +8,15 @@ use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use WWW::Crawler::Mojo;
 
-use Test::More tests => 42;
+use Test::More tests => 48;
+
+my $hostkey = sub {WWW::Crawler::Mojo::_host_key(@_)};
+is $hostkey->('http://a.com/'), 'http://a.com', 'right key';
+is $hostkey->('http://a.com:80/'), 'http://a.com', 'right key';
+is $hostkey->('http://a.com:8080/'), 'http://a.com:8080', 'right key';
+is $hostkey->('https://a.com/'), 'https://a.com', 'right key';
+is $hostkey->('https://a.com:443/'), 'https://a.com', 'right key';
+is $hostkey->('https://a.com:1443/'), 'https://a.com:1443', 'right key';
 
 my $bot = WWW::Crawler::Mojo->new;
 $bot->max_conn(100);
