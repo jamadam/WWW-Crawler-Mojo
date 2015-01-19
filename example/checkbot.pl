@@ -27,7 +27,7 @@ $bot->on(error => sub {
 $bot->on(res => sub {
     $| = 1;
     
-    my ($bot, $discover, $job, $res) = @_;
+    my ($bot, $browse, $job, $res) = @_;
     
     $count{$res->code}++;
     
@@ -40,7 +40,7 @@ $bot->on(res => sub {
     my @props = map { join(':', $_, $count{$_}) } (sort keys %count);
     print join(' / ', @props), ' ' x 30, "\r";
     
-    $discover->();
+    $browse->();
 });
 
 $bot->on(refer => sub {

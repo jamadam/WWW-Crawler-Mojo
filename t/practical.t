@@ -35,8 +35,8 @@ $bot->enqueue(WWW::Crawler::Mojo::resolve_href($base, '/index.html'));
 my %urls;
 
 $bot->on('res' => sub {
-    my ($bot, $discover, $job, $res) = @_;
-    $discover->();
+    my ($bot, $browse, $job, $res) = @_;
+    $browse->();
     $urls{$job->resolved_uri} = $job;
     Mojo::IOLoop->stop if (! scalar @{$bot->queue});
 });

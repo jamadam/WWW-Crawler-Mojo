@@ -11,10 +11,10 @@ $bot->on(start => sub {
 });
 
 $bot->on(res => sub {
-    my ($bot, $discover, $job, $res) = @_;
+    my ($bot, $browse, $job, $res) = @_;
     say sprintf('fetching %s resulted status %s',
                                     $job->resolved_uri, $res->code);
-    $discover->();
+    $browse->();
 });
 
 $bot->on(refer => sub {

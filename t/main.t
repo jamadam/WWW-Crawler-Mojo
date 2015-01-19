@@ -40,7 +40,7 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->discover($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
+    $bot->browse($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
     
     my $job;
     $job = shift @{$bot->{queue}};
@@ -67,7 +67,7 @@ EOF
     $job = shift @{$bot->{queue}};
     is $job, undef, 'no more urls';
     
-    $bot->discover($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/a'));
+    $bot->browse($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/a'));
     
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
@@ -93,7 +93,7 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->discover($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
+    $bot->browse($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
     
     my $job;
     $job = shift @{$bot->{queue}};
@@ -102,7 +102,7 @@ EOF
     
     $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->discover($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/'));
+    $bot->browse($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/'));
     
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
@@ -128,7 +128,7 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->discover($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
+    $bot->browse($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
     
     my $job;
     $job = shift @{$bot->{queue}};
@@ -137,7 +137,7 @@ EOF
     
     $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->discover($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/'));
+    $bot->browse($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/'));
     
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';

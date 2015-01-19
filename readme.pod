@@ -13,9 +13,9 @@ WWW::Crawler::Mojo - A web crawling framework for Perl
     my $bot = WWW::Crawler::Mojo->new;
     
     $bot->on(res => sub {
-        my ($bot, $discover, $job, $res) = @_;
+        my ($bot, $browse, $job, $res) = @_;
         
-        $discover->();
+        $browse->();
     });
     
     $bot->on(refer => sub {
@@ -115,9 +115,9 @@ implements the following new ones.
 Emitted when crawler got response from server.
 
     $bot->on(res => sub {
-        my ($bot, $discover, $job, $res) = @_;
+        my ($bot, $browse, $job, $res) = @_;
         if (...) {
-            $discover->();
+            $browse->();
         } else {
             # DO NOTHING
         }
@@ -208,11 +208,11 @@ peeping API dispatcher.
 
     $bot->peeping_handler($loop, $stream);
 
-=head2 discover
+=head2 browse
 
 Parses and discovers links in a web page. Each links are appended to FIFO array.
 
-    $bot->discover($res, $job);
+    $bot->browse($res, $job);
 
 =head2 enqueue
 
