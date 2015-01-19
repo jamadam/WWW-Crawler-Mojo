@@ -17,7 +17,6 @@ has fix => sub { {} };
 has active_conns_per_host => sub { {} };
 has max_conn => 1;
 has max_conn_per_host => 1;
-has 'peeping';
 has 'peeping_port';
 has peeping_max_length => 30000;
 has queue => sub { [] };
@@ -64,7 +63,7 @@ sub init {
         $self->emit('empty') if (! scalar @{$self->{queue}});
     });
     
-    if ($self->peeping || $self->peeping_port) {
+    if ($self->peeping_port) {
         # peeping API server
         my $id = Mojo::IOLoop->server({port => $self->peeping_port}, sub {
             $self->peeping_handler(@_);
