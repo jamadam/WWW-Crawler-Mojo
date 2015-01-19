@@ -35,7 +35,7 @@ L<Mojo>::* APIs.
 Note that the module is aimed at trivial use cases of crawling within a
 moderate range of web pages so DO NOT use it for persistent crawler jobs.
 
-=head1 ATTRIBUTE
+=head1 ATTRIBUTES
 
 L<WWW::Crawler::Mojo> inherits all attributes from L<Mojo::EventEmitter> and
 implements the following new ones.
@@ -77,6 +77,14 @@ deepness of URI path detected with slash.
     $bot->depth(5);
     say $bot->depth; # 5
 
+=head2 fix
+
+A hash whoes keys are md5 hashes of enqueued URLs.
+
+=head2 crawler_loop_id
+
+A Mojo::IOLoop instance for main IO loop.
+
 =head2 max_conn
 
 A number of max connections.
@@ -91,9 +99,17 @@ A number of max connections per host.
     $bot->max_conn_per_host(5);
     say $bot->max_conn_per_host; # 5
 
+=head2 peeping_port
+
+An port number for providing peeping monitor. It also evalutated as boolean for
+disabling/enabling the feature. Defaults to undef, meaning disable.
+
+    $bot->peeping_port(3001);
+    say $bot->peeping_port; # 3000
+
 =head2 peeping_max_length
 
-Max length of peeping API content.
+Max length of peeping monitor content.
 
     $bot->peeping_max_length(100000);
     say $bot->peeping_max_length; # 100000
@@ -104,6 +120,14 @@ FIFO array contains L<WWW::Crawler::Mojo::Job> objects.
 
     push(@{$bot->queue}, WWW::Crawler::Mojo::Job->new(...));
     my $job = shift @{$bot->queue};
+
+=head2 shuffle
+
+An interval in seconds to shuffle the job queue. It also evalutated as boolean
+for disabling/enabling the feature. Defaults to undef, meaning disable.
+
+    $bot->shuffle(5);
+    say $bot->shuffle; # 5
 
 =head1 EVENTS
 
@@ -258,6 +282,24 @@ Guesses encoding of HTML or CSS with given L<Mojo::Message::Response> instance.
 Resolves URLs with a base URL.
 
     WWW::Crawler::Mojo::resolve_href($base, $uri);
+
+=head1 CONSTANTS
+
+=head2 %tag_attributes
+
+A catalog of HTML attribute names which possibly contain URLs.
+
+    script  => ['src'],
+    link    => ['href'],
+    a       => ['href'],
+    img     => ['src'],
+    area    => ['href', 'ping'],
+    embed   => ['src'],
+    frame   => ['src'],
+    iframe  => ['src'],
+    input   => ['src'],
+    object  => ['data'],
+    form    => ['action'],
 
 =head1 EXAMPLE
 
