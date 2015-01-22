@@ -55,15 +55,38 @@ This class represents a single crawler job.
 
 =head2 literal_uri
 
+A L<Mojo::URL> instance of the literal URL that has appeared in the referrer
+document.
+
 =head2 resolved_uri
+
+A L<Mojo::URL> instance of the resolved URL.
 
 =head2 referrer
 
+A job instance that has referred the URL.
+
 =head2 depth
+
+The depth in integer.
 
 =head2 redirect_history
 
+An array reference that contains URLs of redirect history.
+
+=head2 method
+
+HTTP request method such as get or post. Defaults to get.
+
+=head2 tx_params
+
+A hash reference that contains params for L<Mojo::Transaction>.
+
 =head1 METHODS
+
+=head2 clone
+
+Clones the job.
 
 =head2 child
 
@@ -72,8 +95,6 @@ Initiate a child job by parent job. The parent uri is set to child referrer.
     my $job1 = WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://a/1');
     my $job2 = $job1->child(resolved_uri => 'http://a/2');
     say $job2->referrer # 'http://a/1'
-
-=head2 add_props
 
 =head2 redirect
 
@@ -84,6 +105,10 @@ Replaces the resolved URI and history at once.
     $job->redirect($url2, $url3);
     say $job->resolved_uri # $url2
     say $job->redirect_history # [$url1, $url3]
+
+=head2 original_uri
+
+Returns the original URI of redirected job.
 
 =head1 AUTHOR
 
