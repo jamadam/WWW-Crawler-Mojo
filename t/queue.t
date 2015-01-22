@@ -7,13 +7,8 @@ use lib catdir(dirname(__FILE__), '../lib');
 use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use WWW::Crawler::Mojo;
-use WWW::Crawler::Mojo::Job;
 
-use Test::More tests => 9;
-
-my $job = WWW::Crawler::Mojo::Job->new(resolved_uri => 'foo');
-my $job2 = $job->clone;
-is $job2->resolved_uri, 'foo', 'right result';
+use Test::More tests => 8;
 
 my $bot = WWW::Crawler::Mojo->new;
 $bot->enqueue('http://example.com/');
@@ -25,10 +20,10 @@ is ref $bot->queue->[1], 'WWW::Crawler::Mojo::Job';
 is $bot->queue->[1]->resolved_uri, 'http://example.com/2';
 is @{$bot->queue}, 2, 'right number';
 
-my $job3 = shift @{$bot->queue};
-$bot->enqueue($job3);
+my $job = shift @{$bot->queue};
+$bot->enqueue($job);
 is @{$bot->queue}, 1, 'right number';
-$bot->requeue($job3);
+$bot->requeue($job);
 is @{$bot->queue}, 2, 'right number';
 
 1;

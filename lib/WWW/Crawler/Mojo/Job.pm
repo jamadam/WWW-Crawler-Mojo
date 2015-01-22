@@ -7,7 +7,6 @@ use Mojo::Base -base;
 has 'literal_uri' => '';
 has 'resolved_uri' => '';
 has 'referrer' => '';
-has 'depth' => 0;
 has 'redirect_history' => sub { [] };
 has 'method' => 'get';
 has 'tx_params';
@@ -19,9 +18,14 @@ sub clone {
 
 sub child {
     my $self = shift;
-    my $child = __PACKAGE__->new(@_,
-                                referrer => $self, depth => $self->{depth} + 1);
+    my $child = __PACKAGE__->new(@_, referrer => $self);
     return $child;
+}
+
+sub depth {
+    my $self = shift;
+    return $self->referrer->depth + 1 if $self->referrer;
+    return 0;
 }
 
 sub redirect {
@@ -66,10 +70,6 @@ A L<Mojo::URL> instance of the resolved URL.
 
 A job instance that has referred the URL.
 
-=head2 depth
-
-The depth in integer.
-
 =head2 redirect_history
 
 An array reference that contains URLs of redirect history.
@@ -95,6 +95,10 @@ Initiate a child job by parent job. The parent uri is set to child referrer.
     my $job1 = WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://a/1');
     my $job2 = $job1->child(resolved_uri => 'http://a/2');
     say $job2->referrer # 'http://a/1'
+
+=head2 depth
+
+Counts the depth of job in referrer series.
 
 =head2 redirect
 
