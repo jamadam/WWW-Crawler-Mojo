@@ -9,14 +9,11 @@ use Test::More;
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
 
-use Test::More tests => 11;
+use Test::More tests => 9;
 
 my $job = WWW::Crawler::Mojo::Job->new(resolved_uri => 'foo');
-$job->add_props(add_baz => 'add_baz_value');
 my $job2 = $job->clone;
 is $job2->resolved_uri, 'foo', 'right result';
-is $job2->additional_props->{add_baz}, 'add_baz_value', 'right prop';
-isnt $job->additional_props, $job2->additional_props, 'deep cloned';
 
 my $bot = WWW::Crawler::Mojo->new;
 $bot->enqueue('http://example.com/');

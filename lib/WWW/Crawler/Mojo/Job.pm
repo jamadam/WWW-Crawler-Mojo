@@ -8,16 +8,13 @@ has 'literal_uri' => '';
 has 'resolved_uri' => '';
 has 'referrer' => '';
 has 'depth' => 0;
-has 'additional_props' => sub { {} };
 has 'redirect_history' => sub { [] };
 has 'method' => 'get';
 has 'tx_params';
 
 sub clone {
     my $self = shift;
-    my $new = __PACKAGE__->new(%$self);
-    $new->additional_props({%{$self->additional_props}});
-    return $new;
+    return __PACKAGE__->new(%$self);
 }
 
 sub child {
@@ -25,14 +22,6 @@ sub child {
     my $child = __PACKAGE__->new(@_,
                                 referrer => $self, depth => $self->{depth} + 1);
     return $child;
-}
-
-sub add_props {
-    my $self = shift;
-    my %hash = scalar @_ == 1 ? %{$_[0]} : @_;
-    for (keys %hash) {
-        $self->additional_props->{$_} = $hash{$_};
-    }
 }
 
 sub redirect {
@@ -71,12 +60,6 @@ This class represents a single crawler job.
 =head2 referrer
 
 =head2 depth
-
-=head2 additional_props
-
-Add propeties for job.
-
-    $job->additional_props({key1 => $value1, key2 => $value2});
 
 =head2 redirect_history
 

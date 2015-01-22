@@ -33,6 +33,7 @@ my $bot = WWW::Crawler::Mojo->new;
 $bot->enqueue(WWW::Crawler::Mojo::resolve_href($base, '/index.html'));
 
 my %urls;
+my %contexts;
 
 $bot->on('res' => sub {
     my ($bot, $browse, $job, $res) = @_;
@@ -43,9 +44,7 @@ $bot->on('res' => sub {
 $bot->on('refer' => sub {
     my ($bot, $enqueue, $job, $context) = @_;
     $enqueue->();
-    $job->add_props(
-        context => $context,
-    );
+    $contexts{$job} = $context;
 });
 
 $bot->init;
@@ -58,45 +57,42 @@ my $q;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/index.html')};
 is $q->depth, 0;
 is $q->referrer, '';
-is $q->additional_props->{context}, undef;
+is $contexts{$q}, undef;
 my $parent = $q;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/js/js1.js')};
 is $q->depth, 1;
 is $q->referrer, $parent;
-is ref $q->additional_props->{context}, 'Mojo::DOM';
-is $q->additional_props->{context},
+is ref $contexts{$q}, 'Mojo::DOM';
+is $contexts{$q},
     qq{<script src="./js/js1.js" type="text/javascript"></script>};
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/css/css1.css')};
 is $q->depth, 1;
 is $q->referrer, $parent;
-is ref $q->additional_props->{context}, 'Mojo::DOM';
-is $q->additional_props->{context},
+is ref $contexts{$q}, 'Mojo::DOM';
+is $contexts{$q},
     qq{<link href="./css/css1.css" rel="stylesheet" type="text/css">};
 my $parent2 = $q;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/img/png1.png')};
 is $q->depth, 1;
 is $q->referrer, $parent;
-is ref $q->additional_props->{context}, 'Mojo::DOM';
-is $q->additional_props->{context},
-    qq{<img alt="png1" src="./img/png1.png">};
+is ref $contexts{$q}, 'Mojo::DOM';
+is $contexts{$q}, qq{<img alt="png1" src="./img/png1.png">};
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/img/png2.png')};
 is $q->depth, 2;
 is $q->referrer, $parent2;
-is ref $q->additional_props->{context}, 'Mojo::URL';
-is $q->additional_props->{context},
-    qq{http://127.0.0.1:$port/css/css1.css};
+is ref $contexts{$q}, 'Mojo::URL';
+is $contexts{$q}, qq{http://127.0.0.1:$port/css/css1.css};
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/img/png3.png')};
 is $q->depth, 1;
 is $q->referrer, $parent;
-is ref $q->additional_props->{context}, 'Mojo::DOM';
-like $q->additional_props->{context},
+is ref $contexts{$q}, 'Mojo::DOM';
+like $contexts{$q},
     qr{<div style="background-image:url\(\./img/png3.png\)">.+</div>}s;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/space.txt')};
 is $q->depth, 1;
 is $q->referrer, $parent;
-is ref $q->additional_props->{context}, 'Mojo::DOM';
-like $q->additional_props->{context},
-    qr{<a href=" ./space.txt ">foo</a>}s;
+is ref $contexts{$q}, 'Mojo::DOM';
+like $contexts{$q}, qr{<a href=" ./space.txt ">foo</a>}s;
 
 $daemon->stop;
 $base = Mojo::URL->new("http://127.0.0.1:$port");
