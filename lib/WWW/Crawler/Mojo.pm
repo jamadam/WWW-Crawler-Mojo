@@ -87,7 +87,7 @@ sub process_job {
     my $job = shift @{$self->{queue}};
     my $uri = $job->resolved_uri;
     my $ua = $self->ua;
-    my $tx = $ua->build_tx($job->method => $uri => $job->tx_params);
+    my $tx = $ua->build_tx($job->method || 'get' => $uri => $job->tx_params);
     
     $ua->start($tx, sub {
         $self->_mod_busyness($uri, -1);

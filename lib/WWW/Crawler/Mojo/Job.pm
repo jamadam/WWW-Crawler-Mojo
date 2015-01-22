@@ -8,7 +8,7 @@ has 'literal_uri' => '';
 has 'resolved_uri' => '';
 has 'referrer' => '';
 has 'redirect_history' => sub { [] };
-has 'method' => 'get';
+has 'method';
 has 'tx_params';
 
 sub clone {
@@ -76,7 +76,7 @@ An array reference that contains URLs of redirect history.
 
 =head2 method
 
-HTTP request method such as get or post. Defaults to get.
+HTTP request method such as get or post.
 
 =head2 tx_params
 
