@@ -8,7 +8,7 @@ use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use Mojo::DOM;
 use WWW::Crawler::Mojo;
-use Test::More tests => 28;
+use Test::More tests => 30;
 
 my $html = <<EOF;
 <html>
@@ -30,6 +30,7 @@ my $html = <<EOF;
     var a = "<a href='hoge'>F</a>";
 </script>
 <a href="escaped?foo=bar&amp;baz=yada">G</a>
+<a href="//example.com">ommit scheme</a>
 </body>
 </html>
 EOF
@@ -58,6 +59,8 @@ is shift(@array)->type, 'a', 'right type';
 is shift @array, 'index3.html', 'right url';
 is shift(@array)->type, 'area', 'right type';
 is shift @array, 'escaped?foo=bar&baz=yada', 'right url';
+is shift(@array)->type, 'a', 'right type';
+is shift @array, '//example.com', 'right url';
 is shift(@array)->type, 'a', 'right type';
 is shift @array, undef, 'no more urls';
 

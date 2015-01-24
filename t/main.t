@@ -10,7 +10,7 @@ use Mojo::DOM;
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
 use Mojo::Message::Response;
-use Test::More tests => 25;
+use Test::More tests => 31;
 
 {
     my $html = <<EOF;
@@ -20,6 +20,7 @@ use Test::More tests => 25;
     <link rel="stylesheet" type="text/css" href="css2.css" />
     <script type="text/javascript" src="js1.js"></script>
     <script type="text/javascript" src="js2.js"></script>
+    <script type="text/javascript" src="//example.com/js3.js"></script>
 </head>
 <body>
 <a href="index1.html">A</a>
@@ -56,6 +57,9 @@ EOF
     is $job->literal_uri, 'js2.js', 'right url';
     is $job->resolved_uri, 'http://example.com/js2.js', 'right url';
     $job = shift @{$bot->{queue}};
+    is $job->literal_uri, '//example.com/js3.js', 'right url';
+    is $job->resolved_uri, 'http://example.com/js3.js', 'right url';
+    $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'index1.html', 'right url';
     is $job->resolved_uri, 'http://example.com/index1.html', 'right url';
     $job = shift @{$bot->{queue}};
@@ -67,11 +71,27 @@ EOF
     $job = shift @{$bot->{queue}};
     is $job, undef, 'no more urls';
     
-    $bot->browse($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/a'));
+    my $bot2 = WWW::Crawler::Mojo->new;
+    $bot2->init;
+    $bot2->browse($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/a'));
     
-    $job = shift @{$bot->{queue}};
+    $job = shift @{$bot2->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
     is $job->resolved_uri, 'http://example.com/a/css1.css', 'right url';
+    
+    my $bot3 = WWW::Crawler::Mojo->new;
+    $bot3->init;
+    $bot3->browse($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'https://example.com/'));
+    
+    $job = shift @{$bot3->{queue}};
+    is $job->literal_uri, 'css1.css', 'right url';
+    is $job->resolved_uri, 'https://example.com/css1.css', 'right url';
+    $job = shift @{$bot3->{queue}};
+    $job = shift @{$bot3->{queue}};
+    $job = shift @{$bot3->{queue}};
+    $job = shift @{$bot3->{queue}};
+    is $job->literal_uri, '//example.com/js3.js', 'right url';
+    is $job->resolved_uri, 'https://example.com/js3.js', 'right url';
 }
 {
     my $html = <<EOF;
