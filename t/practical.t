@@ -39,7 +39,6 @@ $bot->on('res' => sub {
     my ($bot, $browse, $job, $res) = @_;
     $browse->();
     $urls{$job->resolved_uri} = $job;
-    Mojo::IOLoop->stop if (! scalar @{$bot->queue});
 });
 $bot->on('refer' => sub {
     my ($bot, $enqueue, $job, $context) = @_;
@@ -94,13 +93,12 @@ is $q->referrer, $parent;
 is ref $contexts{$q}, 'Mojo::DOM';
 like $contexts{$q}, qr{<a href=" ./space.txt ">foo</a>}s;
 
-$daemon->stop;
 $base = Mojo::URL->new("http://127.0.0.1:$port");
 $bot = WWW::Crawler::Mojo->new;
 $bot->ua->request_timeout(0.1);
 $bot->enqueue(WWW::Crawler::Mojo::resolve_href($base, '/'));
 my $timeout;
-$bot->on('error' => sub { $timeout = 1; Mojo::IOLoop->stop });
+$bot->on('error' => sub { $timeout = 1 });
 $bot->init;
 Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 is $timeout, 1, 'error event fired';

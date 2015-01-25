@@ -11,7 +11,6 @@ use List::Util;
 our $VERSION = '0.07';
 
 has active_conn => 0;
-has 'crawler_loop_id';
 has depth => 10;
 has fix => sub { {} };
 has active_conns_per_host => sub { {} };
@@ -40,7 +39,7 @@ sub crawl {
 sub init {
     my ($self) = @_;
     
-    $self->on('empty', sub { say "Queue is drained out." })
+    $self->on('empty', sub { say "Queue is drained out."; Mojo::IOLoop->reset })
                                         unless $self->has_subscribers('empty');
     $self->on('error', sub { say "An error occured during crawling $_[0]: $_[1]" })
                                         unless $self->has_subscribers('error');
@@ -52,23 +51,14 @@ sub init {
     $self->ua->transactor->name($self->ua_name);
     $self->ua->max_redirects(5);
     
-    my $loop_id = Mojo::IOLoop->recurring(0.25 => sub {
+    Mojo::IOLoop->recurring(0.25 => sub {
         $self->process_job(@_);
     });
     
-    $self->crawler_loop_id($loop_id);
-    
-    # notify queue is drained out
-    Mojo::IOLoop->recurring(5 => sub {
-        $self->emit('empty') if (! scalar @{$self->{queue}});
-    });
-    
     if ($self->peeping_port) {
-        # peeping API server
-        my $id = Mojo::IOLoop->server({port => $self->peeping_port}, sub {
+        Mojo::IOLoop->server({port => $self->peeping_port}, sub {
             $self->peeping_handler(@_);
         });
-        $self->peeping_port(Mojo::IOLoop->acceptor($id)->handle->sockport);
     }
     
     if ($self->shuffle) {
@@ -81,8 +71,11 @@ sub init {
 sub process_job {
     my $self = shift;
     
-    return unless ($self->{queue}->[0] &&
-                $self->_mod_busyness($self->{queue}->[0]->resolved_uri, 1));
+    if (!$self->{queue}->[0]) {
+        $self->emit('empty') and return;
+    } elsif (!($self->_mod_busyness($self->{queue}->[0]->resolved_uri, 1))) {
+        return;
+    }
     
     my $job = shift @{$self->{queue}};
     my $uri = $job->resolved_uri;
@@ -440,10 +433,6 @@ deepness of URI path detected with slash.
 =head2 fix
 
 A hash whoes keys are md5 hashes of enqueued URLs.
-
-=head2 crawler_loop_id
-
-A Mojo::IOLoop instance for main IO loop.
 
 =head2 max_conn
 

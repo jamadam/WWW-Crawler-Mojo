@@ -81,10 +81,6 @@ deepness of URI path detected with slash.
 
 A hash whoes keys are md5 hashes of enqueued URLs.
 
-=head2 crawler_loop_id
-
-A Mojo::IOLoop instance for main IO loop.
-
 =head2 max_conn
 
 A number of max connections.
