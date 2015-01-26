@@ -590,13 +590,26 @@ Parses and discovers links in a web page. Each links are appended to FIFO array.
 
 =head2 enqueue
 
-Append a job with a URI or L<WWW::Crawler::Mojo::Job> object.
+Append one or more URIs or L<WWW::Crawler::Mojo::Job> objects.
 
-    $bot->enqueue($job);
+    $bot->enqueue('http://example.com/index1.html');
+
+OR
+
+    $bot->enqueue($job1, $job2);
+
+OR
+
+    $bot->enqueue(
+        'http://example.com/index1.html',
+        'http://example.com/index2.html',
+        'http://example.com/index3.html',
+    );
 
 =head2 requeue
 
-Append a job for re-try.
+Append one or more URLs or jobs for re-try. This accepts same arguments as
+enqueue method.
 
     $self->on(error => sub {
         my ($self, $msg, $job) = @_;
