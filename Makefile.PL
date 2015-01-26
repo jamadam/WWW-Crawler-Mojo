@@ -9,7 +9,7 @@ my %params = (
     ABSTRACT_FROM => 'lib/WWW/Crawler/Mojo.pm',
     LICENSE       => 'perl',
     PREREQ_PM     => {
-        'Mojolicious' => '5.41',
+        'Mojolicious' => '5.47',
     },
     BUILD_REQUIRES => {
         'Test::More'            => '0.98',
@@ -17,7 +17,8 @@ my %params = (
     },
     META_MERGE => {
         resources => {
-            repository => '',
+            repository  => 'https://github.com/jamadam/WWW-Crawler-Mojo',
+            bugtracker  => 'https://github.com/jamadam/WWW-Crawler-Mojo/issues'
         },
     },
     test => {TESTS => 't/*.t t/*/*.t'},

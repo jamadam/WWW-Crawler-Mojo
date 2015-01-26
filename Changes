@@ -1,5 +1,7 @@
 Revision history for WWW-Crawler-Mojo
 
+0.08 2015/01/26
+
 0.07 2015/01/26
   - Removed additional_props on job class.
   - Renamed discover method to browse.
