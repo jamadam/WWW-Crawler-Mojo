@@ -72,7 +72,8 @@ sub process_job {
     my $self = shift;
     
     if (!$self->{queue}->[0]) {
-        $self->emit('empty') and return;
+        $self->emit('empty') if (!$self->active_conn);
+        return;
     } elsif (!($self->_mod_busyness($self->{queue}->[0]->resolved_uri, 1))) {
         return;
     }
