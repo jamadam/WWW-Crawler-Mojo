@@ -93,9 +93,8 @@ sub process_job {
         my $res = $tx->res;
         
         if (!$res->code) {
-            my $msg = ($res->error) ? $res->error->{message} : 'Unknown error';
-            my $url = $job->resolved_uri;
-            $self->emit('error', $msg, $job);
+            $self->emit('error',
+                ($res->error) ? $res->error->{message} : 'Unknown error', $job);
             return;
         }
         
