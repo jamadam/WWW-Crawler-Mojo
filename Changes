@@ -1,9 +1,14 @@
 Revision history for WWW-Crawler-Mojo
 
-0.07 2014/09/20
-  - Improved error event API.
-  - Improved checkbot example.
+0.07 2015/01/26
+  - Removed additional_props on job class.
   - Renamed discover method to browse.
+  - Removed peeping attribute in favor of peeping_port.
+  - Improved error event API.
+  - Added a feature for auto stop crawling when queue get empty.
+  - Improved checkbot example.
+  - Improved tests.
+  - Improved documents.
 
 0.06 2014/09/20
   - Improved URL detection.
