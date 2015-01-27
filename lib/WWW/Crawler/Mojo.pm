@@ -359,9 +359,7 @@ WWW::Crawler::Mojo - A web crawling framework for Perl
 
     use strict;
     use warnings;
-    use utf8;
     use WWW::Crawler::Mojo;
-    use 5.10.0;
     
     my $bot = WWW::Crawler::Mojo->new;
     
