@@ -61,8 +61,3 @@ utf8::encode($html2);
     $res->headers->content_type('text/html; charset=cp932; hoge');
     is WWW::Crawler::Mojo::guess_encoding($res), 'cp932', 'right encoding';
 }
-
-1;
-
-__END__
-

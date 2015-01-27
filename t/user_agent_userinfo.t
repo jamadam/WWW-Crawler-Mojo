@@ -1,4 +1,3 @@
-#!/usr/bin/env perl
 use Mojo::Base -strict;
 use File::Basename 'dirname';
 use File::Spec;

@@ -84,7 +84,3 @@ is $bot->active_conn, 2, 'right result';
 is $bot->_mod_busyness($uri1, -1), 1, 'right result';
 is $bot->_mod_busyness($uri1, -1), 1, 'right result';
 is $bot->active_conn, 0, 'right result';
-
-1;
-
-__END__

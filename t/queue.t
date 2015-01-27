@@ -25,8 +25,3 @@ $bot->enqueue($job);
 is @{$bot->queue}, 1, 'right number';
 $bot->requeue($job);
 is @{$bot->queue}, 2, 'right number';
-
-1;
-
-__END__
-

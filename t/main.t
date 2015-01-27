@@ -163,8 +163,3 @@ EOF
     is $job->literal_uri, 'css1.css', 'right url';
     is $job->resolved_uri, 'http://example.com/css1.css', 'right url';
 }
-
-1;
-
-__END__
-

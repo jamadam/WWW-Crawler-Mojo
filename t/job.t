@@ -27,8 +27,3 @@ $job6->redirect('http://a.com/', 'http://b.com/', 'http://c.com/');
 is $job6->resolved_uri, 'http://a.com/';
 is_deeply $job6->redirect_history, ['http://b.com/', 'http://c.com/'];
 is $job6->original_uri, 'http://c.com/';
-
-1;
-
-__END__
-

@@ -110,8 +110,3 @@ WWW::Crawler::Mojo::collect_urls_html(Mojo::DOM->new($xhtml), sub {
     push(@array, shift);
 });
 is(scalar @array, 0, 'right length');
-
-1;
-
-__END__
-

@@ -182,8 +182,3 @@ $tmp = WWW::Crawler::Mojo::resolve_href('http://www.eclipse.org/forums/index.php
 is $tmp, 'http://www.eclipse.org/forums/', 'right url';
 $tmp = WWW::Crawler::Mojo::resolve_href('https://www.eclipse.org/forums/index.php/f/48/', '//www.eclipse.org/forums/');
 is $tmp, 'https://www.eclipse.org/forums/', 'right url';
-
-1;
-
-__END__
-
