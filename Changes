@@ -1,5 +1,7 @@
 Revision history for WWW-Crawler-Mojo
 
+0.09 2015/01/29
+
 0.08 2015/01/29
   - Renamed browse method to scrape.
   - Improved documents.
