@@ -50,10 +50,10 @@ $bot->enqueue(WWW::Crawler::Mojo::resolve_href($base, '/'));
 my $last_job;
 
 $bot->on('res' => sub {
-    my ($bot, $browse, $job, $res) = @_;
+    my ($bot, $scrape, $job, $res) = @_;
     $job->literal_uri($job->literal_uri->to_string) if $job->literal_uri;
     $job->resolved_uri($job->resolved_uri->to_string);
-    $browse->();
+    $scrape->();
     $last_job = $job;
 });
 $bot->on('refer' => sub {

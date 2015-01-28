@@ -98,7 +98,7 @@ sub process_job {
             return;
         }
         
-        $self->emit('res', sub { $self->browse($res, $job) }, $job, $res);
+        $self->emit('res', sub { $self->scrape($res, $job) }, $job, $res);
     });
 }
 
@@ -149,7 +149,7 @@ sub peeping_handler {
     });
 }
 
-sub browse {
+sub scrape {
     my ($self, $res, $job) = @_;
     
     return if ($res->code != 200);
@@ -364,9 +364,9 @@ WWW::Crawler::Mojo - A web crawling framework for Perl
     my $bot = WWW::Crawler::Mojo->new;
     
     $bot->on(res => sub {
-        my ($bot, $browse, $job, $res) = @_;
+        my ($bot, $scrape, $job, $res) = @_;
         
-        $browse->();
+        $scrape->();
     });
     
     $bot->on(refer => sub {
@@ -486,9 +486,9 @@ implements the following new ones.
 Emitted when crawler got response from server.
 
     $bot->on(res => sub {
-        my ($bot, $browse, $job, $res) = @_;
+        my ($bot, $scrape, $job, $res) = @_;
         if (...) {
-            $browse->();
+            $scrape->();
         } else {
             # DO NOTHING
         }
@@ -579,11 +579,11 @@ peeping API dispatcher.
 
     $bot->peeping_handler($loop, $stream);
 
-=head2 browse
+=head2 scrape
 
 Parses and discovers links in a web page. Each links are appended to FIFO array.
 
-    $bot->browse($res, $job);
+    $bot->scrape($res, $job);
 
 =head2 enqueue
 

@@ -41,8 +41,8 @@ $bot->enqueue(WWW::Crawler::Mojo::resolve_href($base, '/index.html'));
 my %urls;
 
 $bot->on('res' => sub {
-    my ($bot, $browse, $job, $res) = @_;
-    $browse->();
+    my ($bot, $scrape, $job, $res) = @_;
+    $scrape->();
     $urls{$job->resolved_uri} = $job;
 });
 $bot->on('refer' => sub {

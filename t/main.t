@@ -41,7 +41,7 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->browse($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
+    $bot->scrape($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
     
     my $job;
     $job = shift @{$bot->{queue}};
@@ -73,7 +73,7 @@ EOF
     
     my $bot2 = WWW::Crawler::Mojo->new;
     $bot2->init;
-    $bot2->browse($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/a'));
+    $bot2->scrape($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/a'));
     
     $job = shift @{$bot2->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
@@ -81,7 +81,7 @@ EOF
     
     my $bot3 = WWW::Crawler::Mojo->new;
     $bot3->init;
-    $bot3->browse($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'https://example.com/'));
+    $bot3->scrape($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'https://example.com/'));
     
     $job = shift @{$bot3->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
@@ -113,7 +113,7 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->browse($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
+    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
     
     my $job;
     $job = shift @{$bot->{queue}};
@@ -122,7 +122,7 @@ EOF
     
     $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->browse($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/'));
+    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/'));
     
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
@@ -148,7 +148,7 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->browse($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
+    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
     
     my $job;
     $job = shift @{$bot->{queue}};
@@ -157,7 +157,7 @@ EOF
     
     $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->browse($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/'));
+    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/'));
     
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';

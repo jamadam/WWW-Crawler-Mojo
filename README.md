@@ -35,9 +35,9 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
     my $bot = WWW::Crawler::Mojo->new;
     
     $bot->on(res => sub {
-        my ($bot, $browse, $job, $res) = @_;
+        my ($bot, $scrape, $job, $res) = @_;
         
-        $browse->() if (...); # collect URLs from this document
+        $scrape->() if (...); # collect URLs from this document
     });
     
     $bot->on(refer => sub {
