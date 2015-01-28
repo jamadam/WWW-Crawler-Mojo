@@ -53,7 +53,7 @@ WWW::Crawler::Mojo::UserAgent inherits all attributes from Mojo::UserAgent.
 
 =head2 keep_credentials
 
-Set true to set the feature on.
+Set true to set the feature on, defaults to 1.
 
     $ua->keep_credentials(1);
 
