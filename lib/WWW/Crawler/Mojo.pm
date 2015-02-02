@@ -185,13 +185,13 @@ sub scrape {
     if ($type && $type =~ qr{text/(html|xml)}) {
         my $encode = guess_encoding($res) || 'utf-8';
         my $body = Encode::decode($encode, $res->body);
-        collect_urls_html(Mojo::DOM->new($body), $cb);
+        $self->collect_urls_html(Mojo::DOM->new($body), $cb);
     }
     
     if ($type && $type =~ qr{text/css}) {
         my $encode  = guess_encoding($res) || 'utf-8';
         my $body    = Encode::decode($encode, $res->body);
-        collect_urls_css($body, $cb);
+        $self->collect_urls_css($body, $cb);
     }
 };
 
@@ -243,7 +243,7 @@ sub _wrong_dom_detection {
 }
 
 sub collect_urls_html {
-    my ($dom, $cb) = @_;
+    my ($self, $dom, $cb) = @_;
     
     $dom->find(join(',', keys %tag_attributes))->each(sub {
         my $dom = shift;
@@ -260,16 +260,16 @@ sub collect_urls_html {
     });
     $dom->find('style')->each(sub {
         my $dom = shift;
-        collect_urls_css($dom->content || '', sub { $cb->(shift, $dom) });
+        $self->collect_urls_css($dom->content || '', sub { $cb->(shift, $dom) });
     });
     $dom->find('*[style]')->each(sub {
         my $dom = shift;
-        collect_urls_css($dom->{style}, sub { $cb->(shift, $dom) });
+        $self->collect_urls_css($dom->{style}, sub { $cb->(shift, $dom) });
     });
 }
 
 sub collect_urls_css {
-    my ($str, $cb) = @_;
+    my ($self, $str, $cb) = @_;
     $str =~ s{/\*.+?\*/}{}gs;
     my @urls = ($str =~ m{url\(['"]?(.+?)['"]?\)}g);
     $cb->($_) for (@urls);
@@ -619,7 +619,7 @@ enqueue method.
 
 Collects URLs out of HTML.
 
-    WWW::Crawler::Mojo::collect_urls_html($dom, sub {
+    $bot->collect_urls_html($dom, sub {
         my ($uri, $dom) = @_;
     });
 
@@ -627,7 +627,7 @@ Collects URLs out of HTML.
 
 Collects URLs out of CSS.
 
-    WWW::Crawler::Mojo::collect_urls_css($dom, sub {
+    $bot->collect_urls_css($dom, sub {
         my $uri = shift;
     });
 

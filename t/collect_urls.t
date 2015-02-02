@@ -36,7 +36,8 @@ my $html = <<EOF;
 EOF
 
 my @array;
-WWW::Crawler::Mojo::collect_urls_html(Mojo::DOM->new($html), sub {
+my $bot = WWW::Crawler::Mojo->new;
+$bot->collect_urls_html(Mojo::DOM->new($html), sub {
     push(@array, shift);
     push(@array, shift);
 });
@@ -78,7 +79,7 @@ div {
 EOF
 
     my @array;
-    WWW::Crawler::Mojo::collect_urls_css($css, sub {
+    $bot->collect_urls_css($css, sub {
         push(@array, shift);
         push(@array, shift);
     });
@@ -105,7 +106,7 @@ my $xhtml = <<EOF;
 EOF
 
 @array = ();
-WWW::Crawler::Mojo::collect_urls_html(Mojo::DOM->new($xhtml), sub {
+$bot->collect_urls_html(Mojo::DOM->new($xhtml), sub {
     push(@array, shift);
     push(@array, shift);
 });
