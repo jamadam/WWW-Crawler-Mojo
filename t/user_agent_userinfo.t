@@ -1,4 +1,9 @@
 use Mojo::Base -strict;
+
+BEGIN {
+  $ENV{MOJO_REACTOR} = 'Mojo::Reactor::Poll';
+}
+
 use File::Basename 'dirname';
 use File::Spec;
 use lib join '/', File::Spec->splitdir(dirname(__FILE__)), '../extlib';
