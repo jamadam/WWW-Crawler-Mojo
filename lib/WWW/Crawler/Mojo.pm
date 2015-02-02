@@ -10,6 +10,20 @@ use Mojo::Util qw{md5_sum xml_escape dumper};
 use List::Util;
 our $VERSION = '0.09';
 
+our %tag_attributes = (
+    script  => ['src'],
+    link    => ['href'],
+    a       => ['href'],
+    img     => ['src'],
+    area    => ['href', 'ping'],
+    embed   => ['src'],
+    frame   => ['src'],
+    iframe  => ['src'],
+    input   => ['src'],
+    object  => ['data'],
+    form    => ['action'],
+);
+
 has active_conn => 0;
 has depth => 10;
 has fix => sub { {} };
@@ -23,6 +37,7 @@ has 'ua' => sub { WWW::Crawler::Mojo::UserAgent->new };
 has 'ua_name' =>
     "www-crawler-mojo/$VERSION (+https://github.com/jamadam/www-crawler-mojo)";
 has 'shuffle';
+has tag_attributes => sub { \%tag_attributes };
 
 sub crawl {
     my ($self) = @_;
@@ -166,16 +181,12 @@ sub scrape {
     my $cb = sub {
         my ($url, $dom) = @_;
         
-        $url =~ s{^\s*}{}g;
-        $url =~ s{\s*$}{}g;
+        $url = _clean_url_obj($url);
+        my $resolved = resolve_href($base, $url);
         
-        $url = Mojo::URL->new($url);
+        return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});
         
-        return unless
-                (!$url->scheme || $url->scheme =~ qr{http|https|ftp|ws|wss});
-        
-        my $child = $job->child(
-            resolved_uri => resolve_href($base, $url), literal_uri => $url);
+        my $child = $job->child(resolved_uri => $resolved, literal_uri => $url);
         
         $self->emit('refer', sub {
             $self->enqueue($_[0] || $child);
@@ -220,35 +231,13 @@ sub _enqueue {
     }
 }
 
-our %tag_attributes = (
-    script  => ['src'],
-    link    => ['href'],
-    a       => ['href'],
-    img     => ['src'],
-    area    => ['href', 'ping'],
-    embed   => ['src'],
-    frame   => ['src'],
-    iframe  => ['src'],
-    input   => ['src'],
-    object  => ['data'],
-    form    => ['action'],
-);
-
-sub _wrong_dom_detection {
-    my $dom = shift;
-    while ($dom = $dom->parent) {
-        return 1 if ($dom->type && $dom->type eq 'script');
-    }
-    return;
-}
-
 sub collect_urls_html {
     my ($self, $dom, $cb) = @_;
     
-    $dom->find(join(',', keys %tag_attributes))->each(sub {
+    $dom->find(join(',', keys %{$self->tag_attributes}))->each(sub {
         my $dom = shift;
         return if ($dom->xml && _wrong_dom_detection($dom));
-        for (@{$tag_attributes{$dom->type}}) {
+        for (@{$self->tag_attributes->{$dom->type}}) {
             $cb->($dom->{$_}, $dom) if ($dom->{$_});
         }
     });
@@ -287,19 +276,6 @@ sub guess_encoding {
     return _guess_encoding_css($res->body) if ($type =~ qr{text/css});
 }
 
-sub _guess_encoding_css {
-    return (shift =~ qr{^\s*\@charset ['"](.+?)['"];}is)[0];
-}
-
-sub _guess_encoding_html {
-    my $head = (shift =~ qr{<head>(.+)</head>}is)[0] or return;
-    my $charset;
-    Mojo::DOM->new($head)->find('meta[http\-equiv=Content-Type]')->each(sub{
-        $charset = (shift->{content} =~ $charset_re)[0];
-    });
-    return $charset;
-}
-
 sub resolve_href {
     my ($base, $href) = @_;
     $href = ref $href ? $href : Mojo::URL->new($href);
@@ -318,6 +294,34 @@ sub _urls_redirect {
     @urls = _urls_redirect($tx->previous) if ($tx->previous);
     unshift(@urls, $tx->req->url->userinfo(undef));
     return @urls;
+}
+
+sub _wrong_dom_detection {
+    my $dom = shift;
+    while ($dom = $dom->parent) {
+        return 1 if ($dom->type && $dom->type eq 'script');
+    }
+    return;
+}
+
+sub _clean_url_obj {
+    my $url = shift;
+    $url =~ s{^\s*}{}g;
+    $url =~ s{\s*$}{}g;
+    return Mojo::URL->new($url);
+}
+
+sub _guess_encoding_css {
+    return (shift =~ qr{^\s*\@charset ['"](.+?)['"];}is)[0];
+}
+
+sub _guess_encoding_html {
+    my $head = (shift =~ qr{<head>(.+)</head>}is)[0] or return;
+    my $charset;
+    Mojo::DOM->new($head)->find('meta[http\-equiv=Content-Type]')->each(sub{
+        $charset = (shift->{content} =~ $charset_re)[0];
+    });
+    return $charset;
 }
 
 sub _mod_busyness {
@@ -390,6 +394,11 @@ moderate range of web pages so DO NOT use it for persistent crawler jobs.
 
 L<WWW::Crawler::Mojo> inherits all attributes from L<Mojo::EventEmitter> and
 implements the following new ones.
+
+=head2 tag_attributes
+
+Catalog of HTML attribute names which possibly contain URLs. Defaults to
+%__PACKAGE__::tag_attributes.
 
 =head2 ua
 
