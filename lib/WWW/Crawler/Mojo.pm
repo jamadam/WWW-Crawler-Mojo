@@ -21,7 +21,9 @@ our %tag_attributes = (
     iframe  => ['src'],
     input   => ['src'],
     object  => ['data'],
-    form    => ['action'],
+    form    => [sub {
+        _weave_form_data(@_);
+    }],
 );
 
 has active_conn => 0;
@@ -238,6 +240,9 @@ sub collect_urls_html {
         my $dom = shift;
         return if ($dom->xml && _wrong_dom_detection($dom));
         for (@{$self->tag_attributes->{$dom->type}}) {
+            if (ref $_ && ref $_ eq 'CODE') {
+                $cb->($_->($dom));
+            }
             $cb->($dom->{$_}, $dom) if ($dom->{$_});
         }
     });
@@ -286,6 +291,11 @@ sub resolve_href {
     }
     $abs->path->trailing_slash($base->path->trailing_slash) if (!$href->path->to_string);
     return $abs;
+}
+
+sub _weave_form_data {
+    my $dom = shift;
+    return $dom->{action}, 'GET', {};
 }
 
 sub _urls_redirect {
