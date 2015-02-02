@@ -181,7 +181,7 @@ sub scrape {
     }
     
     my $cb = sub {
-        my ($url, $dom) = @_;
+        my ($url, $dom, $method, $params) = @_;
         
         $url = _clean_url_obj($url);
         my $resolved = resolve_href($base, $url);
@@ -189,6 +189,8 @@ sub scrape {
         return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});
         
         my $child = $job->child(resolved_uri => $resolved, literal_uri => $url);
+        $child->method($method) if $method;
+        $child->tx_params($params) if $params;
         
         $self->emit('refer', sub {
             $self->enqueue($_[0] || $child);
@@ -294,8 +296,42 @@ sub resolve_href {
 }
 
 sub _weave_form_data {
-    my $dom = shift;
-    return $dom->{action}, 'GET', {};
+    my $form = shift;
+    my %seed;
+    my $submit;
+    
+    $form->find("*[name]")->each(sub {
+        my $e = shift;
+        my $type = $e->attr('type');
+        my $name = $e->attr('name');
+        $seed{$name} ||= [];
+        
+        if (!$submit && grep{$_ eq $type} qw{submit image}) {
+            $submit = 1;
+            push(@{$seed{$name}}, $e->attr('value'));
+        }
+        if (grep {$_ eq $type} qw{text hidden number}) {
+            push(@{$seed{$name}}, $e->attr('value'));
+        }
+        if ($e->type eq 'textarea') {
+            push(@{$seed{$name}}, $e->text);
+        }
+        if (grep {$_ eq $type} qw{checkbox}) {
+            push(@{$seed{$name}}, $e->attr('value')) if (exists $e->{checked});
+        }
+        if (grep {$_ eq $type} qw{radio}) {
+            push(@{$seed{$name}}, $e->attr('value')) if (exists $e->{checked});
+        }
+        
+        if ($e->type eq 'select') {
+            $e->find('option[selected=selected]')->each(sub {
+                push(@{$seed{$name}}, shift->attr('value'));
+            });
+        }
+    });
+    
+    return $form->{action},
+                    uc ($form->{method} || 'GET'), Mojo::Parameters->new(%seed);
 }
 
 sub _urls_redirect {
