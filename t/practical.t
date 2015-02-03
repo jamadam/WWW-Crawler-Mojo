@@ -7,7 +7,7 @@ use Data::Dumper;
 use Mojo::IOLoop;
 use WWW::Crawler::Mojo;
 
-use Test::More tests => 29;
+use Test::More tests => 39;
 
 {
     package MockServer;
@@ -50,7 +50,7 @@ $bot->init;
 
 Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
-is((scalar keys %urls), 8, 'right length');
+is((scalar keys %urls), 10, 'right length');
 
 my $q;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/index.html')};
@@ -92,6 +92,18 @@ is $q->depth, 1;
 is $q->referrer, $parent;
 is ref $contexts{$q}, 'Mojo::DOM';
 like $contexts{$q}, qr{<a href=" ./space.txt ">foo</a>}s;
+$q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/form_receptor1')};
+is $q->resolved_uri, "http://127.0.0.1:$port/form_receptor1";
+is $q->depth, 1;
+is $q->referrer, $parent;
+is ref $contexts{$q}, 'Mojo::DOM';
+like $contexts{$q}, qr{<form action="/form_receptor1" method="post">.+}s;
+$q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/form_receptor2?a=b&query2=default')};
+is $q->resolved_uri, "http://127.0.0.1:$port/form_receptor2?a=b&query2=default";
+is $q->depth, 1;
+is $q->referrer, $parent;
+is ref $contexts{$q}, 'Mojo::DOM';
+like $contexts{$q}, qr{<form action="/form_receptor2\?a=b" method="get">.+}s;
 
 $base = Mojo::URL->new("http://127.0.0.1:$port");
 $bot = WWW::Crawler::Mojo->new;

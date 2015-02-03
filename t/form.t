@@ -283,9 +283,9 @@ EOF
     my $job;
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, '/index1.html', 'right url';
-    is $job->resolved_uri, 'http://example.com/index1.html', 'right url';
+    is $job->resolved_uri, 'http://example.com/index1.html?foo=default', 'right url';
     is $job->method, 'GET', 'right method';
-    is_deeply $job->tx_params->to_hash, {foo => 'default'}, 'right params';
+    is_deeply $job->tx_params, undef, 'right params';
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, '/index2.html', 'right url';
     is $job->resolved_uri, 'http://example.com/index2.html', 'right url';

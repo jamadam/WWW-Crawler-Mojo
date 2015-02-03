@@ -186,8 +186,16 @@ sub scrape {
         return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});
         
         my $child = $job->child(resolved_uri => $resolved, literal_uri => $url);
+        
         $child->method($method) if $method;
-        $child->tx_params($params) if $params;
+        
+        if ($params) {
+            if ($method eq 'GET') {
+                $child->resolved_uri->query->append($params);
+            } else {
+                $child->tx_params($params);
+            }
+        }
         
         $self->emit('refer', sub {
             $self->enqueue($_[0] || $child);
