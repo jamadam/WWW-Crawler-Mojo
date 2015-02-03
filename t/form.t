@@ -263,7 +263,7 @@ EOF
     <input type="text" name="foo" value="default">
     <input type="submit" value="submit">
 </form>
-<form action="/index2.html">
+<form action="/index2.html" method="post">
     <textarea name="foo">foo</textarea>
     <input type="submit" value="submit">
 </form>
@@ -289,7 +289,7 @@ EOF
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, '/index2.html', 'right url';
     is $job->resolved_uri, 'http://example.com/index2.html', 'right url';
-    is $job->method, 'GET', 'right method';
+    is $job->method, 'POST', 'right method';
     is_deeply $job->tx_params->to_hash, {foo => 'foo'}, 'right params';
     $job = shift @{$bot->{queue}};
     is $job, undef, 'no more urls';
