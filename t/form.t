@@ -10,7 +10,7 @@ use Mojo::DOM;
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
 use Mojo::Message::Response;
-use Test::More tests => 25;
+use Test::More tests => 29;
 
 sub _weave_form_data { WWW::Crawler::Mojo::_weave_form_data(@_); }
 
@@ -23,7 +23,7 @@ sub _weave_form_data { WWW::Crawler::Mojo::_weave_form_data(@_); }
     </form>
 </div>
 EOF
-    my ($action, $method, $params) = _weave_form_data($dom->at('form'));
+    my ($action, $context, $method, $params) = _weave_form_data($dom->at('form'));
     is $action, '/index1.html';
     is $method, 'GET';
     is $params, 'foo=default';
@@ -38,7 +38,7 @@ EOF
     </form>
 </div>
 EOF
-    my ($action, $method, $params) = _weave_form_data($dom->at('form'));
+    my ($action, $context, $method, $params) = _weave_form_data($dom->at('form'));
     is $action, '/index1.html';
     is $method, 'POST';
     is_deeply $params->to_hash, {bar => 'submit', foo => 'default'};
@@ -195,62 +195,62 @@ EOF
 </html>
 EOF
     {
-        my ($action, $method, $params) = _weave_form_data($dom->find('form')->[0]);
+        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[0]);
         is_deeply $params->to_hash, {
             baz => 'bazValue', bar => 'barValue', btn => 'send',
             foo => 'fooValue', yada => 'yadaValue'
         };
     }
     {
-        my ($action, $method, $params) = _weave_form_data($dom->find('form')->[1]);
+        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[1]);
         is_deeply $params->to_hash, {foo => 'fooValue'};
     }
     {
-        my ($action, $method, $params) = _weave_form_data($dom->find('form')->[2]);
+        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[2]);
         is_deeply $params->to_hash, {};
     }
     {
-        my ($action, $method, $params) = _weave_form_data($dom->find('form')->[3]);
+        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[3]);
         is_deeply $params->to_hash, {foo => 'fooValue3'};
     }
     {
-        my ($action, $method, $params) = _weave_form_data($dom->find('form')->[4]);
+        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[4]);
         is_deeply $params->to_hash, {foo => ['', 'fooValue2']};
     }
     {
-        my ($action, $method, $params) = _weave_form_data($dom->find('form')->[5]);
+        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[5]);
         is_deeply $params->to_hash, {foo => 'fooValue2'};
     }
     {
-        my ($action, $method, $params) = _weave_form_data($dom->find('form')->[6]);
+        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[6]);
         is_deeply $params->to_hash, {};
     }
     {
-        my ($action, $method, $params) = _weave_form_data($dom->find('form')->[7]);
+        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[7]);
         is_deeply $params->to_hash, {foo => ''};
     }
     {
-        my ($action, $method, $params) = _weave_form_data($dom->find('form')->[8]);
+        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[8]);
         is_deeply $params->to_hash, {foo => ''};
     }
     {
-        my ($action, $method, $params) = _weave_form_data($dom->find('form')->[9]);
+        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[9]);
         is_deeply $params->to_hash, {};
     }
     {
-        my ($action, $method, $params) = _weave_form_data($dom->find('form')->[10]);
+        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[10]);
         is_deeply $params->to_hash, {foo => ''};
     }
     {
-        my ($action, $method, $params) = _weave_form_data($dom->find('form')->[11]);
+        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[11]);
         is_deeply $params->to_hash, {foo => ['value1', 'value2', 'value3']};
     }
     {
-        my ($action, $method, $params) = _weave_form_data($dom->find('form')->[12]);
+        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[12]);
         is_deeply $params->to_hash, {foo => 'やったー'};
     }
     {
-        my ($action, $method, $params) = _weave_form_data($dom->find('form')->[13]);
+        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[13]);
         is_deeply $params->to_hash, {foo => 'foo default', bar => 'bar default', baz => 'baz default'};
     }
 }
@@ -284,9 +284,13 @@ EOF
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, '/index1.html', 'right url';
     is $job->resolved_uri, 'http://example.com/index1.html', 'right url';
+    is $job->method, 'GET', 'right method';
+    is_deeply $job->tx_params->to_hash, {foo => 'default'}, 'right params';
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, '/index2.html', 'right url';
     is $job->resolved_uri, 'http://example.com/index2.html', 'right url';
+    is $job->method, 'GET', 'right method';
+    is_deeply $job->tx_params->to_hash, {foo => 'foo'}, 'right params';
     $job = shift @{$bot->{queue}};
     is $job, undef, 'no more urls';
 }

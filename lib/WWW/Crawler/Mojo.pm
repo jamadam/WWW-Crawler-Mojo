@@ -325,7 +325,7 @@ sub _weave_form_data {
         }
     });
     
-    return $form->{action},
+    return $form->{action}, $form,
                     uc ($form->{method} || 'GET'), Mojo::Parameters->new(%seed);
 }
 
