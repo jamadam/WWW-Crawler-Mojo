@@ -9,7 +9,7 @@ my %params = (
     ABSTRACT_FROM => 'lib/WWW/Crawler/Mojo.pm',
     LICENSE       => 'perl',
     PREREQ_PM     => {
-        'Mojolicious' => '5.47',
+        'Mojolicious' => '5.77',
     },
     BUILD_REQUIRES => {
         'Test::More'            => '0.98',
