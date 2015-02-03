@@ -297,33 +297,31 @@ sub _weave_form_data {
     my %seed;
     my $submit;
     
-    $form->find("*[name]")->each(sub {
+    $form->find("[name]")->each(sub {
         my $e = shift;
-        my $type = $e->attr('type');
         my $name = $e->attr('name');
         $seed{$name} ||= [];
-        
-        if (!$submit && grep{$_ eq $type} qw{submit image}) {
-            $submit = 1;
-            push(@{$seed{$name}}, $e->attr('value'));
-        }
-        if (grep {$_ eq $type} qw{text hidden number}) {
-            push(@{$seed{$name}}, $e->attr('value'));
-        }
-        if ($e->type eq 'textarea') {
-            push(@{$seed{$name}}, $e->text);
-        }
-        if (grep {$_ eq $type} qw{checkbox}) {
-            push(@{$seed{$name}}, $e->attr('value')) if (exists $e->{checked});
-        }
-        if (grep {$_ eq $type} qw{radio}) {
-            push(@{$seed{$name}}, $e->attr('value')) if (exists $e->{checked});
-        }
         
         if ($e->type eq 'select') {
             $e->find('option[selected=selected]')->each(sub {
                 push(@{$seed{$name}}, shift->attr('value'));
             });
+        } elsif ($e->type eq 'textarea') {
+            push(@{$seed{$name}}, $e->text);
+        }
+        
+        my $type = $e->attr('type');
+        return unless $type;
+        
+        if (!$submit && grep{$_ eq $type} qw{submit image}) {
+            $submit = 1;
+            push(@{$seed{$name}}, $e->attr('value'));
+        } elsif (grep {$_ eq $type} qw{text hidden number}) {
+            push(@{$seed{$name}}, $e->attr('value'));
+        } elsif (grep {$_ eq $type} qw{checkbox}) {
+            push(@{$seed{$name}}, $e->attr('value')) if (exists $e->{checked});
+        } elsif (grep {$_ eq $type} qw{radio}) {
+            push(@{$seed{$name}}, $e->attr('value')) if (exists $e->{checked});
         }
     });
     
