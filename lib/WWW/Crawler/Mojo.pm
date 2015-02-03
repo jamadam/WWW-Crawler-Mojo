@@ -27,7 +27,6 @@ our %tag_attributes = (
 );
 
 has active_conn => 0;
-has depth => 10;
 has fix => sub { {} };
 has active_conns_per_host => sub { {} };
 has max_conn => 1;
@@ -126,7 +125,6 @@ sub say_start {
 ----------------------------------------
 Crawling is starting with @{[ $self->queue->[0]->resolved_uri ]}
 Max Connection  : @{[ $self->max_conn ]}
-Depth           : @{[ $self->depth ]}
 User Agent      : @{[ $self->ua_name ]}
 EOF
 
@@ -170,7 +168,6 @@ sub scrape {
     my ($self, $res, $job) = @_;
     
     return if ($res->code != 200);
-    return if ($self->depth && $job->depth >= $self->depth);
     
     my $base = $job->resolved_uri;
     my $type = $res->headers->content_type;
@@ -473,15 +470,6 @@ A number of current connections per host.
 
     $bot->active_conns_per_host($bot->active_conns_per_host + 1);
     say $bot->active_conns_per_host;
-
-=head2 depth
-
-A number of max depth to crawl. Note that the depth is the number of HTTP
-requests to get to URI starting with the first job. This doesn't mean the
-deepness of URI path detected with slash.
-
-    $bot->depth(5);
-    say $bot->depth; # 5
 
 =head2 fix
 
