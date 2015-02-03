@@ -10,7 +10,7 @@ use Mojo::DOM;
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
 use Mojo::Message::Response;
-use Test::More tests => 29;
+use Test::More tests => 33;
 
 sub _weave_form_data { WWW::Crawler::Mojo::_weave_form_data(@_); }
 
@@ -267,6 +267,10 @@ EOF
     <textarea name="foo">foo</textarea>
     <input type="submit" value="submit">
 </form>
+<form action="/index2.html" method="post">
+    <textarea name="bar">bar</textarea>
+    <input type="submit" value="submit">
+</form>
 </body>
 </html>
 EOF
@@ -291,6 +295,11 @@ EOF
     is $job->resolved_uri, 'http://example.com/index2.html', 'right url';
     is $job->method, 'POST', 'right method';
     is_deeply $job->tx_params->to_hash, {foo => 'foo'}, 'right params';
+    $job = shift @{$bot->{queue}};
+    is $job->literal_uri, '/index2.html', 'right url';
+    is $job->resolved_uri, 'http://example.com/index2.html', 'right url';
+    is $job->method, 'POST', 'right method';
+    is_deeply $job->tx_params->to_hash, {bar => 'bar'}, 'right params';
     $job = shift @{$bot->{queue}};
     is $job, undef, 'no more urls';
 }

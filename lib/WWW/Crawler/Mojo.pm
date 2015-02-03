@@ -232,7 +232,9 @@ sub _enqueue {
             $job = WWW::Crawler::Mojo::Job->new(resolved_uri => $url);
         }
         
-        my $md5 = md5_sum($job->resolved_uri->to_string);
+        my $md5_seed = $job->resolved_uri->to_string. ($job->method || '');
+        $md5_seed .= $job->tx_params->to_string if ($job->tx_params);
+        my $md5 = md5_sum($md5_seed);
         if ($requeue || !exists $self->fix->{$md5}) {
             $self->fix->{$md5} = undef;
             push(@{$self->{queue}}, $job);
