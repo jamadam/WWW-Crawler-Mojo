@@ -17,6 +17,7 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
 * Shuffling the queue periodically.
 * Peeping server for crawler development.
 * Crawl beyond basic authentication.
+* Crawl beyond form submittion.
 
 [Mojo::URL]:http://mojolicio.us/perldoc/Mojo/URL
 [Mojo::DOM]:http://mojolicio.us/perldoc/Mojo/DOM
@@ -58,6 +59,48 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
 * [WWW::Crawler::Mojo](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo)
 * [WWW::Crawler::Mojo::Job](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AJob)
 * [WWW::Crawler::Mojo::UserAgent](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AUserAgent)
+
+## Examples
+
+Restrict enqueuing URLs by depth.
+
+    $bot->on(refer => sub {
+        my ($bot, $enqueue, $job, $context) = @_;
+        
+        $enqueue->() if ($job->depth < 5);
+    });
+
+Restrict enqueuing URLs by host.
+
+    $bot->on(refer => sub {
+        my ($bot, $enqueue, $job, $context) = @_;
+        
+        $enqueue->() if $job->resolved_uri->host eq 'example.com';
+    });
+
+Restrict enqueuing URLs by referrer's host.
+
+	$bot->on(refer => sub {
+        my ($bot, $enqueue, $job, $context) = @_;
+        
+        $enqueue->() if $job->referrer->resolved_uri->host eq 'example.com';
+    });
+
+Excepting enqueuing URLs by path.
+
+    $bot->on(refer => sub {
+        my ($bot, $enqueue, $job, $context) = @_;
+        
+        $enqueue->() unless ($job->resolved_uri->path =~ qr{^/foo/});
+    });
+
+Restricting following URLs by host on response event.
+
+    $bot->on(res => sub {
+        my ($bot, $scrape, $job, $res) = @_;
+        
+        $scrape->() if ($job->resolved_uri->host eq 'example.com');
+    });
 
 ## Other examples
 
