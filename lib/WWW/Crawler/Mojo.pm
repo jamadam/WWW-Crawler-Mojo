@@ -537,7 +537,7 @@ implements the following new ones.
 
 =head2 res
 
-Emitted when crawler got response from server.
+Emitted when crawler got response from server. The callback takes 4 arguments.
 
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
@@ -547,6 +547,26 @@ Emitted when crawler got response from server.
             # DO NOTHING
         }
     });
+
+=over
+
+=item $bot
+
+L<WWW::Crawler::Mojo> instance.
+
+=item $scrape
+
+Scrape URLs out of the document. this is a shorthand of $bot->scrape($job)
+
+=item $job
+
+L<WWW::Crawler::Mojo::Job> instance.
+
+=item $res
+
+L<Mojo::Message::Response> instance.
+
+=back
 
 =head2 refer
 
@@ -563,6 +583,26 @@ the callback.
             # DO NOTHING
         }
     });
+
+=over
+
+=item $bot
+
+L<WWW::Crawler::Mojo> instance.
+
+=item $enqueue
+
+Scrape URLs out of the document. this is a shorthand of $bot->enqueue($job)
+
+=item $job
+
+L<WWW::Crawler::Mojo::Job> instance.
+
+=item $context
+
+Either L<Mojo::DOM> or L<Mojo::URL> instance.
+
+=back
 
 =head2 empty
 
