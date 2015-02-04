@@ -1,5 +1,7 @@
 Revision history for WWW-Crawler-Mojo
 
+0.10 2015/02/04
+
 0.09 2015/02/03
   - Removed depth option.
   - Changed URL collecting method to instance-methods.
