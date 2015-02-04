@@ -29,7 +29,7 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
 * Perl 5.14
 * Mojolicious 5.75
 
-## Usage
+## Synopsis
 
     use WWW::Crawler::Mojo;
     
