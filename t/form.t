@@ -23,10 +23,10 @@ sub _weave_form_data { WWW::Crawler::Mojo::_weave_form_data(@_); }
     </form>
 </div>
 EOF
-    my ($action, $context, $method, $params) = _weave_form_data($dom->at('form'));
-    is $action, '/index1.html';
-    is $method, 'GET';
-    is $params, 'foo=default';
+    my $ret = _weave_form_data($dom->at('form'));
+    is $ret->[0], '/index1.html';
+    is $ret->[2], 'GET';
+    is $ret->[3], 'foo=default';
 }
 
 {
@@ -38,10 +38,10 @@ EOF
     </form>
 </div>
 EOF
-    my ($action, $context, $method, $params) = _weave_form_data($dom->at('form'));
-    is $action, '/index1.html';
-    is $method, 'POST';
-    is_deeply $params->to_hash, {bar => 'submit', foo => 'default'};
+    my $ret = _weave_form_data($dom->at('form'));
+    is $ret->[0], '/index1.html';
+    is $ret->[2], 'POST';
+    is_deeply $ret->[3]->to_hash, {bar => 'submit', foo => 'default'};
 }
 
 {
@@ -195,63 +195,63 @@ EOF
 </html>
 EOF
     {
-        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[0]);
-        is_deeply $params->to_hash, {
+        my $ret = _weave_form_data($dom->find('form')->[0]);
+        is_deeply $ret->[3]->to_hash, {
             baz => 'bazValue', bar => 'barValue', btn => 'send',
             foo => 'fooValue', yada => 'yadaValue'
         };
     }
     {
-        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[1]);
-        is_deeply $params->to_hash, {foo => 'fooValue'};
+        my $ret = _weave_form_data($dom->find('form')->[1]);
+        is_deeply $ret->[3]->to_hash, {foo => 'fooValue'};
     }
     {
-        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[2]);
-        is_deeply $params->to_hash, {};
+        my $ret = _weave_form_data($dom->find('form')->[2]);
+        is_deeply $ret->[3]->to_hash, {};
     }
     {
-        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[3]);
-        is_deeply $params->to_hash, {foo => 'fooValue3'};
+        my $ret = _weave_form_data($dom->find('form')->[3]);
+        is_deeply $ret->[3]->to_hash, {foo => 'fooValue3'};
     }
     {
-        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[4]);
-        is_deeply $params->to_hash, {foo => ['', 'fooValue2']};
+        my $ret = _weave_form_data($dom->find('form')->[4]);
+        is_deeply $ret->[3]->to_hash, {foo => ['', 'fooValue2']};
     }
     {
-        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[5]);
-        is_deeply $params->to_hash, {foo => 'fooValue2'};
+        my $ret = _weave_form_data($dom->find('form')->[5]);
+        is_deeply $ret->[3]->to_hash, {foo => 'fooValue2'};
     }
     {
-        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[6]);
-        is_deeply $params->to_hash, {};
+        my $ret = _weave_form_data($dom->find('form')->[6]);
+        is_deeply $ret->[3]->to_hash, {};
     }
     {
-        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[7]);
-        is_deeply $params->to_hash, {foo => ''};
+        my $ret = _weave_form_data($dom->find('form')->[7]);
+        is_deeply $ret->[3]->to_hash, {foo => ''};
     }
     {
-        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[8]);
-        is_deeply $params->to_hash, {foo => ''};
+        my $ret = _weave_form_data($dom->find('form')->[8]);
+        is_deeply $ret->[3]->to_hash, {foo => ''};
     }
     {
-        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[9]);
-        is_deeply $params->to_hash, {};
+        my $ret = _weave_form_data($dom->find('form')->[9]);
+        is_deeply $ret->[3]->to_hash, {};
     }
     {
-        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[10]);
-        is_deeply $params->to_hash, {foo => ''};
+        my $ret = _weave_form_data($dom->find('form')->[10]);
+        is_deeply $ret->[3]->to_hash, {foo => ''};
     }
     {
-        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[11]);
-        is_deeply $params->to_hash, {foo => ['value1', 'value2', 'value3']};
+        my $ret = _weave_form_data($dom->find('form')->[11]);
+        is_deeply $ret->[3]->to_hash, {foo => ['value1', 'value2', 'value3']};
     }
     {
-        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[12]);
-        is_deeply $params->to_hash, {foo => 'やったー'};
+        my $ret = _weave_form_data($dom->find('form')->[12]);
+        is_deeply $ret->[3]->to_hash, {foo => 'やったー'};
     }
     {
-        my ($action, $context, $method, $params) = _weave_form_data($dom->find('form')->[13]);
-        is_deeply $params->to_hash, {foo => 'foo default', bar => 'bar default', baz => 'baz default'};
+        my $ret = _weave_form_data($dom->find('form')->[13]);
+        is_deeply $ret->[3]->to_hash, {foo => 'foo default', bar => 'bar default', baz => 'baz default'};
     }
 }
 

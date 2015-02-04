@@ -10,20 +10,31 @@ use Mojo::Util qw{md5_sum xml_escape dumper};
 use List::Util;
 our $VERSION = '0.09';
 
-our %tag_attributes = (
-    script  => ['src'],
-    link    => ['href'],
-    a       => ['href'],
-    img     => ['src'],
-    area    => ['href', 'ping'],
-    embed   => ['src'],
-    frame   => ['src'],
-    iframe  => ['src'],
-    input   => ['src'],
-    object  => ['data'],
-    form    => [sub {
-        _weave_form_data(@_);
-    }],
+our %container_selector = (
+    script  => sub { $_[0]->{src} },
+    link    => sub { $_[0]->{href} },
+    a       => sub { $_[0]->{href} },
+    img     => sub { $_[0]->{src} },
+    area    => sub { $_[0]->{href}, $_[0]->{ping} },
+    embed   => sub { $_[0]->{src} },
+    frame   => sub { $_[0]->{src} },
+    iframe  => sub { $_[0]->{src} },
+    input   => sub { $_[0]->{src} },
+    object  => sub { $_[0]->{data} },
+    form    => sub { _weave_form_data($_[0]) },
+    meta    => sub {
+        my $dom = shift;
+        return unless $dom =~ qr{http\-equiv="?Refresh"?}i;
+        if (my $href = $dom->{content} && ($dom->{content} =~ qr{URL=(.+)}i)[0]) {
+            return $href;
+        }
+    },
+    style    => sub {
+        my $dom = shift;
+        my @ret;
+        collect_urls_css(undef, $dom->content || '', sub { push(@ret, shift) });
+        return @ret;
+    },
 );
 
 has active_conn => 0;
@@ -38,7 +49,7 @@ has 'ua' => sub { WWW::Crawler::Mojo::UserAgent->new };
 has 'ua_name' =>
     "www-crawler-mojo/$VERSION (+https://github.com/jamadam/www-crawler-mojo)";
 has 'shuffle';
-has tag_attributes => sub { \%tag_attributes };
+has container_selector => sub { \%container_selector };
 
 sub crawl {
     my ($self) = @_;
@@ -245,25 +256,13 @@ sub _enqueue {
 sub collect_urls_html {
     my ($self, $dom, $cb) = @_;
     
-    $dom->find(join(',', keys %{$self->tag_attributes}))->each(sub {
+    $dom->find(join(',', keys %{$self->container_selector}))->each(sub {
         my $dom = shift;
         return if ($dom->xml && _wrong_dom_detection($dom));
-        for (@{$self->tag_attributes->{$dom->type}}) {
-            if (ref $_ && ref $_ eq 'CODE') {
-                $cb->($_->($dom));
-            }
-            $cb->($dom->{$_}, $dom) if ($dom->{$_});
+        for ($self->container_selector->{$dom->type}->($dom)) {
+            next unless ($_);
+            (ref $_) ? $cb->(@$_) : $cb->($_, $dom);
         }
-    });
-    $dom->find('meta[http\-equiv=Refresh]')->each(sub {
-        my $dom = shift;
-        if (my $href = $dom->{content} && ($dom->{content} =~ qr{URL=(.+)}i)[0]) {
-            $cb->($href, $dom);
-        }
-    });
-    $dom->find('style')->each(sub {
-        my $dom = shift;
-        $self->collect_urls_css($dom->content || '', sub { $cb->(shift, $dom) });
     });
     $dom->find('*[style]')->each(sub {
         my $dom = shift;
@@ -335,8 +334,12 @@ sub _weave_form_data {
         }
     });
     
-    return $form->{action}, $form,
-                    uc ($form->{method} || 'GET'), Mojo::Parameters->new(%seed);
+    return [
+        $form->{action},
+        $form,
+        uc ($form->{method} || 'GET'),
+        Mojo::Parameters->new(%seed),
+    ];
 }
 
 sub _urls_redirect {
@@ -446,10 +449,10 @@ moderate range of web pages so DO NOT use it for persistent crawler jobs.
 L<WWW::Crawler::Mojo> inherits all attributes from L<Mojo::EventEmitter> and
 implements the following new ones.
 
-=head2 tag_attributes
+=head2 container_selector
 
 Catalog of HTML attribute names which possibly contain URLs. Defaults to
-%__PACKAGE__::tag_attributes.
+%__PACKAGE__::container_selector.
 
 =head2 ua
 
@@ -696,7 +699,7 @@ Resolves URLs with a base URL.
 
 =head1 CONSTANTS
 
-=head2 %tag_attributes
+=head2 %container_selector
 
 A catalog of HTML attribute names which possibly contain URLs.
 
