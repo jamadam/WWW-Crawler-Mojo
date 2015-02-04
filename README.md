@@ -102,6 +102,32 @@ Restricting following URLs by host on response event.
         $scrape->() if ($job->resolved_uri->host eq 'example.com');
     });
 
+Speed up.
+
+	$bot->max_conn(5);
+	$bot->max_conn_per_host(5);
+
+Authentication. The user agent automatically reuses the credential for the host.
+
+	$bot->enqueue('http://jamadam:password@example.com');
+
+You can fulfill any prerequisites such as login form submittion so that a login session will be established with cookie or something.
+
+	my $bot = WWW::Crawler::Mojo->new;
+    $bot->ua->post('http://example.com/admin/login', form => {
+    	username => 'jamadam',
+    	password => 'password',
+    });
+	$bot->enqueue('http://example.com/admin/');
+    $bot->crawl
+
+By peeping server, you can peep into the crawler attributes such as queue during crawling.
+
+	$bot->peeping_port(3030);
+    
+	# Following URL will be available
+    # http://127.0.0.1:3030//dumper/queue
+
 ## Other examples
 
 * [WWW-Flatten](https://github.com/jamadam/WWW-Flatten)
