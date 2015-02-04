@@ -451,8 +451,13 @@ implements the following new ones.
 
 =head2 element_handlers
 
-Catalog of HTML attribute names which possibly contain URLs. Defaults to
-%__PACKAGE__::element_handlers.
+HTML element handler on scraping.
+
+    my $handlers = $bot->element_handlers;
+    $bot->element_handlers->{img} = sub {
+        my $dom = shift;
+        return $dom->{src};
+    };
 
 =head2 ua
 
