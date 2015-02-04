@@ -10,7 +10,19 @@ use Mojo::Util qw{md5_sum xml_escape dumper};
 use List::Util;
 our $VERSION = '0.10';
 
-our %container_selector = (
+has active_conn => 0;
+has fix => sub { {} };
+has active_conns_per_host => sub { {} };
+has max_conn => 1;
+has max_conn_per_host => 1;
+has 'peeping_port';
+has peeping_max_length => 30000;
+has queue => sub { [] };
+has 'ua' => sub { WWW::Crawler::Mojo::UserAgent->new };
+has 'ua_name' =>
+    "www-crawler-mojo/$VERSION (+https://github.com/jamadam/www-crawler-mojo)";
+has 'shuffle';
+has element_handlers => sub { {
     script  => sub { $_[0]->{src} },
     link    => sub { $_[0]->{href} },
     a       => sub { $_[0]->{href} },
@@ -29,27 +41,11 @@ our %container_selector = (
             return $href;
         }
     },
-    style    => sub {
+    style   => sub {
         my $dom = shift;
-        my @ret;
-        collect_urls_css(undef, $dom->content || '', sub { push(@ret, shift) });
-        return @ret;
+        return collect_urls_css($dom->content || '');
     },
-);
-
-has active_conn => 0;
-has fix => sub { {} };
-has active_conns_per_host => sub { {} };
-has max_conn => 1;
-has max_conn_per_host => 1;
-has 'peeping_port';
-has peeping_max_length => 30000;
-has queue => sub { [] };
-has 'ua' => sub { WWW::Crawler::Mojo::UserAgent->new };
-has 'ua_name' =>
-    "www-crawler-mojo/$VERSION (+https://github.com/jamadam/www-crawler-mojo)";
-has 'shuffle';
-has container_selector => sub { \%container_selector };
+} };
 
 sub crawl {
     my ($self) = @_;
@@ -222,7 +218,9 @@ sub scrape {
     if ($type && $type =~ qr{text/css}) {
         my $encode  = guess_encoding($res) || 'utf-8';
         my $body    = Encode::decode($encode, $res->body);
-        $self->collect_urls_css($body, $cb);
+        for (collect_urls_css($body)) {
+            $cb->($_);
+        }
     }
 };
 
@@ -256,25 +254,27 @@ sub _enqueue {
 sub collect_urls_html {
     my ($self, $dom, $cb) = @_;
     
-    $dom->find(join(',', keys %{$self->container_selector}))->each(sub {
+    $dom->find(join(',', keys %{$self->element_handlers}))->each(sub {
         my $dom = shift;
         return if ($dom->xml && _wrong_dom_detection($dom));
-        for ($self->container_selector->{$dom->type}->($dom)) {
+        for ($self->element_handlers->{$dom->type}->($dom)) {
             next unless ($_);
             (ref $_) ? $cb->(@$_) : $cb->($_, $dom);
         }
     });
-    $dom->find('*[style]')->each(sub {
+    $dom->find('[style]')->each(sub {
         my $dom = shift;
-        $self->collect_urls_css($dom->{style}, sub { $cb->(shift, $dom) });
+        for (collect_urls_css($dom->{style})) {
+            $cb->($_, $dom);
+        }
     });
 }
 
 sub collect_urls_css {
-    my ($self, $str, $cb) = @_;
+    my ($str) = @_;
     $str =~ s{/\*.+?\*/}{}gs;
     my @urls = ($str =~ m{url\(['"]?(.+?)['"]?\)}g);
-    $cb->($_) for (@urls);
+    return @urls;
 }
 
 my $charset_re = qr{\bcharset\s*=\s*['"]?([a-zA-Z0-9_\-]+)['"]?}i;
@@ -449,10 +449,10 @@ moderate range of web pages so DO NOT use it for persistent crawler jobs.
 L<WWW::Crawler::Mojo> inherits all attributes from L<Mojo::EventEmitter> and
 implements the following new ones.
 
-=head2 container_selector
+=head2 element_handlers
 
 Catalog of HTML attribute names which possibly contain URLs. Defaults to
-%__PACKAGE__::container_selector.
+%__PACKAGE__::element_handlers.
 
 =head2 ua
 
@@ -681,9 +681,7 @@ Collects URLs out of HTML.
 
 Collects URLs out of CSS.
 
-    $bot->collect_urls_css($dom, sub {
-        my $uri = shift;
-    });
+    @urls = collect_urls_css($dom);
 
 =head2 guess_encoding
 
@@ -696,24 +694,6 @@ Guesses encoding of HTML or CSS with given L<Mojo::Message::Response> instance.
 Resolves URLs with a base URL.
 
     WWW::Crawler::Mojo::resolve_href($base, $uri);
-
-=head1 CONSTANTS
-
-=head2 %container_selector
-
-A catalog of HTML attribute names which possibly contain URLs.
-
-    script  => ['src'],
-    link    => ['href'],
-    a       => ['href'],
-    img     => ['src'],
-    area    => ['href', 'ping'],
-    embed   => ['src'],
-    frame   => ['src'],
-    iframe  => ['src'],
-    input   => ['src'],
-    object  => ['data'],
-    form    => ['action'],
 
 =head1 EXAMPLE
 

@@ -8,7 +8,7 @@ use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use Mojo::DOM;
 use WWW::Crawler::Mojo;
-use Test::More tests => 40;
+use Test::More tests => 37;
 
 my $html = <<EOF;
 <html>
@@ -95,17 +95,10 @@ div {
 }
 EOF
 
-    my @array;
-    $bot->collect_urls_css($css, sub {
-        push(@array, shift);
-        push(@array, shift);
-    });
+    my @array = WWW::Crawler::Mojo::collect_urls_css($css);
     is shift @array, '/image/a.png', 'right url';
-    is shift @array, undef, 'empty';
     is shift @array, '/image/b.png', 'right url';
-    is shift @array, undef, 'empty';
     is shift @array, '/image/c.png', 'right url';
-    is shift @array, undef, 'empty';
 }
 
 my $xhtml = <<EOF;
