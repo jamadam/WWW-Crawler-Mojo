@@ -23,28 +23,28 @@ has 'ua_name' =>
     "www-crawler-mojo/$VERSION (+https://github.com/jamadam/www-crawler-mojo)";
 has 'shuffle';
 has element_handlers => sub { {
-    script  => sub { $_[0]->{src} },
-    link    => sub { $_[0]->{href} },
-    a       => sub { $_[0]->{href} },
-    img     => sub { $_[0]->{src} },
-    area    => sub { $_[0]->{href}, $_[0]->{ping} },
-    embed   => sub { $_[0]->{src} },
-    frame   => sub { $_[0]->{src} },
-    iframe  => sub { $_[0]->{src} },
-    input   => sub { $_[0]->{src} },
-    object  => sub { $_[0]->{data} },
-    form    => sub { _weave_form_data($_[0]) },
-    meta    => sub {
-        my $dom = shift;
-        return unless $dom =~ qr{http\-equiv="?Refresh"?}i;
-        if (my $href = $dom->{content} && ($dom->{content} =~ qr{URL=(.+)}i)[0]) {
-            return $href;
-        }
+    'script[src]'   => sub { $_[0]->{src} },
+    'link[href]'    => sub { $_[0]->{href} },
+    'a[href]'       => sub { $_[0]->{href} },
+    'img[src]'      => sub { $_[0]->{src} },
+    'area'          => sub { $_[0]->{href}, $_[0]->{ping} },
+    'embed[src]'    => sub { $_[0]->{src} },
+    'frame[src]'    => sub { $_[0]->{src} },
+    'iframe[src]'   => sub { $_[0]->{src} },
+    'input[src]'    => sub { $_[0]->{src} },
+    'object[data]'  => sub { $_[0]->{data} },
+    'form'          => sub { _weave_form_data($_[0]) },
+    'meta[content]' => sub {
+        return $1 if ($_[0] =~ qr{http\-equiv="?Refresh"?}i &&
+                                (($_[0]->{content} || '') =~ qr{URL=(.+)}i)[0]);
     },
-    style   => sub {
+    'style' => sub {
         my $dom = shift;
-        return collect_urls_css($dom->content || '');
+        return collect_urls_css($dom->content);
     },
+    '[style]' => sub {
+        collect_urls_css(shift->{style});
+    }
 } };
 
 sub crawl {
@@ -254,24 +254,20 @@ sub _enqueue {
 sub collect_urls_html {
     my ($self, $dom, $cb) = @_;
     
-    $dom->find(join(',', keys %{$self->element_handlers}))->each(sub {
-        my $dom = shift;
-        return if ($dom->xml && _wrong_dom_detection($dom));
-        for ($self->element_handlers->{$dom->type}->($dom)) {
-            next unless ($_);
-            (ref $_) ? $cb->(@$_) : $cb->($_, $dom);
-        }
-    });
-    $dom->find('[style]')->each(sub {
-        my $dom = shift;
-        for (collect_urls_css($dom->{style})) {
-            $cb->($_, $dom);
-        }
-    });
+    for my $selector (sort keys %{$self->element_handlers}) {
+        $dom->find($selector)->each(sub {
+            my $dom = shift;
+            return if ($dom->xml && _wrong_dom_detection($dom));
+            for ($self->element_handlers->{$selector}->($dom)) {
+                next unless ($_);
+                (ref $_) ? $cb->(@$_) : $cb->($_, $dom);
+            }
+        });
+    }
 }
 
 sub collect_urls_css {
-    my ($str) = @_;
+    my ($str) = shift || return;
     $str =~ s{/\*.+?\*/}{}gs;
     my @urls = ($str =~ m{url\(['"]?(.+?)['"]?\)}g);
     return @urls;

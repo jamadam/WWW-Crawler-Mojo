@@ -13,7 +13,8 @@ use Test::More tests => 37;
 my $html = <<EOF;
 <html>
 <head>
-     <meta http-equiv="Refresh" content="5;URL=http://example.com/redirected">
+    <meta content="5;URL=http://example.com/no-a-redirection">
+    <meta http-equiv="Refresh" content="5;URL=http://example.com/redirected">
     <link rel="stylesheet" type="text/css" href="css1.css" />
     <link rel="stylesheet" type="text/css" href="css2.css" />
     <script type="text/javascript" src="js1.js"></script>
@@ -48,18 +49,8 @@ $bot->collect_urls_html(Mojo::DOM->new($html), sub {
     push(@array, shift);
     push(@array, shift);
 });
-is shift @array, 'http://example.com/redirected', 'right url';
-is shift(@array)->type, 'meta', 'right type';
-is shift @array, 'css1.css', 'right url';
-is shift(@array)->type, 'link', 'right type';
-is shift @array, 'css2.css', 'right url';
-is shift( @array)->type, 'link', 'right type';
-is shift @array, 'js1.js', 'right url';
-is shift(@array)->type, 'script', 'right type';
-is shift @array, 'js2.js', 'right url';
-is shift(@array)->type, 'script', 'right type';
-is shift @array, 'http://example.com/bgimg.png', 'right url';
-is shift(@array)->type, 'style', 'right type';
+is shift @array, 'http://example.com/bgimg2.png', 'right url';
+is shift(@array)->type, 'a', 'right type';
 is shift @array, 'index1.html', 'right url';
 is shift(@array)->type, 'a', 'right type';
 is shift @array, 'index2.html', 'right url';
@@ -68,18 +59,28 @@ is shift @array, 'mailto:a@example.com','right url';
 is shift(@array)->type, 'a', 'right type';
 is shift @array, 'tel:0000', 'right url';
 is shift(@array)->type, 'a', 'right type';
-is shift @array, 'index3.html', 'right url';
-is shift(@array)->type, 'area', 'right type';
-is shift @array, 'http://example.com/', 'right url';
-is shift(@array)->type, 'area', 'right type';
 is shift @array, 'escaped?foo=bar&baz=yada', 'right url';
 is shift(@array)->type, 'a', 'right type';
 is shift @array, '//example.com', 'right url';
 is shift(@array)->type, 'a', 'right type';
 is shift @array, 'http://doublehit.com/', 'right url';
 is shift(@array)->type, 'a', 'right type';
-is shift @array, 'http://example.com/bgimg2.png', 'right url';
-is shift(@array)->type, 'a', 'right type';
+is shift @array, 'index3.html', 'right url';
+is shift(@array)->type, 'area', 'right type';
+is shift @array, 'http://example.com/', 'right url';
+is shift(@array)->type, 'area', 'right type';
+is shift @array, 'css1.css', 'right url';
+is shift(@array)->type, 'link', 'right type';
+is shift @array, 'css2.css', 'right url';
+is shift(@array)->type, 'link', 'right type';
+is shift @array, 'http://example.com/redirected', 'right url';
+is shift(@array)->type, 'meta', 'right type';
+is shift @array, 'js1.js', 'right url';
+is shift(@array)->type, 'script', 'right type';
+is shift @array, 'js2.js', 'right url';
+is shift(@array)->type, 'script', 'right type';
+is shift @array, 'http://example.com/bgimg.png', 'right url';
+is shift(@array)->type, 'style', 'right type';
 is shift @array, undef, 'no more urls';
 
 {
