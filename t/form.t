@@ -12,7 +12,9 @@ use WWW::Crawler::Mojo::Job;
 use Mojo::Message::Response;
 use Test::More tests => 33;
 
-sub _weave_form_data { WWW::Crawler::Mojo::_weave_form_data(@_); }
+sub _weave_form_data {
+    WWW::Crawler::Mojo->new->element_handlers->{form}->(@_);
+}
 
 {
     my $dom = Mojo::DOM->new(<<EOF);

@@ -33,7 +33,40 @@ has element_handlers => sub { {
     'iframe[src]'   => sub { $_[0]->{src} },
     'input[src]'    => sub { $_[0]->{src} },
     'object[data]'  => sub { $_[0]->{data} },
-    'form'          => sub { _weave_form_data($_[0]) },
+    'form'          => sub {
+        my $dom = shift;
+        my (%seed, $submit);
+        
+        $dom->find("[name]")->each(sub {
+            my $e = shift;
+            $seed{my $name = $e->{name}} ||= [];
+            
+            if ($e->type eq 'select') {
+                $e->find('option[selected]')->each(sub {
+                    push(@{$seed{$name}}, shift->{value});
+                });
+            } elsif ($e->type eq 'textarea') {
+                push(@{$seed{$name}}, $e->text);
+            }
+            
+            return unless (my $type = $e->{type});
+            
+            if (!$submit && grep{$_ eq $type} qw{submit image}) {
+                $submit = 1;
+                push(@{$seed{$name}}, $e->{value});
+            } elsif (grep {$_ eq $type} qw{text hidden number}) {
+                push(@{$seed{$name}}, $e->{value});
+            } elsif (grep {$_ eq $type} qw{checkbox}) {
+                push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
+            } elsif (grep {$_ eq $type} qw{radio}) {
+                push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
+            }
+        });
+        
+        return [$dom->{action},
+            $dom, uc ($dom->{method} || 'GET'), Mojo::Parameters->new(%seed),
+        ];
+    },
     'meta[content]' => sub {
         return $1 if ($_[0] =~ qr{http\-equiv="?Refresh"?}i &&
                                 (($_[0]->{content} || '') =~ qr{URL=(.+)}i)[0]);
@@ -295,47 +328,6 @@ sub resolve_href {
     }
     $abs->path->trailing_slash($base->path->trailing_slash) if (!$href->path->to_string);
     return $abs;
-}
-
-sub _weave_form_data {
-    my $form = shift;
-    my %seed;
-    my $submit;
-    
-    $form->find("[name]")->each(sub {
-        my $e = shift;
-        my $name = $e->attr('name');
-        $seed{$name} ||= [];
-        
-        if ($e->type eq 'select') {
-            $e->find('option[selected=selected]')->each(sub {
-                push(@{$seed{$name}}, shift->attr('value'));
-            });
-        } elsif ($e->type eq 'textarea') {
-            push(@{$seed{$name}}, $e->text);
-        }
-        
-        my $type = $e->attr('type');
-        return unless $type;
-        
-        if (!$submit && grep{$_ eq $type} qw{submit image}) {
-            $submit = 1;
-            push(@{$seed{$name}}, $e->attr('value'));
-        } elsif (grep {$_ eq $type} qw{text hidden number}) {
-            push(@{$seed{$name}}, $e->attr('value'));
-        } elsif (grep {$_ eq $type} qw{checkbox}) {
-            push(@{$seed{$name}}, $e->attr('value')) if (exists $e->{checked});
-        } elsif (grep {$_ eq $type} qw{radio}) {
-            push(@{$seed{$name}}, $e->attr('value')) if (exists $e->{checked});
-        }
-    });
-    
-    return [
-        $form->{action},
-        $form,
-        uc ($form->{method} || 'GET'),
-        Mojo::Parameters->new(%seed),
-    ];
 }
 
 sub _urls_redirect {
