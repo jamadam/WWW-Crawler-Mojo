@@ -64,8 +64,7 @@ has element_handlers => sub { {
         });
         
         return [$dom->{action},
-            $dom, uc ($dom->{method} || 'GET'), Mojo::Parameters->new(%seed),
-        ];
+                    uc ($dom->{method} || 'GET'), Mojo::Parameters->new(%seed)];
     },
     'meta[content]' => sub {
         return $1 if ($_[0] =~ qr{http\-equiv="?Refresh"?}i &&
@@ -218,7 +217,9 @@ sub scrape {
     }
     
     my $cb = sub {
-        my ($url, $dom, $method, $params) = @_;
+        my ($url, $dom) = @_;
+        my $method, my $params;
+        ($url, $method, $params) = @$url if (ref $url);
         
         $url = _clean_url_obj($url);
         my $resolved = resolve_href($base, $url);
@@ -293,7 +294,7 @@ sub collect_urls_html {
             return if ($dom->xml && _wrong_dom_detection($dom));
             for ($self->element_handlers->{$selector}->($dom)) {
                 next unless ($_);
-                (ref $_) ? $cb->(@$_) : $cb->($_, $dom);
+                $cb->($_, $dom);
             }
         });
     }
