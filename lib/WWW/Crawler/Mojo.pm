@@ -211,49 +211,28 @@ sub scrape {
     my $base = $job->resolved_uri;
     my $type = $res->headers->content_type;
     
-    if ($type && $type =~ qr{text/(html|xml)} &&
-                                (my $base_tag = $res->dom->at('base'))) {
-        $base = resolve_href($base, $base_tag->attr('href'));
-    }
-    
-    my $cb = sub {
-        my ($url, $dom) = @_;
-        my $method, my $params;
-        ($url, $method, $params) = @$url if (ref $url);
-        
-        $url = _clean_url_obj($url);
-        my $resolved = resolve_href($base, $url);
-        
-        return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});
-        
-        my $child = $job->child(resolved_uri => $resolved, literal_uri => $url);
-        
-        $child->method($method) if $method;
-        
-        if ($params) {
-            if ($method eq 'GET') {
-                $child->resolved_uri->query->append($params);
-            } else {
-                $child->tx_params($params);
-            }
-        }
-        
-        $self->emit('refer', sub {
-            $self->enqueue($_[0] || $child);
-        }, $child, $dom || $job->resolved_uri);
-    };
-    
     if ($type && $type =~ qr{text/(html|xml)}) {
+        if ((my $base_tag = $res->dom->at('base'))) {
+            $base = resolve_href($base, $base_tag->attr('href'));
+        }
         my $encode = guess_encoding($res) || 'utf-8';
-        my $body = Encode::decode($encode, $res->body);
-        $self->collect_urls_html(Mojo::DOM->new($body), $cb);
+        my $dom = Mojo::DOM->new(Encode::decode($encode, $res->body));
+        for my $selector (sort keys %{$self->element_handlers}) {
+            $dom->find($selector)->each(sub {
+                my $dom = shift;
+                return if ($dom->xml && _wrong_dom_detection($dom));
+                for ($self->element_handlers->{$selector}->($dom)) {
+                    $self->_delegate_enqueue($_, $dom, $job, $base);
+                }
+            });
+        }
     }
     
     if ($type && $type =~ qr{text/css}) {
         my $encode  = guess_encoding($res) || 'utf-8';
         my $body    = Encode::decode($encode, $res->body);
         for (collect_urls_css($body)) {
-            $cb->($_);
+            $self->_delegate_enqueue($_, $job->resolved_uri, $job, $base);
         }
     }
 };
@@ -285,19 +264,31 @@ sub _enqueue {
     }
 }
 
-sub collect_urls_html {
-    my ($self, $dom, $cb) = @_;
+sub _delegate_enqueue {
+    my ($self, $url, $dom, $job, $base) = @_;
+    my $method, my $params;
     
-    for my $selector (sort keys %{$self->element_handlers}) {
-        $dom->find($selector)->each(sub {
-            my $dom = shift;
-            return if ($dom->xml && _wrong_dom_detection($dom));
-            for ($self->element_handlers->{$selector}->($dom)) {
-                next unless ($_);
-                $cb->($_, $dom);
-            }
-        });
+    return unless $url;
+    ($url, $method, $params) = @$url if (ref $url);
+    
+    $url = _clean_url_obj($url);
+    my $resolved = resolve_href($base, $url);
+    
+    return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});
+    
+    my $child = $job->child(resolved_uri => $resolved, literal_uri => $url);
+    
+    $child->method($method) if $method;
+    
+    if ($params) {
+        if ($method eq 'GET') {
+            $child->resolved_uri->query->append($params);
+        } else {
+            $child->tx_params($params);
+        }
     }
+    
+    $self->emit('refer', sub { $self->enqueue($_[0] || $child) }, $child, $dom);
 }
 
 sub collect_urls_css {

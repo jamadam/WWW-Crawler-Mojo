@@ -8,7 +8,10 @@ use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use Mojo::DOM;
 use WWW::Crawler::Mojo;
-use Test::More tests => 37;
+use WWW::Crawler::Mojo::Job;
+use Test::More tests => 33;
+
+my @array;
 
 my $html = <<EOF;
 <html>
@@ -43,21 +46,26 @@ my $html = <<EOF;
 </html>
 EOF
 
-my @array;
-my $bot = WWW::Crawler::Mojo->new;
-$bot->collect_urls_html(Mojo::DOM->new($html), sub {
-    push(@array, shift);
-    push(@array, shift);
-});
+@array = ();
+{
+    my $res = Mojo::Message::Response->new;
+    $res->code(200);
+    $res->headers->content_type('text/html');
+    $res->body(Mojo::DOM->new($html));
+    my $job = WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/');
+    my $bot = WWW::Crawler::Mojo->new;
+    $bot->on('refer', sub {
+        my ($bot, $enqueue, $job, $context) = @_;
+        push(@array, $job->literal_uri);
+        push(@array, $context);
+    });
+    $bot->scrape($res, $job);
+}
 is shift @array, 'http://example.com/bgimg2.png', 'right url';
 is shift(@array)->type, 'a', 'right type';
 is shift @array, 'index1.html', 'right url';
 is shift(@array)->type, 'a', 'right type';
 is shift @array, 'index2.html', 'right url';
-is shift(@array)->type, 'a', 'right type';
-is shift @array, 'mailto:a@example.com','right url';
-is shift(@array)->type, 'a', 'right type';
-is shift @array, 'tel:0000', 'right url';
 is shift(@array)->type, 'a', 'right type';
 is shift @array, 'escaped?foo=bar&baz=yada', 'right url';
 is shift(@array)->type, 'a', 'right type';
@@ -117,8 +125,18 @@ my $xhtml = <<EOF;
 EOF
 
 @array = ();
-$bot->collect_urls_html(Mojo::DOM->new($xhtml), sub {
-    push(@array, shift);
-    push(@array, shift);
-});
+{
+    my $res = Mojo::Message::Response->new;
+    $res->code(200);
+    $res->headers->content_type('text/html');
+    $res->body(Mojo::DOM->new($xhtml));
+    my $job = WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/');
+    my $bot = WWW::Crawler::Mojo->new;
+    $bot->on('refer', sub {
+        my ($bot, $enqueue, $job, $context) = @_;
+        push(@array, $job->literal_uri);
+        push(@array, $context);
+    });
+    $bot->scrape($res, $job);
+}
 is(scalar @array, 0, 'right length');
