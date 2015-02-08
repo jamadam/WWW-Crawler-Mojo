@@ -60,7 +60,6 @@ $bot->on('refer' => sub {
     my ($bot, $enqueue, $job, $context) = @_;
     $enqueue->();
 });
-$bot->depth(100);
 $bot->init;
 
 Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
