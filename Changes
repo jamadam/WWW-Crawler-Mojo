@@ -1,5 +1,7 @@
 Revision history for WWW-Crawler-Mojo
 
+0.11 2015/02/08
+
 0.10 2015/02/08
   - Removed collect_urls_html method in favor of scrape.
   - Improved documentaion.
