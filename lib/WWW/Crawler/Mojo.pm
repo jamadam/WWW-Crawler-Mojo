@@ -292,10 +292,7 @@ sub _delegate_enqueue {
 }
 
 sub collect_urls_css {
-    my ($str) = shift || return;
-    $str =~ s{/\*.+?\*/}{}gs;
-    my @urls = ($str =~ m{url\(['"]?(.+?)['"]?\)}g);
-    return @urls;
+    map { s/^(['"])// && s/$1$//; $_ } (shift || '') =~ m{url\((.+?)\)}ig;
 }
 
 my $charset_re = qr{\bcharset\s*=\s*['"]?([a-zA-Z0-9_\-]+)['"]?}i;
@@ -374,16 +371,10 @@ sub _mod_busyness {
 
 sub _host_key {
     state $well_known_ports = {http => 80, https => 443};
-    
-    my $uri = ref $_[0] ? $_[0] : Mojo::URL->new($_[0]);
+    my $uri = shift;
     my $key = $uri->scheme. '://'. $uri->ihost;
-    
-    if (my $port = $uri->port) {
-        if ($port ne $well_known_ports->{$uri->scheme}) {
-            $key .= ':'. $port;
-        }
-    }
-    
+    return $key unless (my $port = $uri->port);
+    $key .= ':'. $port if ($port ne $well_known_ports->{$uri->scheme});
     return $key;
 }
 

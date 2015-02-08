@@ -9,7 +9,7 @@ use Test::More;
 use Mojo::DOM;
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
-use Test::More tests => 33;
+use Test::More tests => 38;
 
 my @array;
 
@@ -102,12 +102,29 @@ div {
 div {
     background: #fff url('/image/c.png');
 }
+div {
+    background: #fff url(/image/d.png);
+}
+div {
+    background: #fff url("/image/e.png");
+}
+div {
+    background: #fff url(/image/?spring15');
+}
+div {
+    background: #fff URL(/image/f);
+}
 EOF
 
     my @array = WWW::Crawler::Mojo::collect_urls_css($css);
     is shift @array, '/image/a.png', 'right url';
     is shift @array, '/image/b.png', 'right url';
     is shift @array, '/image/c.png', 'right url';
+    is shift @array, '/image/d.png', 'right url';
+    is shift @array, '/image/e.png', 'right url';
+    is shift @array, "/image/?spring15'", 'right url';
+    is shift @array, "/image/f", 'right url';
+    is shift @array, undef, 'empty';
 }
 
 my $xhtml = <<EOF;
