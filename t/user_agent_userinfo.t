@@ -9,11 +9,25 @@ use File::Spec;
 use lib join '/', File::Spec->splitdir(dirname(__FILE__)), '../extlib';
 use lib join '/', File::Spec->splitdir(dirname(__FILE__)), '../lib';
 use Mojo::IOLoop;
+use Mojo::URL;
 use WWW::Crawler::Mojo::UserAgent;
 use Test::More;
 use Test::Mojo;
 
-use Test::More tests => 5;
+use Test::More tests => 15;
+
+sub host_key { WWW::Crawler::Mojo::UserAgent::_host_key(@_) }
+
+is host_key(Mojo::URL->new('http://a/a')), 'http://a', 'right key';
+is host_key(Mojo::URL->new('http://a:80/a')), 'http://a', 'right key';
+is host_key(Mojo::URL->new('http://a:8080/a')), 'http://a:8080', 'right key';
+is host_key(Mojo::URL->new('http://a:443/a')), 'http://a:443', 'right key';
+is host_key(Mojo::URL->new('https://a/a')), 'https://a', 'right key';
+is host_key(Mojo::URL->new('https://a:443/a')), 'https://a', 'right key';
+is host_key(Mojo::URL->new('https://a:1443/a')), 'https://a:1443', 'right key';
+is host_key(Mojo::URL->new('https://a:80/a')), 'https://a:80', 'right key';
+is host_key(Mojo::URL->new('ftp://a/a')), undef, 'right key';
+is host_key(Mojo::URL->new('/a')), undef, 'right key';
 
 my $ua = WWW::Crawler::Mojo::UserAgent->new(ioloop => Mojo::IOLoop->singleton);
 

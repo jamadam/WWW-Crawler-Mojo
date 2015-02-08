@@ -2,6 +2,7 @@ package WWW::Crawler::Mojo::UserAgent;
 use strict;
 use warnings;
 use Mojo::Base 'Mojo::UserAgent';
+use 5.010;
 
 has credentials => sub {{}};
 has keep_credentials => 1;
@@ -14,18 +15,28 @@ sub new {
         $self->on(start => sub {
             my ($self, $tx) = @_;
             my $url = $tx->req->url;
-            if ($url->is_abs) {
-                my $key = $url->scheme. '://'. $url->host. ':'. ($url->port || 80);
-                if ($url->userinfo) {
-                    $self->credentials->{$key} = $url->userinfo;
-                } else {
-                    $url->userinfo($self->credentials->{$key});
-                }
+            
+            my $host_key = _host_key($url) or return;
+            
+            if ($url->userinfo) {
+                $self->credentials->{$host_key} = $url->userinfo;
+            } else {
+                $url->userinfo($self->credentials->{$host_key});
             }
         });
     }
     
     return $self;
+}
+
+sub _host_key {
+    state $well_known_ports = {http => 80, https => 443};
+    my $uri = shift;
+    return unless $uri->is_abs && (my $wkp = $well_known_ports->{$uri->scheme});
+    my $key = $uri->scheme. '://'. $uri->ihost;
+    return $key unless (my $port = $uri->port);
+    $key .= ':'. $port if $port != $wkp;
+    return $key;
 }
 
 1;
