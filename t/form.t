@@ -10,7 +10,7 @@ use Mojo::DOM;
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
 use Mojo::Message::Response;
-use Test::More tests => 33;
+use Test::More tests => 38;
 
 sub _weave_form_data {
     WWW::Crawler::Mojo->new->element_handlers->{form}->(@_);
@@ -306,3 +306,34 @@ EOF
     is $job, undef, 'no more urls';
 }
 
+
+{
+    my $html = <<EOF;
+<html>
+<body>
+<form>
+    <input type="text" name="foo" value="default">
+    <input type="submit" value="submit">
+</form>
+</body>
+</html>
+EOF
+    
+    my $res = Mojo::Message::Response->new;
+    $res->code(200);
+    $res->body($html);
+    $res->headers->content_type('text/html');
+    
+    my $bot = WWW::Crawler::Mojo->new;
+    $bot->init;
+    $bot->scrape($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
+    
+    my $job;
+    $job = shift @{$bot->{queue}};
+    is $job->literal_uri, '', 'right url';
+    is $job->resolved_uri, 'http://example.com/?foo=default', 'right url';
+    is $job->method, 'GET', 'right method';
+    is_deeply $job->tx_params, undef, 'right params';
+    $job = shift @{$bot->{queue}};
+    is $job, undef, 'no more urls';
+}

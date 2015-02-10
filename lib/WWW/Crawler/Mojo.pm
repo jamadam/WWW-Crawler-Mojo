@@ -63,7 +63,7 @@ has element_handlers => sub { {
             }
         });
         
-        return [$dom->{action},
+        return [$dom->{action} || '',
                     uc ($dom->{method} || 'GET'), Mojo::Parameters->new(%seed)];
     },
     'meta[content]' => sub {
