@@ -76,6 +76,9 @@ has element_handlers => sub { {
     },
     '[style]' => sub {
         collect_urls_css(shift->{style});
+    },
+    'urlset[xmlns^=http://www.sitemaps.org/schemas/sitemap/]' => sub {
+        @{$_->find('url loc')->map(sub {$_->content})->to_array};
     }
 } };
 
