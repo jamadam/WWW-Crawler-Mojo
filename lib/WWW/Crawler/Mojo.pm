@@ -208,9 +208,16 @@ sub peeping_handler {
 
 sub scrape {
     my ($self, $res, $job) = @_;
-    
-    return if ($res->code != 200);
-    
+    $self->_scrape_backend($res, $job) if $res->code == 200;
+}
+
+sub scrape_any {
+    my ($self, $res, $job) = @_;
+    $self->_scrape_backend($res, $job) if $res->headers->content_length;
+}
+
+sub _scrape_backend {
+    my ($self, $res, $job) = @_;
     my $base = $job->resolved_uri;
     my $type = $res->headers->content_type;
     
@@ -535,7 +542,8 @@ L<WWW::Crawler::Mojo> instance.
 
 =item $scrape
 
-Scrape URLs out of the document. this is a shorthand of $bot->scrape($job)
+Scraper code reference for current document. This is a shorthand of
+$bot->scrape($job)
 
 =item $job
 
@@ -571,7 +579,8 @@ L<WWW::Crawler::Mojo> instance.
 
 =item $enqueue
 
-Scrape URLs out of the document. this is a shorthand of $bot->enqueue($job)
+Enqueue code reference for current URL. This is a shorthand of
+$bot->enqueue($job)
 
 =item $job
 
@@ -655,8 +664,16 @@ peeping API dispatcher.
 =head2 scrape
 
 Parses and discovers links in a web page. Each links are appended to FIFO array.
+This performs scraping when response code is 200 OK.
 
     $bot->scrape($res, $job);
+
+=head2 scrape_any
+
+Almost same as scrape method does while it performs scraping no matter what
+response code is given.
+
+    $bot->scrape_any($res, $job);
 
 =head2 enqueue
 
