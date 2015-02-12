@@ -18,6 +18,7 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
 * Peeping server for crawler development.
 * Crawls beyond basic authentication.
 * Form submitting emulation.
+* Flexible enough to crawl even 404 error documents.
 
 [Mojo::URL]:http://mojolicio.us/perldoc/Mojo/URL
 [Mojo::DOM]:http://mojolicio.us/perldoc/Mojo/DOM
@@ -80,7 +81,7 @@ Restrict enqueuing URLs by host.
 
 Restrict enqueuing URLs by referrer's host.
 
-	$bot->on(refer => sub {
+    $bot->on(refer => sub {
         my ($bot, $enqueue, $job, $context) = @_;
         
         $enqueue->() if $job->referrer->resolved_uri->host eq 'example.com';
@@ -104,28 +105,36 @@ Restricting following URLs by host on response event.
 
 Speed up.
 
-	$bot->max_conn(5);
-	$bot->max_conn_per_host(5);
+    $bot->max_conn(5);
+    $bot->max_conn_per_host(5);
 
 Authentication. The user agent automatically reuses the credential for the host.
 
-	$bot->enqueue('http://jamadam:password@example.com');
+    $bot->enqueue('http://jamadam:password@example.com');
+
+Want to scrape inside error documents?
+
+    $bot->on(res => sub {
+        my ($bot, $scrape, $job, $res) = @_;
+        
+        $bot->scrape_any($res, $job); # doesn't restrict to 200 OK
+    });
 
 You can fulfill any prerequisites such as login form submittion so that a login session will be established with cookie or something.
 
-	my $bot = WWW::Crawler::Mojo->new;
+    my $bot = WWW::Crawler::Mojo->new;
     $bot->ua->post('http://example.com/admin/login', form => {
-    	username => 'jamadam',
-    	password => 'password',
+        username => 'jamadam',
+        password => 'password',
     });
-	$bot->enqueue('http://example.com/admin/');
+    $bot->enqueue('http://example.com/admin/');
     $bot->crawl
 
 By peeping server, you can peep into the crawler attributes such as queue during crawling.
 
-	$bot->peeping_port(3030);
+    $bot->peeping_port(3030);
     
-	# Following URL will be available
+    # Following URL will be available
     # http://127.0.0.1:3030//dumper/queue
 
 ## Other examples
