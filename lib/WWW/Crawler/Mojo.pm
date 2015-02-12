@@ -215,7 +215,7 @@ sub scrape {
     my $type = $res->headers->content_type;
     
     if ($type && $type =~ qr{text/(html|xml)}) {
-        if ((my $base_tag = $res->dom->at('base'))) {
+        if ((my $base_tag = $res->dom->at('base[href]'))) {
             $base = resolve_href($base, $base_tag->attr('href'));
         }
         my $encode = guess_encoding($res) || 'utf-8';

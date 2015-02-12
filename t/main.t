@@ -10,7 +10,7 @@ use Mojo::DOM;
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
 use Mojo::Message::Response;
-use Test::More tests => 31;
+use Test::More tests => 33;
 
 {
     my $html = <<EOF;
@@ -168,6 +168,33 @@ EOF
     $bot->init;
     $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/'));
     
+    $job = shift @{$bot->{queue}};
+    is $job->literal_uri, 'css1.css', 'right url';
+    is $job->resolved_uri, 'http://example.com/css1.css', 'right url';
+}
+{
+    my $html = <<EOF;
+<html>
+<head>
+    <base>
+    <link rel="stylesheet" type="text/css" href="css1.css" />
+</head>
+<body>
+</body>
+</html>
+EOF
+    
+    my $tx = Mojo::Transaction::HTTP->new;
+    $tx->req->url(Mojo::URL->new('http://example.com/'));
+    $tx->res->code(200);
+    $tx->res->body($html);
+    $tx->res->headers->content_type('text/html');
+    
+    my $bot = WWW::Crawler::Mojo->new;
+    $bot->init;
+    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
+    
+    my $job;
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
     is $job->resolved_uri, 'http://example.com/css1.css', 'right url';
