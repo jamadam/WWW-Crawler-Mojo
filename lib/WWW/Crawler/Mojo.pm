@@ -227,7 +227,7 @@ sub _scrape_backend {
             $base = resolve_href($base, $base_tag->attr('href'));
         }
         my $dom =
-            Mojo::DOM->new(_encoder(guess_encoding($res))->decode($res->body));
+            Mojo::DOM->new(encoder(guess_encoding($res))->decode($res->body));
         for my $selector (sort keys %{$self->element_handlers}) {
             $dom->find($selector)->each(sub {
                 my $dom = shift;
@@ -240,7 +240,7 @@ sub _scrape_backend {
     }
     
     if ($type && $type =~ qr{text/css}) {
-        my $body = _encoder(guess_encoding($res))->decode($res->body);
+        my $body = encoder(guess_encoding($res))->decode($res->body);
         for (collect_urls_css($body)) {
             $self->_delegate_enqueue($_, $job->resolved_uri, $job, $base);
         }
