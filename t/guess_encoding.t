@@ -9,7 +9,7 @@ use Test::More;
 use WWW::Crawler::Mojo;
 use Mojo::Message::Response;
 
-use Test::More tests => 4;
+use Test::More tests => 9;
 
 my $html = <<EOF;
 <html>
@@ -61,3 +61,9 @@ utf8::encode($html2);
     $res->headers->content_type('text/html; charset=cp932; hoge');
     is WWW::Crawler::Mojo::guess_encoding($res), 'cp932', 'right encoding';
 }
+
+ok WWW::Crawler::Mojo::encoder('utf8')->isa('Encode::utf8'), 'right class';
+ok WWW::Crawler::Mojo::encoder('')->isa('Encode::utf8'), 'right class';
+ok WWW::Crawler::Mojo::encoder()->isa('Encode::utf8'), 'right class';
+ok WWW::Crawler::Mojo::encoder('UTF7')->isa('Encode::Unicode::UTF7'), 'right class';
+ok WWW::Crawler::Mojo::encoder('cp932')->isa('Encode::XS'), 'right class';

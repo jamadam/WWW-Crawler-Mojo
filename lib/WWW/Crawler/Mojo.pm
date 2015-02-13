@@ -8,6 +8,7 @@ use WWW::Crawler::Mojo::UserAgent;
 use Mojo::Message::Request;
 use Mojo::Util qw{md5_sum xml_escape dumper};
 use List::Util;
+use Encode qw(find_encoding);
 our $VERSION = '0.11';
 
 has active_conn => 0;
@@ -225,8 +226,8 @@ sub _scrape_backend {
         if ((my $base_tag = $res->dom->at('base[href]'))) {
             $base = resolve_href($base, $base_tag->attr('href'));
         }
-        my $encode = guess_encoding($res) || 'utf-8';
-        my $dom = Mojo::DOM->new(Encode::decode($encode, $res->body));
+        my $dom =
+            Mojo::DOM->new(_encoder(guess_encoding($res))->decode($res->body));
         for my $selector (sort keys %{$self->element_handlers}) {
             $dom->find($selector)->each(sub {
                 my $dom = shift;
@@ -239,8 +240,7 @@ sub _scrape_backend {
     }
     
     if ($type && $type =~ qr{text/css}) {
-        my $encode  = guess_encoding($res) || 'utf-8';
-        my $body    = Encode::decode($encode, $res->body);
+        my $body = _encoder(guess_encoding($res))->decode($res->body);
         for (collect_urls_css($body)) {
             $self->_delegate_enqueue($_, $job->resolved_uri, $job, $base);
         }
@@ -306,6 +306,14 @@ sub collect_urls_css {
 }
 
 my $charset_re = qr{\bcharset\s*=\s*['"]?([a-zA-Z0-9_\-]+)['"]?}i;
+
+sub encoder {
+    for (shift || 'utf-8', 'utf-8') {
+        if (my $enc = find_encoding($_)) {
+            return $enc;
+        }
+    }
+}
 
 sub guess_encoding {
     my $res     = shift;
