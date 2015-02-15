@@ -12,13 +12,12 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
 * Throttle the connection with max connection and max connection per host options.
 * Depth detection.
 * Tracks 301 HTTP redirects.
-* Network error detection.
-* Retry with your own rules.
+* Detects network errors and retry with your own rules.
 * Shuffles queue periodically if indicated.
 * Peeping server for crawler development.
 * Crawls beyond basic authentication.
+* Crawls even error documents.
 * Form submitting emulation.
-* Flexible enough to crawl even 404 error documents.
 
 [Mojo::URL]:http://mojolicio.us/perldoc/Mojo/URL
 [Mojo::DOM]:http://mojolicio.us/perldoc/Mojo/DOM
