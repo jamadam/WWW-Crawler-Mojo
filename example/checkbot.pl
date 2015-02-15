@@ -49,7 +49,7 @@ $bot->on(res => sub {
             report_stdout($msg, $job2->resolved_uri, $job->resolved_uri);
         }
         
-        $enqueue->();# if ($job->referrer->resolved_uri->host eq $start->host);
+        $enqueue->() if ($job->referrer->resolved_uri->host eq $start->host);
         #$enqueue->() ;
     });
 });
