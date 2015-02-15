@@ -62,7 +62,7 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
 
 ## Examples
 
-Restricting following URLs by status code.
+Restricting scraping URLs by status code.
 
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
@@ -70,7 +70,7 @@ Restricting following URLs by status code.
         $scrape->();
     });
 
-Restricting following URLs by host.
+Restricting scraping URLs by host.
 
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
@@ -78,7 +78,7 @@ Restricting following URLs by host.
         $scrape->();
     });
 
-Restrict enqueuing URLs by depth.
+Restrict following URLs by depth.
 
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
@@ -90,7 +90,7 @@ Restrict enqueuing URLs by depth.
         });
     });
 
-Restrict enqueuing URLs by host.
+Restrict following URLs by host.
 
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
@@ -101,7 +101,7 @@ Restrict enqueuing URLs by host.
         });
     });
 
-Restrict enqueuing URLs by referrer's host.
+Restrict following URLs by referrer's host.
 
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
@@ -112,7 +112,7 @@ Restrict enqueuing URLs by referrer's host.
         });
     });
 
-Excepting enqueuing URLs by path.
+Excepting following URLs by path.
 
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
