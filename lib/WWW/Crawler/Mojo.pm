@@ -215,7 +215,7 @@ sub scrape {
     my $base = $job->resolved_uri;
     my $type = $res->headers->content_type;
     
-    if ($type && $type =~ qr{^(text/application)/(html|xml|xhtml)}) {
+    if ($type && $type =~ qr{^(text|application)/(html|xml|xhtml)}) {
         if ((my $base_tag = $res->dom->at('base[href]'))) {
             $base = resolve_href($base, $base_tag->attr('href'));
         }
