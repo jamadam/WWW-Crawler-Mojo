@@ -70,7 +70,7 @@ Restricting following URLs by status code.
         $scrape->();
     });
 
-Restricting following URLs by host on response event.
+Restricting following URLs by host.
 
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
