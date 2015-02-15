@@ -279,6 +279,7 @@ EOF
     
     my $res = Mojo::Message::Response->new;
     $res->code(200);
+    $res->headers->content_length(length($html));
     $res->body($html);
     $res->headers->content_type('text/html');
     
@@ -321,6 +322,7 @@ EOF
     
     my $res = Mojo::Message::Response->new;
     $res->code(200);
+    $res->headers->content_length(length($html));
     $res->body($html);
     $res->headers->content_type('text/html');
     

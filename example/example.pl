@@ -14,12 +14,10 @@ $bot->on(res => sub {
     my ($bot, $scrape, $job, $res) = @_;
     say sprintf('fetching %s resulted status %s',
                                     $job->resolved_uri, $res->code);
-    $scrape->();
-});
-
-$bot->on(refer => sub {
-    my ($bot, $enqueue, $job, $context) = @_;
-    $enqueue->();
+    $scrape->(sub {
+        my ($bot, $enqueue, $job2, $context) = @_;
+        $enqueue->();
+    });
 });
 
 $bot->on(error => sub {

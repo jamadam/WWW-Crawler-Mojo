@@ -40,20 +40,18 @@ $bot->on(res => sub {
     my @props = map { join(':', $_, $count{$_}) } (sort keys %count);
     print join(' / ', @props), ' ' x 30, "\r";
     
-    $scrape->();
-});
-
-$bot->on(refer => sub {
-    my ($bot, $enqueue, $job, $context) = @_;
-    
-    if (security_warning($job, $context)) {
-        $count{'WARNING'}++;
-        my $msg = 'WARNING : Cross-scheme resource found';
-        report_stdout($msg, $job->resolved_uri, $job->referrer->resolved_uri);
-    }
-    
-    $enqueue->() if ($job->referrer->resolved_uri->host eq $start->host);
-    #$enqueue->() ;
+    $scrape->(sub {
+        my ($bot, $enqueue, $job2, $context) = @_;
+        
+        if (security_warning($job2, $context)) {
+            $count{'WARNING'}++;
+            my $msg = 'WARNING : Cross-scheme resource found';
+            report_stdout($msg, $job2->resolved_uri, $job->resolved_uri);
+        }
+        
+        $enqueue->();# if ($job->referrer->resolved_uri->host eq $start->host);
+        #$enqueue->() ;
+    });
 });
 
 $bot->shuffle(5);

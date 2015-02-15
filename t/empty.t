@@ -45,10 +45,6 @@ $bot->on('res' => sub {
     $scrape->();
     $urls{$job->resolved_uri} = $job;
 });
-$bot->on('refer' => sub {
-    my ($bot, $enqueue, $job, $context) = @_;
-    $enqueue->();
-});
 
 $bot->init;
 

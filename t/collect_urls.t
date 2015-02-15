@@ -51,15 +51,15 @@ EOF
     my $res = Mojo::Message::Response->new;
     $res->code(200);
     $res->headers->content_type('text/html');
+    $res->headers->content_length(length($html));
     $res->body(Mojo::DOM->new($html));
     my $job = WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/');
     my $bot = WWW::Crawler::Mojo->new;
-    $bot->on('refer', sub {
+    $bot->scrape($res, $job, sub {
         my ($bot, $enqueue, $job, $context) = @_;
         push(@array, $job->literal_uri);
         push(@array, $context);
     });
-    $bot->scrape($res, $job);
 }
 is shift @array, 'http://example.com/bgimg2.png', 'right url';
 is shift(@array)->type, 'a', 'right type';
@@ -146,14 +146,14 @@ EOF
     my $res = Mojo::Message::Response->new;
     $res->code(200);
     $res->headers->content_type('text/html');
+    $res->headers->content_length(length($xhtml));
     $res->body(Mojo::DOM->new($xhtml));
     my $job = WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/');
     my $bot = WWW::Crawler::Mojo->new;
-    $bot->on('refer', sub {
+    $bot->scrape($res, $job, sub {
         my ($bot, $enqueue, $job, $context) = @_;
         push(@array, $job->literal_uri);
         push(@array, $context);
     });
-    $bot->scrape($res, $job);
 }
 is(scalar @array, 0, 'right length');

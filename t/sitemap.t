@@ -34,15 +34,15 @@ EOF
     my $res = Mojo::Message::Response->new;
     $res->code(200);
     $res->headers->content_type('text/html');
+    $res->headers->content_length(length($xml));
     $res->body(Mojo::DOM->new($xml));
     my $job = WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/');
     my $bot = WWW::Crawler::Mojo->new;
-    $bot->on('refer', sub {
+    $bot->scrape($res, $job, sub {
         my ($bot, $enqueue, $job, $context) = @_;
         push(@array, $job->literal_uri);
         push(@array, $context);
     });
-    $bot->scrape($res, $job);
 }
 is shift @array, 'http://example.com/1', 'right url';
 is shift(@array)->type, 'urlset', 'right type';
@@ -67,14 +67,14 @@ EOF
     my $res = Mojo::Message::Response->new;
     $res->code(200);
     $res->headers->content_type('text/html');
+    $res->headers->content_length(length($xml));
     $res->body(Mojo::DOM->new($xml));
     my $job = WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/');
     my $bot = WWW::Crawler::Mojo->new;
-    $bot->on('refer', sub {
+    $bot->scrape($res, $job, sub {
         my ($bot, $enqueue, $job, $context) = @_;
         push(@array, $job->literal_uri);
         push(@array, $context);
     });
-    $bot->scrape($res, $job);
 }
 is shift(@array), undef, 'right type';

@@ -39,6 +39,7 @@ EOF
     
     my $res = Mojo::Message::Response->new;
     $res->code(200);
+    $res->headers->content_length(length($html));
     $res->body($html);
     $res->headers->content_type('text/html');
     
@@ -117,8 +118,9 @@ EOF
     my $tx = Mojo::Transaction::HTTP->new;
     $tx->req->url(Mojo::URL->new('http://example.com/'));
     $tx->res->code(200);
-    $tx->res->body($html);
     $tx->res->headers->content_type('text/html');
+    $tx->res->headers->content_length(length($html));
+    $tx->res->body($html);
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
@@ -152,8 +154,9 @@ EOF
     my $tx = Mojo::Transaction::HTTP->new;
     $tx->req->url(Mojo::URL->new('http://example.com/'));
     $tx->res->code(200);
-    $tx->res->body($html);
     $tx->res->headers->content_type('text/html');
+    $tx->res->headers->content_length(length($html));
+    $tx->res->body($html);
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
@@ -187,8 +190,9 @@ EOF
     my $tx = Mojo::Transaction::HTTP->new;
     $tx->req->url(Mojo::URL->new('http://example.com/'));
     $tx->res->code(200);
-    $tx->res->body($html);
+    $tx->res->headers->content_length(length($html));
     $tx->res->headers->content_type('text/html');
+    $tx->res->body($html);
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;

@@ -104,8 +104,6 @@ sub init {
                                         unless $self->has_subscribers('error');
     $self->on('res', sub { $_[1]->() })
                                         unless $self->has_subscribers('res');
-    $self->on('refer', sub { $_[1]->() })
-                                        unless $self->has_subscribers('refer');
     
     $self->ua->transactor->name($self->ua_name);
     $self->ua->max_redirects(5);
@@ -157,7 +155,9 @@ sub process_job {
             return;
         }
         
-        $self->emit('res', sub { $self->scrape($res, $job) }, $job, $res);
+        $self->emit('res', sub {
+            $self->scrape($res, $job, $_[0]);
+        }, $job, $res);
     });
 }
 
@@ -208,17 +208,10 @@ sub peeping_handler {
 }
 
 sub scrape {
-    my ($self, $res, $job) = @_;
-    $self->_scrape_backend($res, $job) if $res->code == 200;
-}
-
-sub scrape_any {
-    my ($self, $res, $job) = @_;
-    $self->_scrape_backend($res, $job) if $res->headers->content_length;
-}
-
-sub _scrape_backend {
-    my ($self, $res, $job) = @_;
+    my ($self, $res, $job, $cb) = @_;
+    
+    return unless $res->headers->content_length && $res->body;
+    
     my $base = $job->resolved_uri;
     my $type = $res->headers->content_type;
     
@@ -233,7 +226,7 @@ sub _scrape_backend {
                 my $dom = shift;
                 return if ($dom->xml && _wrong_dom_detection($dom));
                 for ($self->element_handlers->{$selector}->($dom)) {
-                    $self->_delegate_enqueue($_, $dom, $job, $base);
+                    $self->_delegate_enqueue($_, $dom, $job, $base, $cb);
                 }
             });
         }
@@ -242,7 +235,7 @@ sub _scrape_backend {
     if ($type && $type =~ qr{text/css}) {
         my $body = encoder(guess_encoding($res))->decode($res->body);
         for (collect_urls_css($body)) {
-            $self->_delegate_enqueue($_, $job->resolved_uri, $job, $base);
+            $self->_delegate_enqueue($_, $job->resolved_uri, $job, $base, $cb);
         }
     }
 };
@@ -275,7 +268,7 @@ sub _enqueue {
 }
 
 sub _delegate_enqueue {
-    my ($self, $url, $dom, $job, $base) = @_;
+    my ($self, $url, $dom, $job, $base, $cb) = @_;
     my $method, my $params;
     
     return unless $url;
@@ -298,7 +291,8 @@ sub _delegate_enqueue {
         }
     }
     
-    $self->emit('refer', sub { $self->enqueue($_[0] || $child) }, $child, $dom);
+    $cb ||= sub { $_[1]->() };
+    $cb->($self, sub { $self->enqueue($_[0] || $child) }, $child, $dom);
 }
 
 sub collect_urls_css {
@@ -536,47 +530,26 @@ Emitted when crawler got response from server. The callback takes 4 arguments.
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
         if (...) {
-            $scrape->();
+            $scrape->(sub {
+                # called when URL found
+            });
         } else {
             # DO NOTHING
         }
     });
 
-=over
-
-=item $bot
+=head3 $bot
 
 L<WWW::Crawler::Mojo> instance.
 
-=item $scrape
+=head3 $scrape
 
-Scraper code reference for current document. This is a shorthand of
-$bot->scrape($job)
+Scraper code reference for current document. The code takes a callback for
+argument in case a URL found.
 
-=item $job
-
-L<WWW::Crawler::Mojo::Job> instance.
-
-=item $res
-
-L<Mojo::Message::Response> instance.
-
-=back
-
-=head2 refer
-
-Emitted when new URI is found. You can enqueue the URI conditionally with
-the callback.
-
-    $bot->on(refer => sub {
+    $scrape(sub {
         my ($bot, $enqueue, $job, $context) = @_;
-        if (...) {
-            $enqueue->();
-        } elseif (...) {
-            $enqueue->(...); # maybe different url
-        } else {
-            # DO NOTHING
-        }
+        ...
     });
 
 =over
@@ -587,8 +560,9 @@ L<WWW::Crawler::Mojo> instance.
 
 =item $enqueue
 
-Enqueue code reference for current URL. This is a shorthand of
-$bot->enqueue($job)
+Enqueue code reference for current URL. This is a shorthand of..
+
+    $bot->enqueue($job)
 
 =item $job
 
@@ -599,6 +573,14 @@ L<WWW::Crawler::Mojo::Job> instance.
 Either L<Mojo::DOM> or L<Mojo::URL> instance.
 
 =back
+
+=head3 $job
+
+L<WWW::Crawler::Mojo::Job> instance.
+
+=head3 $res
+
+L<Mojo::Message::Response> instance.
 
 =head2 empty
 
@@ -672,16 +654,9 @@ peeping API dispatcher.
 =head2 scrape
 
 Parses and discovers links in a web page. Each links are appended to FIFO array.
-This performs scraping when response code is 200 OK.
+This performs scraping.
 
-    $bot->scrape($res, $job);
-
-=head2 scrape_any
-
-Almost same as scrape method does while it performs scraping no matter what
-response code is given.
-
-    $bot->scrape_any($res, $job);
+    $bot->scrape($res, $job, $cb);
 
 =head2 enqueue
 

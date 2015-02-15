@@ -37,13 +37,13 @@ my %contexts;
 
 $bot->on('res' => sub {
     my ($bot, $scrape, $job, $res) = @_;
-    $scrape->();
     $urls{$job->resolved_uri} = $job;
-});
-$bot->on('refer' => sub {
-    my ($bot, $enqueue, $job, $context) = @_;
-    $enqueue->();
-    $contexts{$job} = $context;
+    return unless $res->code == 200;
+    $scrape->(sub {
+        my ($bot, $enqueue, $job, $context) = @_;
+        $enqueue->();
+        $contexts{$job} = $context;
+    });
 });
 
 $bot->init;

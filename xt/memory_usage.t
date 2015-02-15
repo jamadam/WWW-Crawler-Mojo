@@ -53,12 +53,11 @@ $bot->on('res' => sub {
     my ($bot, $scrape, $job, $res) = @_;
     $job->literal_uri($job->literal_uri->to_string) if $job->literal_uri;
     $job->resolved_uri($job->resolved_uri->to_string);
-    $scrape->();
+    $scrape->(sub {
+        my ($bot, $enqueue, $job, $context) = @_;
+        $enqueue->();
+    });
     $last_job = $job;
-});
-$bot->on('refer' => sub {
-    my ($bot, $enqueue, $job, $context) = @_;
-    $enqueue->();
 });
 $bot->init;
 

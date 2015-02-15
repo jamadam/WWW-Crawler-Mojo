@@ -38,14 +38,13 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
     
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
+
+		$cb = sub {
+            my ($bot, $enqueue, $job, $context) = @_;
+            $enqueue->() if (...); # enqueue this job
+        }
         
-        $scrape->() if (...); # collect URLs from this document
-    });
-    
-    $bot->on(refer => sub {
-        my ($bot, $enqueue, $job, $context) = @_;
-        
-        $enqueue->() if (...); # enqueue this job
+    	$scrape->($cb) if (...); # collect URLs from this document
     });
     
     $bot->enqueue('http://example.com/');
@@ -63,44 +62,65 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
 
 ## Examples
 
-Restrict enqueuing URLs by depth.
+Restricting following URLs by status code.
 
-    $bot->on(refer => sub {
-        my ($bot, $enqueue, $job, $context) = @_;
-        
-        $enqueue->() if ($job->depth < 5);
-    });
-
-Restrict enqueuing URLs by host.
-
-    $bot->on(refer => sub {
-        my ($bot, $enqueue, $job, $context) = @_;
-        
-        $enqueue->() if $job->resolved_uri->host eq 'example.com';
-    });
-
-Restrict enqueuing URLs by referrer's host.
-
-    $bot->on(refer => sub {
-        my ($bot, $enqueue, $job, $context) = @_;
-        
-        $enqueue->() if $job->referrer->resolved_uri->host eq 'example.com';
-    });
-
-Excepting enqueuing URLs by path.
-
-    $bot->on(refer => sub {
-        my ($bot, $enqueue, $job, $context) = @_;
-        
-        $enqueue->() unless ($job->resolved_uri->path =~ qr{^/foo/});
+    $bot->on(res => sub {
+        my ($bot, $scrape, $job, $res) = @_;
+        return unless ($res->code == 200);
+        $scrape->();
     });
 
 Restricting following URLs by host on response event.
 
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
+        return unless if ($job->resolved_uri->host eq 'example.com');
+        $scrape->();
+    });
+
+Restrict enqueuing URLs by depth.
+
+    $bot->on(res => sub {
+        my ($bot, $scrape, $job, $res) = @_;
         
-        $scrape->() if ($job->resolved_uri->host eq 'example.com');
+        $scrape->(sub {
+            my ($bot, $enqueue, $job, $context) = @_;
+			return unless ($job->depth < 5)
+            $enqueue->();
+        });
+    });
+
+Restrict enqueuing URLs by host.
+
+    $bot->on(res => sub {
+        my ($bot, $scrape, $job, $res) = @_;
+        
+        $scrape->(sub {
+            my ($bot, $enqueue, $job, $context) = @_;
+            $enqueue->() if $job->resolved_uri->host eq 'example.com';
+        });
+    });
+
+Restrict enqueuing URLs by referrer's host.
+
+    $bot->on(res => sub {
+        my ($bot, $scrape, $job, $res) = @_;
+        
+        $scrape->(sub {
+            my ($bot, $enqueue, $job, $context) = @_;
+            $enqueue->() if $job->referrer->resolved_uri->host eq 'example.com';
+        });
+    });
+
+Excepting enqueuing URLs by path.
+
+    $bot->on(res => sub {
+        my ($bot, $scrape, $job, $res) = @_;
+        
+        $scrape->(sub {
+            my ($bot, $enqueue, $job, $context) = @_;
+            $enqueue->() unless ($job->resolved_uri->path =~ qr{^/foo/});
+        });
     });
 
 Speed up.
@@ -111,14 +131,6 @@ Speed up.
 Authentication. The user agent automatically reuses the credential for the host.
 
     $bot->enqueue('http://jamadam:password@example.com');
-
-Want to scrape inside error documents?
-
-    $bot->on(res => sub {
-        my ($bot, $scrape, $job, $res) = @_;
-        
-        $bot->scrape_any($res, $job); # doesn't restrict to 200 OK
-    });
 
 You can fulfill any prerequisites such as login form submittion so that a login session will be established with cookie or something.
 
