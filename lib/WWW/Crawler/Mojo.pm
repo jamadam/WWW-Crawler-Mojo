@@ -13,6 +13,7 @@ our $VERSION = '0.11';
 
 has active_conn => 0;
 has active_conns_per_host => sub { {} };
+has clock_speed => 0.25;
 has element_handlers => sub { {
     'script[src]'   => sub { $_[0]->{src} },
     'link[href]'    => sub { $_[0]->{href} },
@@ -110,7 +111,7 @@ sub init {
     $self->ua->transactor->name($self->ua_name);
     $self->ua->max_redirects(5);
     
-    Mojo::IOLoop->recurring(0.25 => sub {
+    Mojo::IOLoop->recurring($self->clock_speed => sub {
         $self->process_job(@_);
     });
     
@@ -360,6 +361,13 @@ HTML element handler on scraping.
         my $dom = shift;
         return $dom->{src};
     };
+
+=head2 clock_speed
+
+A number of millisecond for main event loop interval. Defaults to 0.25.
+
+    $bot->clock_speed(2);
+    my $clock = $bot->clock_speed; # 2
 
 =head2 fix
 
