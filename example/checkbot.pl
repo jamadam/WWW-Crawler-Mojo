@@ -58,7 +58,6 @@ $bot->shuffle(5);
 $bot->max_conn_per_host(2);
 $bot->max_conn(5);
 $bot->enqueue($start);
-$bot->peeping_port(3001);
 $bot->crawl;
 
 sub report_stdout {

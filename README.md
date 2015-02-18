@@ -14,7 +14,6 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
 * Tracks 301 HTTP redirects.
 * Detects network errors and retry with your own rules.
 * Shuffles queue periodically if indicated.
-* Peeping server for crawler development.
 * Crawls beyond basic authentication.
 * Crawls even error documents.
 * Form submitting emulation.
@@ -38,12 +37,12 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
 
-		$cb = sub {
+        $cb = sub {
             my ($bot, $enqueue, $job, $context) = @_;
             $enqueue->() if (...); # enqueue this job
         }
         
-    	$scrape->($cb) if (...); # collect URLs from this document
+        $scrape->($cb) if (...); # collect URLs from this document
     });
     
     $bot->enqueue('http://example.com/');
@@ -84,7 +83,7 @@ Restrict following URLs by depth.
         
         $scrape->(sub {
             my ($bot, $enqueue, $job, $context) = @_;
-			return unless ($job->depth < 5)
+            return unless ($job->depth < 5)
             $enqueue->();
         });
     });
@@ -140,13 +139,6 @@ You can fulfill any prerequisites such as login form submittion so that a login 
     });
     $bot->enqueue('http://example.com/admin/');
     $bot->crawl
-
-By peeping server, you can peep into the crawler attributes such as queue during crawling.
-
-    $bot->peeping_port(3030);
-    
-    # Following URL will be available
-    # http://127.0.0.1:3030//dumper/queue
 
 ## Other examples
 

@@ -75,8 +75,6 @@ has element_handlers => sub { {
 has fix => sub { {} };
 has max_conn => 1;
 has max_conn_per_host => 1;
-has 'peeping_port';
-has peeping_max_length => 30000;
 has queue => sub { [] };
 has 'shuffle';
 has 'ua' => sub { WWW::Crawler::Mojo::UserAgent->new };
@@ -116,43 +114,11 @@ sub init {
         $self->process_job(@_);
     });
     
-    if ($self->peeping_port) {
-        Mojo::IOLoop->server({port => $self->peeping_port}, sub {
-            $self->peeping_handler(@_);
-        });
-    }
-    
     if ($self->shuffle) {
         Mojo::IOLoop->recurring($self->shuffle => sub {
             @{$self->{queue}} = List::Util::shuffle @{$self->{queue}};
         });
     }
-}
-
-sub peeping_handler {
-    my ($self, $loop, $stream) = @_;
-    $stream->on(read => sub {
-        my ($stream, $bytes) = @_;
-        
-        my $path = Mojo::Message::Request->new->parse($bytes)->url->path;
-        
-        if ($path =~ qr{^/queue}) {
-            my $res = sprintf('%s jobs are left.', scalar @{$self->queue});
-            $stream->write("HTTP/1.1 200 OK\n\n");
-            $stream->write($res, sub {shift->close});
-            return;
-        }
-        
-        if ($path =~ qr{^/dumper/(\w+)} && defined $self->{$1}) {
-            my $res = substr(dumper($self->{$1}), 0, $self->peeping_max_length);
-            $stream->write("HTTP/1.1 200 OK\n\n");
-            $stream->write($res, sub {shift->close});
-            return;
-        }
-        
-        $stream->write(
-                    "HTTP/1.1 404 NOT FOUND\n\nNOT FOUND", sub {shift->close});
-    });
 }
 
 sub process_job {
@@ -203,14 +169,6 @@ sub say_start {
 Crawling is starting with @{[ $self->queue->[0]->resolved_uri ]}
 Max Connection  : @{[ $self->max_conn ]}
 User Agent      : @{[ $self->ua_name ]}
-EOF
-
-    print <<"EOF" if ($self->peeping_port);
-Peeping API is available at following URL
-    http://127.0.0.1:@{[ $self->peeping_port ]}/
-EOF
-    
-    print <<"EOF";
 ----------------------------------------
 EOF
 }
@@ -421,21 +379,6 @@ A number of max connections per host.
     $bot->max_conn_per_host(5);
     say $bot->max_conn_per_host; # 5
 
-=head2 peeping_port
-
-An port number for providing peeping monitor. It also evalutated as boolean for
-disabling/enabling the feature. Defaults to undef, meaning disable.
-
-    $bot->peeping_port(3001);
-    say $bot->peeping_port; # 3000
-
-=head2 peeping_max_length
-
-Max length of peeping monitor content.
-
-    $bot->peeping_max_length(100000);
-    say $bot->peeping_max_length; # 100000
-
 =head2 queue
 
 FIFO array contains L<WWW::Crawler::Mojo::Job> objects.
@@ -591,12 +534,6 @@ Process a job.
 Displays starting messages to STDOUT
 
     $bot->say_start;
-
-=head2 peeping_handler
-
-peeping API dispatcher.
-
-    $bot->peeping_handler($loop, $stream);
 
 =head2 scrape
 
