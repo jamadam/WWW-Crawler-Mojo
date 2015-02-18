@@ -3,9 +3,10 @@ use strict;
 use warnings;
 use utf8;
 use Mojo::Base -base;
+use Mojo::Util qw(deprecated);
 
 has 'literal_uri' => '';
-has 'resolved_uri' => '';
+has 'url' => '';
 has 'referrer';
 has 'redirect_history' => sub { [] };
 has 'method';
@@ -24,14 +25,20 @@ sub child {
 
 sub redirect {
     my ($self, $last, @history) = @_;
-    $self->resolved_uri($last);
+    $self->url($last);
     $self->redirect_history(\@history);
+}
+
+sub resolved_uri {
+    deprecated 'resolved_uri is DEPRECATED in favor of url';
+    return $_[0]->{resolved_uri} = $_[1] if (scalar @_ == 2);
+    return $_[0]->{resolved_uri} //= '';
 }
 
 sub original_uri {
     my $self = shift;
     my @histry = @{$self->redirect_history};
-    return $self->resolved_uri unless (@histry);
+    return $self->url unless (@histry);
     return $histry[$#histry];
 }
 
@@ -44,7 +51,7 @@ WWW::Crawler::Mojo::Job - Single crawler job
 =head1 SYNOPSIS
 
     my $job1 = WWW::Crawler::Mojo::Job->new;
-    $job1->resolved_uri('http://example.com/');
+    $job1->url('http://example.com/');
     my $job2 = $job1->child;
 
 =head1 DESCRIPTION
@@ -72,9 +79,9 @@ document.
     $job1->literal_uri('./index.html');
     say $job1->literal_uri; # './index.html'
 
-=head2 resolved_uri
+=head2 resolved_uri [DEPRECATED]
 
-A L<Mojo::URL> instance of the resolved URL.
+A L<Mojo::URL> instance of the resolved URL. Use url instead.
 
     $job1->resolved_uri('http://example.com/');
     say $job1->resolved_uri; # 'http://example.com/'
@@ -92,6 +99,13 @@ An array reference that contains URLs of redirect history.
 
     $job1->redirect_history([$url1, $url2, $url3]);
     my $history = $job1->redirect_history;
+
+=head2 url [DEPRECATED]
+
+A L<Mojo::URL> instance of the resolved URL.
+
+    $job1->url('http://example.com/');
+    say $job1->url; # 'http://example.com/'
 
 =head2 method
 
@@ -119,24 +133,24 @@ Clones the job.
 
 Instantiate a child job by parent job. The parent uri is set to child referrer.
 
-    my $job1 = WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://a/1');
-    my $job2 = $job1->child(resolved_uri => 'http://a/2');
-    say $job2->referrer->resolved_uri # 'http://a/1'
+    my $job1 = WWW::Crawler::Mojo::Job->new(url => 'http://a/1');
+    my $job2 = $job1->child(url => 'http://a/2');
+    say $job2->referrer->url # 'http://a/1'
 
 =head2 redirect
 
 Replaces the resolved URI and history at once.
 
     my $job = WWW::Crawler::Mojo::Job->new;
-    $job->resolved_uri($url1);
+    $job->url($url1);
     $job->redirect($url2, $url3);
-    say $job->resolved_uri # $url2
+    say $job->url # $url2
     say $job->redirect_history # [$url1, $url3]
 
 =head2 original_uri
 
 Returns the original URI of redirected job. If redirected, returns last element
-of redirect_histroy attribute, otherwise returns resolved_uri attribute.
+of redirect_histroy attribute, otherwise returns url attribute.
 
     $job1->redirect_history([$url1, $url2, $url3]);
     my $url4 = $job1->original_uri; # $url4 is $url3

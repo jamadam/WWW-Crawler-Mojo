@@ -53,7 +53,7 @@ EOF
     $res->headers->content_type('text/html');
     $res->headers->content_length(length($html));
     $res->body(Mojo::DOM->new($html));
-    my $job = WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/');
+    my $job = WWW::Crawler::Mojo::Job->new(url => 'http://example.com/');
     my $bot = WWW::Crawler::Mojo->new;
     $bot->scrape($res, $job, sub {
         my ($bot, $enqueue, $job, $context) = @_;
@@ -148,7 +148,7 @@ EOF
     $res->headers->content_type('text/html');
     $res->headers->content_length(length($xhtml));
     $res->body(Mojo::DOM->new($xhtml));
-    my $job = WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/');
+    my $job = WWW::Crawler::Mojo::Job->new(url => 'http://example.com/');
     my $bot = WWW::Crawler::Mojo->new;
     $bot->scrape($res, $job, sub {
         my ($bot, $enqueue, $job, $context) = @_;

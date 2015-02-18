@@ -43,7 +43,7 @@ my %urls;
 $bot->on('res' => sub {
     my ($bot, $scrape, $job, $res) = @_;
     $scrape->();
-    $urls{$job->resolved_uri} = $job;
+    $urls{$job->url} = $job;
 });
 
 $bot->init;

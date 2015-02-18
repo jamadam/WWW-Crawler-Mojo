@@ -127,12 +127,12 @@ sub process_job {
     if (!$self->{queue}->[0]) {
         $self->emit('empty') if (!$self->active_conn);
         return;
-    } elsif (!($self->_mod_busyness($self->{queue}->[0]->resolved_uri, 1))) {
+    } elsif (!($self->_mod_busyness($self->{queue}->[0]->url, 1))) {
         return;
     }
     
     my $job = shift @{$self->{queue}};
-    my $uri = $job->resolved_uri;
+    my $uri = $job->url;
     my $ua = $self->ua;
     my $tx = $ua->build_tx($job->method || 'get' => $uri => $job->tx_params);
     
@@ -166,7 +166,7 @@ sub say_start {
     
     print <<"EOF";
 ----------------------------------------
-Crawling is starting with @{[ $self->queue->[0]->resolved_uri ]}
+Crawling is starting with @{[ $self->queue->[0]->url ]}
 Max Connection  : @{[ $self->max_conn ]}
 User Agent      : @{[ $self->ua_name ]}
 ----------------------------------------
@@ -178,7 +178,7 @@ sub scrape {
     
     return unless $res->headers->content_length && $res->body;
     
-    my $base = $job->resolved_uri;
+    my $base = $job->url;
     my $type = $res->headers->content_type;
     
     if ($type && $type =~ qr{^(text|application)/(html|xml|xhtml)}) {
@@ -199,7 +199,7 @@ sub scrape {
     
     if ($type && $type =~ qr{text/css}) {
         for (collect_urls_css(decoded_body($res))) {
-            $self->_delegate_enqueue($_, $job->resolved_uri, $job, $base, $cb);
+            $self->_delegate_enqueue($_, $job->url, $job, $base, $cb);
         }
     }
 };
@@ -221,13 +221,13 @@ sub _delegate_enqueue {
     
     return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});
     
-    my $child = $job->child(resolved_uri => $resolved, literal_uri => $url);
+    my $child = $job->child(url => $resolved, literal_uri => $url);
     
     $child->method($method) if $method;
     
     if ($params) {
         if ($method eq 'GET') {
-            $child->resolved_uri->query->append($params);
+            $child->url->query->append($params);
         } else {
             $child->tx_params($params);
         }
@@ -243,10 +243,10 @@ sub _enqueue {
     for my $job (@$jobs) {
         if (! ref $job || ref $job ne 'WWW::Crawler::Mojo::Job') {
             my $url = !ref $job ? Mojo::URL->new($job) : $job;
-            $job = WWW::Crawler::Mojo::Job->new(resolved_uri => $url);
+            $job = WWW::Crawler::Mojo::Job->new(url => $url);
         }
         
-        my $md5_seed = $job->resolved_uri->to_string. ($job->method || '');
+        my $md5_seed = $job->url->to_string. ($job->method || '');
         $md5_seed .= $job->tx_params->to_string if ($job->tx_params);
         my $md5 = md5_sum($md5_seed);
         if ($requeue || !exists $self->fix->{$md5}) {

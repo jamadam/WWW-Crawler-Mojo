@@ -72,7 +72,7 @@ Restricting scraping URLs by host.
 
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
-        return unless if ($job->resolved_uri->host eq 'example.com');
+        return unless if ($job->url->host eq 'example.com');
         $scrape->();
     });
 
@@ -95,7 +95,7 @@ Restrict following URLs by host.
         
         $scrape->(sub {
             my ($bot, $enqueue, $job, $context) = @_;
-            $enqueue->() if $job->resolved_uri->host eq 'example.com';
+            $enqueue->() if $job->url->host eq 'example.com';
         });
     });
 
@@ -106,7 +106,7 @@ Restrict following URLs by referrer's host.
         
         $scrape->(sub {
             my ($bot, $enqueue, $job, $context) = @_;
-            $enqueue->() if $job->referrer->resolved_uri->host eq 'example.com';
+            $enqueue->() if $job->referrer->url->host eq 'example.com';
         });
     });
 
@@ -117,7 +117,7 @@ Excepting following URLs by path.
         
         $scrape->(sub {
             my ($bot, $enqueue, $job, $context) = @_;
-            $enqueue->() unless ($job->resolved_uri->path =~ qr{^/foo/});
+            $enqueue->() unless ($job->url->path =~ qr{^/foo/});
         });
     });
 

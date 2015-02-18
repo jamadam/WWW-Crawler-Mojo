@@ -45,63 +45,63 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->scrape($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
+    $bot->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'));
     
     my $job;
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'index1.html', 'right url';
-    is $job->resolved_uri, 'http://example.com/index1.html', 'right url';
+    is $job->url, 'http://example.com/index1.html', 'right url';
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'index2.html', 'right url';
-    is $job->resolved_uri, 'http://example.com/index2.html', 'right url';
+    is $job->url, 'http://example.com/index2.html', 'right url';
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'index3.html', 'right url';
-    is $job->resolved_uri, 'http://example.com/index3.html', 'right url';
+    is $job->url, 'http://example.com/index3.html', 'right url';
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
-    is $job->resolved_uri, 'http://example.com/css1.css', 'right url';
+    is $job->url, 'http://example.com/css1.css', 'right url';
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'css2.css', 'right url';
-    is $job->resolved_uri, 'http://example.com/css2.css', 'right url';
+    is $job->url, 'http://example.com/css2.css', 'right url';
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'js1.js', 'right url';
-    is $job->resolved_uri, 'http://example.com/js1.js', 'right url';
+    is $job->url, 'http://example.com/js1.js', 'right url';
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'js2.js', 'right url';
-    is $job->resolved_uri, 'http://example.com/js2.js', 'right url';
+    is $job->url, 'http://example.com/js2.js', 'right url';
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, '//example.com/js3.js', 'right url';
-    is $job->resolved_uri, 'http://example.com/js3.js', 'right url';
+    is $job->url, 'http://example.com/js3.js', 'right url';
     $job = shift @{$bot->{queue}};
     is $job, undef, 'no more urls';
     
     my $bot2 = WWW::Crawler::Mojo->new;
     $bot2->init;
-    $bot2->scrape($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/a'));
+    $bot2->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/a'));
     
     $job = shift @{$bot2->{queue}};
     $job = shift @{$bot2->{queue}};
     $job = shift @{$bot2->{queue}};
     $job = shift @{$bot2->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
-    is $job->resolved_uri, 'http://example.com/a/css1.css', 'right url';
+    is $job->url, 'http://example.com/a/css1.css', 'right url';
     
     my $bot3 = WWW::Crawler::Mojo->new;
     $bot3->init;
-    $bot3->scrape($res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'https://example.com/'));
+    $bot3->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'https://example.com/'));
     
     $job = shift @{$bot3->{queue}};
     $job = shift @{$bot3->{queue}};
     $job = shift @{$bot3->{queue}};
     $job = shift @{$bot3->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
-    is $job->resolved_uri, 'https://example.com/css1.css', 'right url';
+    is $job->url, 'https://example.com/css1.css', 'right url';
     $job = shift @{$bot3->{queue}};
     $job = shift @{$bot3->{queue}};
     $job = shift @{$bot3->{queue}};
     $job = shift @{$bot3->{queue}};
     is $job->literal_uri, '//example.com/js3.js', 'right url';
-    is $job->resolved_uri, 'https://example.com/js3.js', 'right url';
+    is $job->url, 'https://example.com/js3.js', 'right url';
 }
 {
     my $html = <<EOF;
@@ -124,20 +124,20 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
+    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'));
     
     my $job;
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
-    is $job->resolved_uri, 'http://example2.com/css1.css', 'right url';
+    is $job->url, 'http://example2.com/css1.css', 'right url';
     
     $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/'));
+    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/'));
     
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
-    is $job->resolved_uri, 'http://example2.com/css1.css', 'right url';
+    is $job->url, 'http://example2.com/css1.css', 'right url';
 }
 {
     my $html = <<EOF;
@@ -160,20 +160,20 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
+    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'));
     
     my $job;
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
-    is $job->resolved_uri, 'http://example.com/css1.css', 'right url';
+    is $job->url, 'http://example.com/css1.css', 'right url';
     
     $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/a/'));
+    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/'));
     
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
-    is $job->resolved_uri, 'http://example.com/css1.css', 'right url';
+    is $job->url, 'http://example.com/css1.css', 'right url';
 }
 {
     my $html = <<EOF;
@@ -196,10 +196,10 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://example.com/'));
+    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'));
     
     my $job;
     $job = shift @{$bot->{queue}};
     is $job->literal_uri, 'css1.css', 'right url';
-    is $job->resolved_uri, 'http://example.com/css1.css', 'right url';
+    is $job->url, 'http://example.com/css1.css', 'right url';
 }

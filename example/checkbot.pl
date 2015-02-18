@@ -21,7 +21,7 @@ $bot->on(error => sub {
     
     chomp($msg);
     
-    report_stdout($msg, $job->resolved_uri, $job->referrer->resolved_uri);
+    report_stdout($msg, $job->url, $job->referrer->url);
 });
 
 $bot->on(res => sub {
@@ -33,7 +33,7 @@ $bot->on(res => sub {
     
     if ($res->code =~ qr{[54]..}) {
         my $msg = $res->code. ' occured!';
-        report_stdout($msg, $job->resolved_uri, $job->referrer->resolved_uri);
+        report_stdout($msg, $job->url, $job->referrer->url);
     }
     
     $count{QUEUE} = scalar @{$bot->queue};
@@ -46,10 +46,10 @@ $bot->on(res => sub {
         if (security_warning($job2, $context)) {
             $count{'WARNING'}++;
             my $msg = 'WARNING : Cross-scheme resource found';
-            report_stdout($msg, $job2->resolved_uri, $job->resolved_uri);
+            report_stdout($msg, $job2->url, $job->url);
         }
         
-        $enqueue->() if ($job->referrer->resolved_uri->host eq $start->host);
+        $enqueue->() if ($job->referrer->url->host eq $start->host);
         #$enqueue->() ;
     });
 });
@@ -75,8 +75,8 @@ sub report_stdout {
 sub security_warning {
     my ($job, $context) = @_;
     
-    my $scheme1 = $job->referrer->resolved_uri->protocol;
-    my $scheme2 = $job->resolved_uri->protocol;
+    my $scheme1 = $job->referrer->url->protocol;
+    my $scheme2 = $job->url->protocol;
     
     if ($scheme1 eq 'https' && $scheme2 ne 'https') {
         return 1 if (!ref $context || ref $context ne 'Mojo::DOM');

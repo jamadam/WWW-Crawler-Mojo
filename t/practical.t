@@ -37,7 +37,7 @@ my %contexts;
 
 $bot->on('res' => sub {
     my ($bot, $scrape, $job, $res) = @_;
-    $urls{$job->resolved_uri} = $job;
+    $urls{$job->url} = $job;
     return unless $res->code == 200;
     $scrape->(sub {
         my ($bot, $enqueue, $job, $context) = @_;
@@ -93,13 +93,13 @@ is $q->referrer, $parent;
 is ref $contexts{$q}, 'Mojo::DOM';
 like $contexts{$q}, qr{<a href=" ./space.txt ">foo</a>}s;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/form_receptor1')};
-is $q->resolved_uri, "http://127.0.0.1:$port/form_receptor1";
+is $q->url, "http://127.0.0.1:$port/form_receptor1";
 is $q->depth, 1;
 is $q->referrer, $parent;
 is ref $contexts{$q}, 'Mojo::DOM';
 like $contexts{$q}, qr{<form action="/form_receptor1" method="post">.+}s;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/form_receptor2?a=b&query2=default')};
-is $q->resolved_uri, "http://127.0.0.1:$port/form_receptor2?a=b&query2=default";
+is $q->url, "http://127.0.0.1:$port/form_receptor2?a=b&query2=default";
 is $q->depth, 1;
 is $q->referrer, $parent;
 is ref $contexts{$q}, 'Mojo::DOM';
