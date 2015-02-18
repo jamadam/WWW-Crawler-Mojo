@@ -216,8 +216,6 @@ sub _delegate_enqueue {
     return unless $url;
     ($url, $method, $params) = @$url if (ref $url);
     
-    $url =~ s{\s}{}g;
-    $url = Mojo::URL->new($url);
     my $resolved = resolve_href($base, $url);
     
     return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});

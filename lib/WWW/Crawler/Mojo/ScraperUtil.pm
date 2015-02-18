@@ -34,6 +34,7 @@ sub guess_encoding {
 
 sub resolve_href {
     my ($base, $href) = @_;
+    $href =~ s{\s}{}g;
     $href = ref $href ? $href : Mojo::URL->new($href);
     $base = ref $base ? $base : Mojo::URL->new($base);
     my $abs = $href->to_abs($base)->fragment(undef);
