@@ -7,6 +7,7 @@ use lib catdir(dirname(__FILE__), '../lib');
 use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use WWW::Crawler::Mojo;
+use WWW::Crawler::Mojo::ScraperUtil qw{guess_encoding encoder};
 use Mojo::Message::Response;
 
 use Test::More tests => 9;
@@ -38,32 +39,32 @@ utf8::encode($html2);
     my $res = Mojo::Message::Response->new;
     $res->body($html);
     $res->headers->content_type('text/html');
-    is WWW::Crawler::Mojo::guess_encoding($res), undef, 'right encoding';
+    is guess_encoding($res), undef, 'right encoding';
 }
 
 {
     my $res = Mojo::Message::Response->new;
     $res->body($html2);
     $res->headers->content_type('text/html');
-    is WWW::Crawler::Mojo::guess_encoding($res), 'cp932', 'right encoding';
+    is guess_encoding($res), 'cp932', 'right encoding';
 }
 
 {
     my $res = Mojo::Message::Response->new;
     $res->body($html);
     $res->headers->content_type('text/html; charset=cp932');
-    is WWW::Crawler::Mojo::guess_encoding($res), 'cp932', 'right encoding';
+    is guess_encoding($res), 'cp932', 'right encoding';
 }
 
 {
     my $res = Mojo::Message::Response->new;
     $res->body($html);
     $res->headers->content_type('text/html; charset=cp932; hoge');
-    is WWW::Crawler::Mojo::guess_encoding($res), 'cp932', 'right encoding';
+    is guess_encoding($res), 'cp932', 'right encoding';
 }
 
-ok WWW::Crawler::Mojo::encoder('utf8')->isa('Encode::utf8'), 'right class';
-ok WWW::Crawler::Mojo::encoder('')->isa('Encode::utf8'), 'right class';
-ok WWW::Crawler::Mojo::encoder()->isa('Encode::utf8'), 'right class';
-ok WWW::Crawler::Mojo::encoder('UTF7')->isa('Encode::Unicode::UTF7'), 'right class';
-ok WWW::Crawler::Mojo::encoder('cp932')->isa('Encode::XS'), 'right class';
+ok encoder('utf8')->isa('Encode::utf8'), 'right class';
+ok encoder('')->isa('Encode::utf8'), 'right class';
+ok encoder()->isa('Encode::utf8'), 'right class';
+ok encoder('UTF7')->isa('Encode::Unicode::UTF7'), 'right class';
+ok encoder('cp932')->isa('Encode::XS'), 'right class';

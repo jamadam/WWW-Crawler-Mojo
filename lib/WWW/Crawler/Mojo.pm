@@ -5,10 +5,10 @@ use 5.010;
 use Mojo::Base 'Mojo::EventEmitter';
 use WWW::Crawler::Mojo::Job;
 use WWW::Crawler::Mojo::UserAgent;
+use WWW::Crawler::Mojo::ScraperUtil qw{resolve_href decoded_body};
 use Mojo::Message::Request;
 use Mojo::Util qw{md5_sum xml_escape dumper};
 use List::Util;
-use Encode qw(find_encoding);
 our $VERSION = '0.11';
 
 has active_conn => 0;
@@ -227,8 +227,7 @@ sub scrape {
         if ((my $base_tag = $res->dom->at('base[href]'))) {
             $base = resolve_href($base, $base_tag->attr('href'));
         }
-        my $dom =
-            Mojo::DOM->new(encoder(guess_encoding($res))->decode($res->body));
+        my $dom = Mojo::DOM->new(decoded_body($res));
         for my $selector (sort keys %{$self->element_handlers}) {
             $dom->find($selector)->each(sub {
                 my $dom = shift;
@@ -241,8 +240,7 @@ sub scrape {
     }
     
     if ($type && $type =~ qr{text/css}) {
-        my $body = encoder(guess_encoding($res))->decode($res->body);
-        for (collect_urls_css($body)) {
+        for (collect_urls_css(decoded_body($res))) {
             $self->_delegate_enqueue($_, $job->resolved_uri, $job, $base, $cb);
         }
     }
@@ -252,45 +250,6 @@ sub collect_urls_css {
     map { s/^(['"])// && s/$1$//; $_ } (shift || '') =~ m{url\((.+?)\)}ig;
 }
 
-my $charset_re = qr{\bcharset\s*=\s*['"]?([a-zA-Z0-9_\-]+)['"]?}i;
-
-sub encoder {
-    for (shift || 'utf-8', 'utf-8') {
-        if (my $enc = find_encoding($_)) {
-            return $enc;
-        }
-    }
-}
-
-sub guess_encoding {
-    my $res     = shift;
-    my $type    = $res->headers->content_type;
-    return unless ($type);
-    my $charset = ($type =~ $charset_re)[0];
-    return $charset if ($charset);
-    return _guess_encoding_html($res->body) if ($type =~ qr{text/(html|xml)});
-    return _guess_encoding_css($res->body) if ($type =~ qr{text/css});
-}
-
-sub resolve_href {
-    my ($base, $href) = @_;
-    $href = ref $href ? $href : Mojo::URL->new($href);
-    $base = ref $base ? $base : Mojo::URL->new($base);
-    my $abs = $href->to_abs($base)->fragment(undef);
-    while ($abs->path->parts->[0] && $abs->path->parts->[0] =~ /^\./) {
-        shift @{$abs->path->parts};
-    }
-    $abs->path->trailing_slash($base->path->trailing_slash) if (!$href->path->to_string);
-    return $abs;
-}
-
-sub _clean_url_obj {
-    my $url = shift;
-    $url =~ s{^\s*}{}g;
-    $url =~ s{\s*$}{}g;
-    return Mojo::URL->new($url);
-}
-
 sub _delegate_enqueue {
     my ($self, $url, $dom, $job, $base, $cb) = @_;
     my $method, my $params;
@@ -298,7 +257,8 @@ sub _delegate_enqueue {
     return unless $url;
     ($url, $method, $params) = @$url if (ref $url);
     
-    $url = _clean_url_obj($url);
+    $url =~ s{\s}{}g;
+    $url = Mojo::URL->new($url);
     my $resolved = resolve_href($base, $url);
     
     return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});
@@ -336,19 +296,6 @@ sub _enqueue {
             push(@{$self->{queue}}, $job);
         }
     }
-}
-
-sub _guess_encoding_css {
-    return (shift =~ qr{^\s*\@charset ['"](.+?)['"];}is)[0];
-}
-
-sub _guess_encoding_html {
-    my $head = (shift =~ qr{<head>(.+)</head>}is)[0] or return;
-    my $charset;
-    Mojo::DOM->new($head)->find('meta[http\-equiv=Content-Type]')->each(sub{
-        $charset = (shift->{content} =~ $charset_re)[0];
-    });
-    return $charset;
 }
 
 sub _host_key {
@@ -701,18 +648,6 @@ Collects URLs out of HTML.
 Collects URLs out of CSS.
 
     @urls = collect_urls_css($dom);
-
-=head2 guess_encoding
-
-Guesses encoding of HTML or CSS with given L<Mojo::Message::Response> instance.
-
-    $encode = WWW::Crawler::Mojo::guess_encoding($res) || 'utf-8'
-
-=head2 resolve_href
-
-Resolves URLs with a base URL.
-
-    WWW::Crawler::Mojo::resolve_href($base, $uri);
 
 =head1 EXAMPLE
 
