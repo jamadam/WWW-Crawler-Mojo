@@ -1,6 +1,19 @@
 Revision history for WWW-Crawler-Mojo
 
-0.11 2015/02/08
+0.11 2015/02/19
+  - Updated dependency to Mojolicious v5.79.
+  - Fixed a bug on checkbot example.
+  - Fixed small bug on form submittion.
+  - Fixed small bug on base tag detection.
+  - Fixed small bug on charset detection.
+  - Removed refer event in favor of callback for scraper.
+  - Removed peeping server feature at all.
+  - Deprecated resolved_uri attribute of Job class in favor of url.
+  - Deprecated original_uri in favor of original_url.
+  - Improved to crawl sitemap.xml too.
+  - Improved html document detection by accepting more html like mime types.
+  - Improved to use less memory.
+  - Added clock_speed attribute.
 
 0.10 2015/02/08
   - Removed collect_urls_html method in favor of scrape.
