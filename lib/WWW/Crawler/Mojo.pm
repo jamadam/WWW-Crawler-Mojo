@@ -12,17 +12,7 @@ use Encode qw(find_encoding);
 our $VERSION = '0.11';
 
 has active_conn => 0;
-has fix => sub { {} };
 has active_conns_per_host => sub { {} };
-has max_conn => 1;
-has max_conn_per_host => 1;
-has 'peeping_port';
-has peeping_max_length => 30000;
-has queue => sub { [] };
-has 'ua' => sub { WWW::Crawler::Mojo::UserAgent->new };
-has 'ua_name' =>
-    "www-crawler-mojo/$VERSION (+https://github.com/jamadam/www-crawler-mojo)";
-has 'shuffle';
 has element_handlers => sub { {
     'script[src]'   => sub { $_[0]->{src} },
     'link[href]'    => sub { $_[0]->{href} },
@@ -82,6 +72,16 @@ has element_handlers => sub { {
         @{$_->find('url loc')->map(sub {$_->content})->to_array};
     }
 } };
+has fix => sub { {} };
+has max_conn => 1;
+has max_conn_per_host => 1;
+has 'peeping_port';
+has peeping_max_length => 30000;
+has queue => sub { [] };
+has 'shuffle';
+has 'ua' => sub { WWW::Crawler::Mojo::UserAgent->new };
+has 'ua_name' =>
+    "www-crawler-mojo/$VERSION (+https://github.com/jamadam/www-crawler-mojo)";
 
 sub crawl {
     my ($self) = @_;
@@ -93,6 +93,10 @@ sub crawl {
     $self->emit('start');
     
     Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+}
+
+sub enqueue {
+    shift->_enqueue([@_]);
 }
 
 sub init {
@@ -123,6 +127,32 @@ sub init {
             @{$self->{queue}} = List::Util::shuffle @{$self->{queue}};
         });
     }
+}
+
+sub peeping_handler {
+    my ($self, $loop, $stream) = @_;
+    $stream->on(read => sub {
+        my ($stream, $bytes) = @_;
+        
+        my $path = Mojo::Message::Request->new->parse($bytes)->url->path;
+        
+        if ($path =~ qr{^/queue}) {
+            my $res = sprintf('%s jobs are left.', scalar @{$self->queue});
+            $stream->write("HTTP/1.1 200 OK\n\n");
+            $stream->write($res, sub {shift->close});
+            return;
+        }
+        
+        if ($path =~ qr{^/dumper/(\w+)} && defined $self->{$1}) {
+            my $res = substr(dumper($self->{$1}), 0, $self->peeping_max_length);
+            $stream->write("HTTP/1.1 200 OK\n\n");
+            $stream->write($res, sub {shift->close});
+            return;
+        }
+        
+        $stream->write(
+                    "HTTP/1.1 404 NOT FOUND\n\nNOT FOUND", sub {shift->close});
+    });
 }
 
 sub process_job {
@@ -161,6 +191,10 @@ sub process_job {
     });
 }
 
+sub requeue {
+    shift->_enqueue([@_], 1);
+}
+
 sub say_start {
     my $self = shift;
     
@@ -179,32 +213,6 @@ EOF
     print <<"EOF";
 ----------------------------------------
 EOF
-}
-
-sub peeping_handler {
-    my ($self, $loop, $stream) = @_;
-    $stream->on(read => sub {
-        my ($stream, $bytes) = @_;
-        
-        my $path = Mojo::Message::Request->new->parse($bytes)->url->path;
-        
-        if ($path =~ qr{^/queue}) {
-            my $res = sprintf('%s jobs are left.', scalar @{$self->queue});
-            $stream->write("HTTP/1.1 200 OK\n\n");
-            $stream->write($res, sub {shift->close});
-            return;
-        }
-        
-        if ($path =~ qr{^/dumper/(\w+)} && defined $self->{$1}) {
-            my $res = substr(dumper($self->{$1}), 0, $self->peeping_max_length);
-            $stream->write("HTTP/1.1 200 OK\n\n");
-            $stream->write($res, sub {shift->close});
-            return;
-        }
-        
-        $stream->write(
-                    "HTTP/1.1 404 NOT FOUND\n\nNOT FOUND", sub {shift->close});
-    });
 }
 
 sub scrape {
@@ -239,61 +247,6 @@ sub scrape {
         }
     }
 };
-
-sub enqueue {
-    shift->_enqueue([@_]);
-}
-
-sub requeue {
-    shift->_enqueue([@_], 1);
-}
-
-sub _enqueue {
-    my ($self, $jobs, $requeue) = @_;
-    
-    for my $job (@$jobs) {
-        if (! ref $job || ref $job ne 'WWW::Crawler::Mojo::Job') {
-            my $url = !ref $job ? Mojo::URL->new($job) : $job;
-            $job = WWW::Crawler::Mojo::Job->new(resolved_uri => $url);
-        }
-        
-        my $md5_seed = $job->resolved_uri->to_string. ($job->method || '');
-        $md5_seed .= $job->tx_params->to_string if ($job->tx_params);
-        my $md5 = md5_sum($md5_seed);
-        if ($requeue || !exists $self->fix->{$md5}) {
-            $self->fix->{$md5} = undef;
-            push(@{$self->{queue}}, $job);
-        }
-    }
-}
-
-sub _delegate_enqueue {
-    my ($self, $url, $dom, $job, $base, $cb) = @_;
-    my $method, my $params;
-    
-    return unless $url;
-    ($url, $method, $params) = @$url if (ref $url);
-    
-    $url = _clean_url_obj($url);
-    my $resolved = resolve_href($base, $url);
-    
-    return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});
-    
-    my $child = $job->child(resolved_uri => $resolved, literal_uri => $url);
-    
-    $child->method($method) if $method;
-    
-    if ($params) {
-        if ($method eq 'GET') {
-            $child->resolved_uri->query->append($params);
-        } else {
-            $child->tx_params($params);
-        }
-    }
-    
-    $cb ||= sub { $_[1]->() };
-    $cb->($self, sub { $self->enqueue($_[0] || $child) }, $child, $dom);
-}
 
 sub collect_urls_css {
     map { s/^(['"])// && s/$1$//; $_ } (shift || '') =~ m{url\((.+?)\)}ig;
@@ -331,27 +284,58 @@ sub resolve_href {
     return $abs;
 }
 
-sub _urls_redirect {
-    my $tx = shift;
-    my @urls;
-    @urls = _urls_redirect($tx->previous) if ($tx->previous);
-    unshift(@urls, $tx->req->url->userinfo(undef));
-    return @urls;
-}
-
-sub _wrong_dom_detection {
-    my $dom = shift;
-    while ($dom = $dom->parent) {
-        return 1 if ($dom->type && $dom->type eq 'script');
-    }
-    return;
-}
-
 sub _clean_url_obj {
     my $url = shift;
     $url =~ s{^\s*}{}g;
     $url =~ s{\s*$}{}g;
     return Mojo::URL->new($url);
+}
+
+sub _delegate_enqueue {
+    my ($self, $url, $dom, $job, $base, $cb) = @_;
+    my $method, my $params;
+    
+    return unless $url;
+    ($url, $method, $params) = @$url if (ref $url);
+    
+    $url = _clean_url_obj($url);
+    my $resolved = resolve_href($base, $url);
+    
+    return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});
+    
+    my $child = $job->child(resolved_uri => $resolved, literal_uri => $url);
+    
+    $child->method($method) if $method;
+    
+    if ($params) {
+        if ($method eq 'GET') {
+            $child->resolved_uri->query->append($params);
+        } else {
+            $child->tx_params($params);
+        }
+    }
+    
+    $cb ||= sub { $_[1]->() };
+    $cb->($self, sub { $self->enqueue($_[0] || $child) }, $child, $dom);
+}
+
+sub _enqueue {
+    my ($self, $jobs, $requeue) = @_;
+    
+    for my $job (@$jobs) {
+        if (! ref $job || ref $job ne 'WWW::Crawler::Mojo::Job') {
+            my $url = !ref $job ? Mojo::URL->new($job) : $job;
+            $job = WWW::Crawler::Mojo::Job->new(resolved_uri => $url);
+        }
+        
+        my $md5_seed = $job->resolved_uri->to_string. ($job->method || '');
+        $md5_seed .= $job->tx_params->to_string if ($job->tx_params);
+        my $md5 = md5_sum($md5_seed);
+        if ($requeue || !exists $self->fix->{$md5}) {
+            $self->fix->{$md5} = undef;
+            push(@{$self->{queue}}, $job);
+        }
+    }
 }
 
 sub _guess_encoding_css {
@@ -365,6 +349,15 @@ sub _guess_encoding_html {
         $charset = (shift->{content} =~ $charset_re)[0];
     });
     return $charset;
+}
+
+sub _host_key {
+    state $well_known_ports = {http => 80, https => 443};
+    my $uri = shift;
+    my $key = $uri->scheme. '://'. $uri->ihost;
+    return $key unless (my $port = $uri->port);
+    $key .= ':'. $port if ($port ne $well_known_ports->{$uri->scheme});
+    return $key;
 }
 
 sub _mod_busyness {
@@ -381,13 +374,20 @@ sub _mod_busyness {
     return 1;
 }
 
-sub _host_key {
-    state $well_known_ports = {http => 80, https => 443};
-    my $uri = shift;
-    my $key = $uri->scheme. '://'. $uri->ihost;
-    return $key unless (my $port = $uri->port);
-    $key .= ':'. $port if ($port ne $well_known_ports->{$uri->scheme});
-    return $key;
+sub _urls_redirect {
+    my $tx = shift;
+    my @urls;
+    @urls = _urls_redirect($tx->previous) if ($tx->previous);
+    unshift(@urls, $tx->req->url->userinfo(undef));
+    return @urls;
+}
+
+sub _wrong_dom_detection {
+    my $dom = shift;
+    while ($dom = $dom->parent) {
+        return 1 if ($dom->type && $dom->type eq 'script');
+    }
+    return;
 }
 
 1;
@@ -432,30 +432,6 @@ moderate range of web pages so DO NOT use it for persistent crawler jobs.
 L<WWW::Crawler::Mojo> inherits all attributes from L<Mojo::EventEmitter> and
 implements the following new ones.
 
-=head2 element_handlers
-
-HTML element handler on scraping.
-
-    my $handlers = $bot->element_handlers;
-    $bot->element_handlers->{img} = sub {
-        my $dom = shift;
-        return $dom->{src};
-    };
-
-=head2 ua
-
-A L<Mojo::UserAgent> instance.
-
-    my $ua = $bot->ua;
-    $bot->ua(Mojo::UserAgent->new);
-
-=head2 ua_name
-
-Name of crawler for User-Agent header.
-
-    $bot->ua_name('my-bot/0.01 (+https://example.com/)');
-    say $bot->ua_name; # 'my-bot/0.01 (+https://example.com/)'
-
 =head2 active_conn
 
 A number of current connections.
@@ -469,6 +445,16 @@ A number of current connections per host.
 
     $bot->active_conns_per_host($bot->active_conns_per_host + 1);
     say $bot->active_conns_per_host;
+
+=head2 element_handlers
+
+HTML element handler on scraping.
+
+    my $handlers = $bot->element_handlers;
+    $bot->element_handlers->{img} = sub {
+        my $dom = shift;
+        return $dom->{src};
+    };
 
 =head2 fix
 
@@ -517,6 +503,20 @@ for disabling/enabling the feature. Defaults to undef, meaning disable.
 
     $bot->shuffle(5);
     say $bot->shuffle; # 5
+
+=head2 ua
+
+A L<Mojo::UserAgent> instance.
+
+    my $ua = $bot->ua;
+    $bot->ua(Mojo::UserAgent->new);
+
+=head2 ua_name
+
+Name of crawler for User-Agent header.
+
+    $bot->ua_name('my-bot/0.01 (+https://example.com/)');
+    say $bot->ua_name; # 'my-bot/0.01 (+https://example.com/)'
 
 =head1 EVENTS
 
