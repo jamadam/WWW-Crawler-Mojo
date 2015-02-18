@@ -49,7 +49,7 @@ $bot->on(res => sub {
             report_stdout($msg, $job2->url, $job->url);
         }
         
-        $enqueue->() if ($job->referrer->url->host eq $start->host);
+        $enqueue->() if ($job->url->host eq $start->host);
         #$enqueue->() ;
     });
 });
