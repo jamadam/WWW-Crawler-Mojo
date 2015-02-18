@@ -36,6 +36,11 @@ sub resolved_uri {
 }
 
 sub original_uri {
+    deprecated 'original_uri is DEPRECATED in favor of original_url';
+    return shift->original_url(@_);
+}
+
+sub original_url {
     my $self = shift;
     my @histry = @{$self->redirect_history};
     return $self->url unless (@histry);
@@ -147,13 +152,17 @@ Replaces the resolved URI and history at once.
     say $job->url # $url2
     say $job->redirect_history # [$url1, $url3]
 
-=head2 original_uri
+=head2 original_uri [DEPRECATED]
+
+An alias for original_url.
+
+=head2 original_url
 
 Returns the original URI of redirected job. If redirected, returns last element
 of redirect_histroy attribute, otherwise returns url attribute.
 
     $job1->redirect_history([$url1, $url2, $url3]);
-    my $url4 = $job1->original_uri; # $url4 is $url3
+    my $url4 = $job1->original_url; # $url4 is $url3
 
 =head1 AUTHOR
 

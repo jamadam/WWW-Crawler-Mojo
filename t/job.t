@@ -33,5 +33,5 @@ use Test::More tests => 13;
     $job->redirect('http://a.com/', 'http://b.com/', 'http://c.com/');
     is $job->url, 'http://a.com/';
     is_deeply $job->redirect_history, ['http://b.com/', 'http://c.com/'];
-    is $job->original_uri, 'http://c.com/';
+    is $job->original_url, 'http://c.com/';
 }
