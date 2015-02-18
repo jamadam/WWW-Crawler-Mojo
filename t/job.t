@@ -8,22 +8,30 @@ use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use WWW::Crawler::Mojo::Job;
 
-use Test::More tests => 9;
+use Test::More tests => 13;
+{
+    my $job = WWW::Crawler::Mojo::Job->new(resolved_uri => 'foo');
+    is $job->depth, 0;
+    my $job2 = $job->clone;
+    is $job2->resolved_uri, 'foo', 'right result';
+    is $job2->depth, 0;
+    my $job3 = $job->child;
+    is $job3->depth, 1;
+    my $job4 = $job->child;
+    is $job4->depth, 1;
+    my $job5 = $job4->child;
+    is $job5->depth, 2;
+    my $job6 = $job5->child;
+    is $job6->depth, 3;
+    ok $job6->referrer, 'referrer exists';
+    ok $job6->referrer->referrer, 'referrer exists';
+    ok $job6->referrer->referrer->referrer, 'referrer exists';
+}
 
-my $job = WWW::Crawler::Mojo::Job->new(resolved_uri => 'foo');
-is $job->depth, 0;
-my $job2 = $job->clone;
-is $job2->resolved_uri, 'foo', 'right result';
-is $job2->depth, 0;
-my $job3 = $job->child;
-is $job3->depth, 1;
-my $job4 = $job->child;
-is $job4->depth, 1;
-my $job5 = $job4->child;
-is $job5->depth, 2;
-
-my $job6 = WWW::Crawler::Mojo::Job->new();
-$job6->redirect('http://a.com/', 'http://b.com/', 'http://c.com/');
-is $job6->resolved_uri, 'http://a.com/';
-is_deeply $job6->redirect_history, ['http://b.com/', 'http://c.com/'];
-is $job6->original_uri, 'http://c.com/';
+{
+    my $job = WWW::Crawler::Mojo::Job->new();
+    $job->redirect('http://a.com/', 'http://b.com/', 'http://c.com/');
+    is $job->resolved_uri, 'http://a.com/';
+    is_deeply $job->redirect_history, ['http://b.com/', 'http://c.com/'];
+    is $job->original_uri, 'http://c.com/';
+}

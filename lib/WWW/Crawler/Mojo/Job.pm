@@ -6,10 +6,11 @@ use Mojo::Base -base;
 
 has 'literal_uri' => '';
 has 'resolved_uri' => '';
-has 'referrer' => '';
+has 'referrer';
 has 'redirect_history' => sub { [] };
 has 'method';
 has 'tx_params';
+has 'depth' => 0;
 
 sub clone {
     my $self = shift;
@@ -18,14 +19,7 @@ sub clone {
 
 sub child {
     my $self = shift;
-    my $child = __PACKAGE__->new(@_, referrer => $self);
-    return $child;
-}
-
-sub depth {
-    my $self = shift;
-    return $self->referrer->depth + 1 if $self->referrer;
-    return 0;
+    return __PACKAGE__->new(@_, referrer => $self, depth => $self->depth + 1);
 }
 
 sub redirect {
@@ -58,6 +52,17 @@ WWW::Crawler::Mojo::Job - Single crawler job
 This class represents a single crawler job.
 
 =head1 ATTRIBUTES
+
+=head2 depth
+
+The depth of job in referrer series.
+
+    my $job1 = WWW::Crawler::Mojo::Job->new;
+    my $job2 = $job1->child;
+    my $job3 = $job2->child;
+    say $job1->depth; # 0
+    say $job2->depth; # 1
+    say $job3->depth; # 2
 
 =head2 literal_uri
 
@@ -117,17 +122,6 @@ Instantiate a child job by parent job. The parent uri is set to child referrer.
     my $job1 = WWW::Crawler::Mojo::Job->new(resolved_uri => 'http://a/1');
     my $job2 = $job1->child(resolved_uri => 'http://a/2');
     say $job2->referrer->resolved_uri # 'http://a/1'
-
-=head2 depth
-
-Counts the depth of job in referrer series.
-
-    my $job1 = WWW::Crawler::Mojo::Job->new;
-    my $job2 = $job1->child;
-    my $job3 = $job2->child;
-    say $job1->depth; # 0
-    say $job2->depth; # 1
-    say $job3->depth; # 2
 
 =head2 redirect
 

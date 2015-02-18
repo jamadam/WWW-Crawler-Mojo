@@ -55,7 +55,7 @@ is((scalar keys %urls), 10, 'right length');
 my $q;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/index.html')};
 is $q->depth, 0;
-is $q->referrer, '';
+is $q->referrer, undef;
 is $contexts{$q}, undef;
 my $parent = $q;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/js/js1.js')};
