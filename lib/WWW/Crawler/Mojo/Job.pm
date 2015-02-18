@@ -8,19 +8,28 @@ use Mojo::Util qw(deprecated);
 has 'literal_uri' => '';
 has 'url' => '';
 has 'referrer';
+has 'referrer_url';
 has 'redirect_history' => sub { [] };
 has 'method';
 has 'tx_params';
 has 'depth' => 0;
+has 'closed';
 
 sub clone {
     my $self = shift;
     return __PACKAGE__->new(%$self);
 }
 
+sub close {
+    my $self = shift;
+    $self->{closed} = 1;
+    $self->{referrer} = undef;
+}
+
 sub child {
     my $self = shift;
-    return __PACKAGE__->new(@_, referrer => $self, depth => $self->depth + 1);
+    return __PACKAGE__->new(@_, referrer => $self, referrer_url => $self->url,
+                                                    depth => $self->depth + 1);
 }
 
 sub redirect {
@@ -64,6 +73,13 @@ WWW::Crawler::Mojo::Job - Single crawler job
 This class represents a single crawler job.
 
 =head1 ATTRIBUTES
+
+=head2 closed
+
+A flag that the job has been closed or not.
+
+    $job->closed(1);
+    say $job->closed;
 
 =head2 depth
 
@@ -133,6 +149,12 @@ A hash reference that contains params for L<Mojo::Transaction>.
 Clones the job.
 
     my $job2 = $job1->clone;
+
+=head2 close
+
+Close the job and cut the referrer series.
+
+    $job->close;
 
 =head2 child
 

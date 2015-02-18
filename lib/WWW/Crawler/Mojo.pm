@@ -155,6 +155,8 @@ sub process_job {
         $self->emit('res', sub {
             $self->scrape($res, $job, $_[0]);
         }, $job, $res);
+        
+        $job->close;
     });
 }
 

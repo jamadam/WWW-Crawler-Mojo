@@ -8,7 +8,7 @@ use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use WWW::Crawler::Mojo::Job;
 
-use Test::More tests => 13;
+use Test::More tests => 15;
 {
     my $job = WWW::Crawler::Mojo::Job->new(url => 'foo');
     is $job->depth, 0;
@@ -26,6 +26,9 @@ use Test::More tests => 13;
     ok $job6->referrer, 'referrer exists';
     ok $job6->referrer->referrer, 'referrer exists';
     ok $job6->referrer->referrer->referrer, 'referrer exists';
+    $job6->close;
+    is $job6->closed, 1, 'closed';
+    is $job6->referrer, undef, 'closed';
 }
 
 {
