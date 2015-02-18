@@ -51,7 +51,6 @@ my $last_job;
 
 $bot->on('res' => sub {
     my ($bot, $scrape, $job, $res) = @_;
-    $job->literal_uri($job->literal_uri->to_string) if $job->literal_uri;
     $job->url($job->url->to_string);
     $scrape->(sub {
         my ($bot, $enqueue, $job, $context) = @_;
@@ -64,4 +63,4 @@ $bot->init;
 Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
 warn total_size($last_job);
-#warn Dumper($last_job);
+warn Dumper($last_job);
