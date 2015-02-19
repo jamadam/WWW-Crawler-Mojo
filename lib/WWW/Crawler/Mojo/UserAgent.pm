@@ -18,15 +18,7 @@ sub new {
         $self->on(start => sub {
             my ($self, $tx) = @_;
             my $url = $tx->req->url;
-            
-            $self->active_host($url, 1);
-            
-            $tx->on(finish => sub {
-                $self->active_host($url, -1);
-            });
-            
             my $host_key = _host_key($url) or return;
-            
             if ($url->userinfo) {
                 $self->credentials->{$host_key} = $url->userinfo;
             } else {
@@ -34,6 +26,13 @@ sub new {
             }
         });
     }
+    
+    $self->on(start => sub {
+        my ($self, $tx) = @_;
+        my $url = $tx->req->url;
+        $self->active_host($url, 1);
+        $tx->on(finish => sub { $self->active_host($url, -1) });
+    });
     
     return $self;
 }
