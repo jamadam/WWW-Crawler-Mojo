@@ -128,9 +128,9 @@ sub process_job {
     }
     
     my $job = $self->queue->dequeue;
-    my $uri = $job->url;
+    my $url = $job->url;
     my $ua = $self->ua;
-    my $tx = $ua->build_tx($job->method || 'get' => $uri => $job->tx_params);
+    my $tx = $ua->build_tx($job->method || 'get' => $url => $job->tx_params);
     
     $ua->start($tx, sub {
         my ($ua, $tx) = @_;
@@ -491,7 +491,7 @@ This performs scraping.
 
 =head2 enqueue
 
-Append one or more URIs or L<WWW::Crawler::Mojo::Job> objects.
+Append one or more URLs or L<WWW::Crawler::Mojo::Job> objects.
 
     $bot->enqueue('http://example.com/index1.html');
 

@@ -184,7 +184,7 @@ Instantiate a child job by parent job. The parent uri is set to child referrer.
 
 =head2 redirect
 
-Replaces the resolved URI and history at once.
+Replaces the resolved URL and history at once.
 
     my $job = WWW::Crawler::Mojo::Job->new;
     $job->url($url1);
@@ -198,7 +198,7 @@ An alias for original_url.
 
 =head2 original_url
 
-Returns the original URI of redirected job. If redirected, returns last element
+Returns the original URL of redirected job. If redirected, returns last element
 of redirect_histroy attribute, otherwise returns url attribute.
 
     $job1->redirect_history([$url1, $url2, $url3]);
