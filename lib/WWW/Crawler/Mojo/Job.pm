@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use utf8;
 use Mojo::Base -base;
-use Mojo::Util qw(deprecated);
+use Mojo::Util qw(md5_sum deprecated);
 
 has 'literal_uri' => '';
 has 'url' => '';
@@ -14,6 +14,17 @@ has 'method';
 has 'tx_params';
 has 'depth' => 0;
 has 'closed';
+
+sub upgrade {
+    my ($class, $job) = @_;
+    
+    if (! ref $job || ref $job ne __PACKAGE__) {
+        my $url = !ref $job ? Mojo::URL->new($job) : $job;
+        $job = $class->new(url => $url);
+    }
+    
+    return $job;
+}
 
 sub clone {
     my $self = shift;
@@ -30,6 +41,13 @@ sub child {
     my $self = shift;
     return __PACKAGE__->new(@_, referrer => $self, referrer_url => $self->url,
                                                     depth => $self->depth + 1);
+}
+
+sub digest {
+    my $self = shift;
+    my $md5_seed = $self->url->to_string. ($self->method || '');
+    $md5_seed .= $self->tx_params->to_string if ($self->tx_params);
+    return md5_sum($md5_seed);
 }
 
 sub redirect {

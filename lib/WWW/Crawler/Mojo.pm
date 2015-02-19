@@ -4,11 +4,11 @@ use warnings;
 use 5.010;
 use Mojo::Base 'Mojo::EventEmitter';
 use WWW::Crawler::Mojo::Job;
+use WWW::Crawler::Mojo::Queue::Memory;
 use WWW::Crawler::Mojo::UserAgent;
 use WWW::Crawler::Mojo::ScraperUtil qw{resolve_href decoded_body};
 use Mojo::Message::Request;
-use Mojo::Util qw{md5_sum xml_escape dumper};
-use List::Util;
+use Mojo::Util qw{xml_escape dumper};
 our $VERSION = '0.11';
 
 has active_conn => 0;
@@ -73,10 +73,9 @@ has element_handlers => sub { {
         @{$_->find('url loc')->map(sub {$_->content})->to_array};
     }
 } };
-has fix => sub { {} };
 has max_conn => 1;
 has max_conn_per_host => 1;
-has queue => sub { [] };
+has queue => sub { WWW::Crawler::Mojo::Queue::Memory->new };
 has 'shuffle';
 has 'ua' => sub { WWW::Crawler::Mojo::UserAgent->new };
 has 'ua_name' =>
@@ -87,15 +86,11 @@ sub crawl {
     
     $self->init;
     
-    die 'No job is given' if (! scalar @{$self->queue});
+    die 'No job is given' if (! $self->queue->length);
     
     $self->emit('start');
     
     Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
-}
-
-sub enqueue {
-    shift->_enqueue([@_]);
 }
 
 sub init {
@@ -117,7 +112,7 @@ sub init {
     
     if ($self->shuffle) {
         Mojo::IOLoop->recurring($self->shuffle => sub {
-            @{$self->{queue}} = List::Util::shuffle @{$self->{queue}};
+            $self->queue->shuffle;
         });
     }
 }
@@ -125,14 +120,14 @@ sub init {
 sub process_job {
     my $self = shift;
     
-    if (!$self->{queue}->[0]) {
+    if (!$self->queue->length) {
         $self->emit('empty') if (!$self->active_conn);
         return;
-    } elsif (!($self->_mod_busyness($self->{queue}->[0]->url, 1))) {
+    } elsif (!($self->_mod_busyness($self->queue->next->url, 1))) {
         return;
     }
     
-    my $job = shift @{$self->{queue}};
+    my $job = $self->queue->dequeue;
     my $uri = $job->url;
     my $ua = $self->ua;
     my $tx = $ua->build_tx($job->method || 'get' => $uri => $job->tx_params);
@@ -160,16 +155,12 @@ sub process_job {
     });
 }
 
-sub requeue {
-    shift->_enqueue([@_], 1);
-}
-
 sub say_start {
     my $self = shift;
     
     print <<"EOF";
 ----------------------------------------
-Crawling is starting with @{[ $self->queue->[0]->url ]}
+Crawling is starting with @{[ $self->queue->next->url ]}
 Max Connection  : @{[ $self->max_conn ]}
 User Agent      : @{[ $self->ua_name ]}
 ----------------------------------------
@@ -238,23 +229,14 @@ sub _delegate_enqueue {
     $cb->($self, sub { $self->enqueue($_[0] || $child) }, $child, $dom);
 }
 
-sub _enqueue {
-    my ($self, $jobs, $requeue) = @_;
-    
-    for my $job (@$jobs) {
-        if (! ref $job || ref $job ne 'WWW::Crawler::Mojo::Job') {
-            my $url = !ref $job ? Mojo::URL->new($job) : $job;
-            $job = WWW::Crawler::Mojo::Job->new(url => $url);
-        }
-        
-        my $md5_seed = $job->url->to_string. ($job->method || '');
-        $md5_seed .= $job->tx_params->to_string if ($job->tx_params);
-        my $md5 = md5_sum($md5_seed);
-        if ($requeue || !exists $self->fix->{$md5}) {
-            $self->fix->{$md5} = undef;
-            push(@{$self->{queue}}, $job);
-        }
-    }
+sub enqueue {
+    my ($self, @jobs) = @_;
+    $self->queue->enqueue(WWW::Crawler::Mojo::Job->upgrade($_)) for @jobs;
+}
+
+sub requeue {
+    my ($self, @jobs) = @_;
+    $self->queue->requeue(WWW::Crawler::Mojo::Job->upgrade($_)) for @jobs;
 }
 
 sub _host_key {
@@ -369,10 +351,6 @@ A number of millisecond for main event loop interval. Defaults to 0.25.
     $bot->clock_speed(2);
     my $clock = $bot->clock_speed; # 2
 
-=head2 fix
-
-A hash whoes keys are md5 hashes of enqueued URLs.
-
 =head2 max_conn
 
 A number of max connections.
@@ -389,10 +367,10 @@ A number of max connections per host.
 
 =head2 queue
 
-FIFO array contains L<WWW::Crawler::Mojo::Job> objects.
+L<WWW::Crawler::Mojo::Queue::Memory> object for default.
 
-    push(@{$bot->queue}, WWW::Crawler::Mojo::Job->new(...));
-    my $job = shift @{$bot->queue};
+    $bot->queue(WWW::Crawler::Mojo::Queue::Memory->new);
+    $bot->queue->enqueue($job);
 
 =head2 shuffle
 

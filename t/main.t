@@ -48,41 +48,41 @@ EOF
     $bot->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'));
     
     my $job;
-    $job = shift @{$bot->{queue}};
+    $job = $bot->queue->dequeue;
     is $job->literal_uri, 'index1.html', 'right url';
     is $job->url, 'http://example.com/index1.html', 'right url';
-    $job = shift @{$bot->{queue}};
+    $job = $bot->queue->dequeue;
     is $job->literal_uri, 'index2.html', 'right url';
     is $job->url, 'http://example.com/index2.html', 'right url';
-    $job = shift @{$bot->{queue}};
+    $job = $bot->queue->dequeue;
     is $job->literal_uri, 'index3.html', 'right url';
     is $job->url, 'http://example.com/index3.html', 'right url';
-    $job = shift @{$bot->{queue}};
+    $job = $bot->queue->dequeue;
     is $job->literal_uri, 'css1.css', 'right url';
     is $job->url, 'http://example.com/css1.css', 'right url';
-    $job = shift @{$bot->{queue}};
+    $job = $bot->queue->dequeue;
     is $job->literal_uri, 'css2.css', 'right url';
     is $job->url, 'http://example.com/css2.css', 'right url';
-    $job = shift @{$bot->{queue}};
+    $job = $bot->queue->dequeue;
     is $job->literal_uri, 'js1.js', 'right url';
     is $job->url, 'http://example.com/js1.js', 'right url';
-    $job = shift @{$bot->{queue}};
+    $job = $bot->queue->dequeue;
     is $job->literal_uri, 'js2.js', 'right url';
     is $job->url, 'http://example.com/js2.js', 'right url';
-    $job = shift @{$bot->{queue}};
+    $job = $bot->queue->dequeue;
     is $job->literal_uri, '//example.com/js3.js', 'right url';
     is $job->url, 'http://example.com/js3.js', 'right url';
-    $job = shift @{$bot->{queue}};
+    $job = $bot->queue->dequeue;
     is $job, undef, 'no more urls';
     
     my $bot2 = WWW::Crawler::Mojo->new;
     $bot2->init;
     $bot2->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/a'));
     
-    $job = shift @{$bot2->{queue}};
-    $job = shift @{$bot2->{queue}};
-    $job = shift @{$bot2->{queue}};
-    $job = shift @{$bot2->{queue}};
+    $job = $bot2->queue->dequeue;
+    $job = $bot2->queue->dequeue;
+    $job = $bot2->queue->dequeue;
+    $job = $bot2->queue->dequeue;
     is $job->literal_uri, 'css1.css', 'right url';
     is $job->url, 'http://example.com/a/css1.css', 'right url';
     
@@ -90,16 +90,16 @@ EOF
     $bot3->init;
     $bot3->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'https://example.com/'));
     
-    $job = shift @{$bot3->{queue}};
-    $job = shift @{$bot3->{queue}};
-    $job = shift @{$bot3->{queue}};
-    $job = shift @{$bot3->{queue}};
+    $job = $bot3->queue->dequeue;
+    $job = $bot3->queue->dequeue;
+    $job = $bot3->queue->dequeue;
+    $job = $bot3->queue->dequeue;
     is $job->literal_uri, 'css1.css', 'right url';
     is $job->url, 'https://example.com/css1.css', 'right url';
-    $job = shift @{$bot3->{queue}};
-    $job = shift @{$bot3->{queue}};
-    $job = shift @{$bot3->{queue}};
-    $job = shift @{$bot3->{queue}};
+    $job = $bot3->queue->dequeue;
+    $job = $bot3->queue->dequeue;
+    $job = $bot3->queue->dequeue;
+    $job = $bot3->queue->dequeue;
     is $job->literal_uri, '//example.com/js3.js', 'right url';
     is $job->url, 'https://example.com/js3.js', 'right url';
 }
@@ -127,7 +127,7 @@ EOF
     $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'));
     
     my $job;
-    $job = shift @{$bot->{queue}};
+    $job = $bot->queue->dequeue;
     is $job->literal_uri, 'css1.css', 'right url';
     is $job->url, 'http://example2.com/css1.css', 'right url';
     
@@ -135,7 +135,7 @@ EOF
     $bot->init;
     $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/'));
     
-    $job = shift @{$bot->{queue}};
+    $job = $bot->queue->dequeue;
     is $job->literal_uri, 'css1.css', 'right url';
     is $job->url, 'http://example2.com/css1.css', 'right url';
 }
@@ -163,7 +163,7 @@ EOF
     $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'));
     
     my $job;
-    $job = shift @{$bot->{queue}};
+    $job = $bot->queue->dequeue;
     is $job->literal_uri, 'css1.css', 'right url';
     is $job->url, 'http://example.com/css1.css', 'right url';
     
@@ -171,7 +171,7 @@ EOF
     $bot->init;
     $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/'));
     
-    $job = shift @{$bot->{queue}};
+    $job = $bot->queue->dequeue;
     is $job->literal_uri, 'css1.css', 'right url';
     is $job->url, 'http://example.com/css1.css', 'right url';
 }
@@ -199,7 +199,7 @@ EOF
     $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'));
     
     my $job;
-    $job = shift @{$bot->{queue}};
+    $job = $bot->queue->dequeue;
     is $job->literal_uri, 'css1.css', 'right url';
     is $job->url, 'http://example.com/css1.css', 'right url';
 }

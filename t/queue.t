@@ -12,16 +12,16 @@ use Test::More tests => 8;
 
 my $bot = WWW::Crawler::Mojo->new;
 $bot->enqueue('http://example.com/');
-is ref $bot->queue->[0], 'WWW::Crawler::Mojo::Job';
-is $bot->queue->[0]->url, 'http://example.com/';
-is @{$bot->queue}, 1, 'right number';
+is ref $bot->queue->next, 'WWW::Crawler::Mojo::Job';
+is $bot->queue->next->url, 'http://example.com/';
+is $bot->queue->length, 1, 'right number';
 $bot->enqueue(Mojo::URL->new('http://example.com/2'));
-is ref $bot->queue->[1], 'WWW::Crawler::Mojo::Job';
-is $bot->queue->[1]->url, 'http://example.com/2';
-is @{$bot->queue}, 2, 'right number';
+is ref $bot->queue->next(1), 'WWW::Crawler::Mojo::Job';
+is $bot->queue->next(1)->url, 'http://example.com/2';
+is $bot->queue->length, 2, 'right number';
 
-my $job = shift @{$bot->queue};
+my $job = $bot->queue->dequeue;
 $bot->enqueue($job);
-is @{$bot->queue}, 1, 'right number';
+is $bot->queue->length, 1, 'right number';
 $bot->requeue($job);
-is @{$bot->queue}, 2, 'right number';
+is $bot->queue->length, 2, 'right number';

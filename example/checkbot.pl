@@ -36,7 +36,7 @@ $bot->on(res => sub {
         report_stdout($msg, $job->url, $job->referrer->url);
     }
     
-    $count{QUEUE} = scalar @{$bot->queue};
+    $count{QUEUE} = $bot->queue->length;
     my @props = map { join(':', $_, $count{$_}) } (sort keys %count);
     print join(' / ', @props), ' ' x 30, "\r";
     
