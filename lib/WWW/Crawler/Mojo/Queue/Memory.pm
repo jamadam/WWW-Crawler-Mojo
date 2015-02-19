@@ -61,7 +61,7 @@ Crawler queue with memory.
 
 =head1 ATTRIBUTES
 
-This class inherits all methods from WWW::Crawler::Mojo::Queue and implements
+This class inherits all methods from L<WWW::Crawler::Mojo::Queue> and implements
 following new ones.
 
 =head2 fix
@@ -74,7 +74,31 @@ jobs.
 
 =head1 METHODS
 
-This class inherits all methods from WWW::Crawler::Mojo::Queue.
+This class inherits all methods from L<WWW::Crawler::Mojo::Queue>.
+
+=head2 dequeue
+
+Implement for L<WWW::Crawler::Mojo::Queue> interface.
+
+=head2 enqueue
+
+Implement for L<WWW::Crawler::Mojo::Queue> interface.
+
+=head2 length
+
+Implement for L<WWW::Crawler::Mojo::Queue> interface.
+
+=head2 next
+
+Implement for L<WWW::Crawler::Mojo::Queue> interface.
+
+=head2 requeue
+
+Implement for L<WWW::Crawler::Mojo::Queue> interface.
+
+=head2 shuffle
+
+Implement for L<WWW::Crawler::Mojo::Queue> interface.
 
 =head1 AUTHOR
 

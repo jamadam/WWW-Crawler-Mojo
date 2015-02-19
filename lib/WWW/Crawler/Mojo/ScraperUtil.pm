@@ -70,16 +70,16 @@ WWW::Crawler::Mojo::ScraperUtil - Scraper utitlities
 
 =head1 DESCRIPTION
 
-This class inherits Mojo::UserAgent and override start method for storing user
-info
+This class inherits L<Mojo::UserAgent> and override start method for storing
+user info
 
 =head1 ATTRIBUTES
 
-WWW::Crawler::Mojo::UserAgent inherits all attributes from Mojo::UserAgent.
+WWW::Crawler::Mojo::UserAgent inherits all attributes from L<Mojo::UserAgent>.
 
 =head1 METHODS
 
-WWW::Crawler::Mojo::UserAgent inherits all methods from Mojo::UserAgent.
+WWW::Crawler::Mojo::UserAgent inherits all methods from L<Mojo::UserAgent>.
 
 =head2 decoded_body
 

@@ -76,7 +76,7 @@ WWW::Crawler::Mojo::UserAgent - Mojo::UserAgent sub class for userinfo storage
 
 =head1 DESCRIPTION
 
-This class inherits Mojo::UserAgent and override start method for storing user
+This class inherits L<Mojo::UserAgent> and override start method for storing user
 info
 
 =head1 ATTRIBUTES
@@ -111,7 +111,21 @@ Storage for credentials.
 
 =head1 METHODS
 
-WWW::Crawler::Mojo::UserAgent inherits all methods from Mojo::UserAgent.
+WWW::Crawler::Mojo::UserAgent inherits all methods from L<Mojo::UserAgent>.
+
+=head2 active_host
+
+Maintenance the numbers of active connections.
+
+    $ua->active_host($url, 1);
+    $ua->active_host($url, -1);
+    my $amount = $ua->active_host($url);
+
+=head2 new
+
+Constructer.
+
+    $ua = WWW::Crawler::Mojo::UserAgent->new;
 
 =head1 AUTHOR
 

@@ -160,6 +160,13 @@ A hash reference that contains params for L<Mojo::Transaction>.
     $job1->tx_params({foo => 'bar'});
     $params = $job1->tx_params;
 
+=head2 referrer_url
+
+A L<Mojo::URL> instance for referrer URL.
+
+    $job->referrer_url($url);
+    say $job->referrer_url;
+
 =head1 METHODS
 
 =head2 clone
@@ -182,6 +189,12 @@ Instantiate a child job by parent job. The parent uri is set to child referrer.
     my $job2 = $job1->child(url => 'http://a/2');
     say $job2->referrer->url # 'http://a/1'
 
+=head2 digest
+
+Generate digest string with url, method, tx_params attributes.
+
+    say $job->digest;
+
 =head2 redirect
 
 Replaces the resolved URL and history at once.
@@ -203,6 +216,10 @@ of redirect_histroy attribute, otherwise returns url attribute.
 
     $job1->redirect_history([$url1, $url2, $url3]);
     my $url4 = $job1->original_url; # $url4 is $url3
+
+=head2 upgrade
+
+Instanciate a job with string or a L<Mojo::URL> instance.
 
 =head1 AUTHOR
 
