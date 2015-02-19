@@ -11,8 +11,6 @@ use Mojo::Message::Request;
 use Mojo::Util qw{xml_escape dumper};
 our $VERSION = '0.11';
 
-has active_conn => 0;
-has active_conns_per_host => sub { {} };
 has clock_speed => 0.25;
 has element_handlers => sub { {
     'script[src]'   => sub { $_[0]->{src} },
@@ -121,9 +119,11 @@ sub process_job {
     my $self = shift;
     
     if (!$self->queue->length) {
-        $self->emit('empty') if (!$self->active_conn);
+        $self->emit('empty') if (!$self->ua->active_conn);
         return;
-    } elsif (!($self->_mod_busyness($self->queue->next->url, 1))) {
+    }
+    if ($self->ua->active_conn >= $self->max_conn ||
+        $self->ua->active_host($self->queue->next->url) >= $self->max_conn_per_host) {
         return;
     }
     
@@ -133,8 +133,6 @@ sub process_job {
     my $tx = $ua->build_tx($job->method || 'get' => $uri => $job->tx_params);
     
     $ua->start($tx, sub {
-        $self->_mod_busyness($uri, -1);
-        
         my ($ua, $tx) = @_;
         
         $job->redirect(_urls_redirect($tx));
@@ -239,29 +237,6 @@ sub requeue {
     $self->queue->requeue(WWW::Crawler::Mojo::Job->upgrade($_)) for @jobs;
 }
 
-sub _host_key {
-    state $well_known_ports = {http => 80, https => 443};
-    my $uri = shift;
-    my $key = $uri->scheme. '://'. $uri->ihost;
-    return $key unless (my $port = $uri->port);
-    $key .= ':'. $port if ($port ne $well_known_ports->{$uri->scheme});
-    return $key;
-}
-
-sub _mod_busyness {
-    my ($self, $uri, $inc) = @_;
-    my $key = _host_key($uri);
-    my $hosts = $self->active_conns_per_host;
-    
-    return if ($inc > 0 && ($self->active_conn >= $self->max_conn ||
-                        ($hosts->{$key} || 0) >= $self->max_conn_per_host));
-    
-    $self->{active_conn} += $inc;
-    $hosts->{$key} += $inc;
-    delete($hosts->{$key}) unless ($hosts->{$key});
-    return 1;
-}
-
 sub _urls_redirect {
     my $tx = shift;
     my @urls;
@@ -319,20 +294,6 @@ moderate range of web pages so DO NOT use it for persistent crawler jobs.
 
 L<WWW::Crawler::Mojo> inherits all attributes from L<Mojo::EventEmitter> and
 implements the following new ones.
-
-=head2 active_conn
-
-A number of current connections.
-
-    $bot->active_conn($bot->active_conn + 1);
-    say $bot->active_conn;
-
-=head2 active_conns_per_host
-
-A number of current connections per host.
-
-    $bot->active_conns_per_host($bot->active_conns_per_host + 1);
-    say $bot->active_conns_per_host;
 
 =head2 element_handlers
 

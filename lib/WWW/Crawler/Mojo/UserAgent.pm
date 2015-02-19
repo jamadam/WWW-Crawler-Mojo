@@ -2,8 +2,11 @@ package WWW::Crawler::Mojo::UserAgent;
 use strict;
 use warnings;
 use Mojo::Base 'Mojo::UserAgent';
+use Mojo::URL;
 use 5.010;
 
+has active_conn => 0;
+has active_conns_per_host => sub { {} };
 has credentials => sub {{}};
 has keep_credentials => 1;
 
@@ -15,6 +18,12 @@ sub new {
         $self->on(start => sub {
             my ($self, $tx) = @_;
             my $url = $tx->req->url;
+            
+            $self->active_host($url, 1);
+            
+            $tx->on(finish => sub {
+                $self->active_host($url, -1);
+            });
             
             my $host_key = _host_key($url) or return;
             
@@ -31,12 +40,25 @@ sub new {
 
 sub _host_key {
     state $well_known_ports = {http => 80, https => 443};
-    my $uri = shift;
-    return unless $uri->is_abs && (my $wkp = $well_known_ports->{$uri->scheme});
-    my $key = $uri->scheme. '://'. $uri->ihost;
-    return $key unless (my $port = $uri->port);
+    my $url = shift;
+    $url = Mojo::URL->new($url) unless ref $url;
+    return unless $url->is_abs && (my $wkp = $well_known_ports->{$url->scheme});
+    my $key = $url->scheme. '://'. $url->ihost;
+    return $key unless (my $port = $url->port);
     $key .= ':'. $port if $port != $wkp;
     return $key;
+}
+
+sub active_host {
+    my ($self, $url, $inc) = @_;
+    my $key = _host_key($url);
+    my $hosts = $self->active_conns_per_host;
+    if ($inc) {
+        $self->{active_conn} += $inc;
+        $hosts->{$key} += $inc;
+        delete($hosts->{$key}) unless ($hosts->{$key});
+    }
+    return $hosts->{$key} || 0;
 }
 
 1;
@@ -61,6 +83,20 @@ info
 =head1 ATTRIBUTES
 
 WWW::Crawler::Mojo::UserAgent inherits all attributes from Mojo::UserAgent.
+
+=head2 active_conn
+
+A number of current connections.
+
+    $bot->active_conn($bot->active_conn + 1);
+    say $bot->active_conn;
+
+=head2 active_conns_per_host
+
+A number of current connections per host.
+
+    $bot->active_conns_per_host($bot->active_conns_per_host + 1);
+    say $bot->active_conns_per_host;
 
 =head2 keep_credentials
 
