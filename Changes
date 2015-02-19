@@ -2,6 +2,7 @@ Revision history for WWW-Crawler-Mojo
 
 0.11 2015/02/19
   - Updated dependency to Mojolicious v5.79.
+  - Fixed a bug where connection count didn't detected for redirected urls.
   - Fixed a bug on checkbot example.
   - Fixed small bug on form submittion.
   - Fixed small bug on base tag detection.
