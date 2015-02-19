@@ -6,8 +6,8 @@ use Mojo::Base -base;
 
 sub dequeue { die 'Must be implemented by sub classes' }
 sub enqueue { die 'Must be implemented by sub classes' }
-sub next { die 'Must be implemented by sub classes' }
 sub length { die 'Must be implemented by sub classes' }
+sub next { die 'Must be implemented by sub classes' }
 sub requeue { die 'Must be implemented by sub classes' }
 sub shuffle { die 'Must be implemented by sub classes' }
 sub _enqueue { die 'Must be implemented by sub classes' }

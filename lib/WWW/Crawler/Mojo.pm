@@ -75,8 +75,8 @@ has max_conn => 1;
 has max_conn_per_host => 1;
 has queue => sub { WWW::Crawler::Mojo::Queue::Memory->new };
 has 'shuffle';
-has 'ua' => sub { WWW::Crawler::Mojo::UserAgent->new };
-has 'ua_name' =>
+has ua => sub { WWW::Crawler::Mojo::UserAgent->new };
+has ua_name =>
     "www-crawler-mojo/$VERSION (+https://github.com/jamadam/www-crawler-mojo)";
 
 sub crawl {

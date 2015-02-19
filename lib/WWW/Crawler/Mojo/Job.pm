@@ -5,15 +5,15 @@ use utf8;
 use Mojo::Base -base;
 use Mojo::Util qw(md5_sum deprecated);
 
-has 'literal_uri' => '';
-has 'url' => '';
+has 'closed';
+has depth => 0;
+has 'literal_uri';
+has 'method';
 has 'referrer';
 has 'referrer_url';
-has 'redirect_history' => sub { [] };
-has 'method';
+has redirect_history => sub { [] };
 has 'tx_params';
-has 'depth' => 0;
-has 'closed';
+has 'url';
 
 sub upgrade {
     my ($class, $job) = @_;

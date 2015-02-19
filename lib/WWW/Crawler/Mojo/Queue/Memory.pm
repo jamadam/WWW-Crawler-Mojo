@@ -16,12 +16,12 @@ sub enqueue {
     shift->_enqueue(@_);
 }
 
-sub next {
-    return shift->jobs->[shift || 0];
-}
-
 sub length {
     return scalar(@{shift->jobs});
+}
+
+sub next {
+    return shift->jobs->[shift || 0];
 }
 
 sub requeue {

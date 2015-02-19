@@ -38,17 +38,6 @@ sub new {
     return $self;
 }
 
-sub _host_key {
-    state $well_known_ports = {http => 80, https => 443};
-    my $url = shift;
-    $url = Mojo::URL->new($url) unless ref $url;
-    return unless $url->is_abs && (my $wkp = $well_known_ports->{$url->scheme});
-    my $key = $url->scheme. '://'. $url->ihost;
-    return $key unless (my $port = $url->port);
-    $key .= ':'. $port if $port != $wkp;
-    return $key;
-}
-
 sub active_host {
     my ($self, $url, $inc) = @_;
     my $key = _host_key($url);
@@ -59,6 +48,17 @@ sub active_host {
         delete($hosts->{$key}) unless ($hosts->{$key});
     }
     return $hosts->{$key} || 0;
+}
+
+sub _host_key {
+    state $well_known_ports = {http => 80, https => 443};
+    my $url = shift;
+    $url = Mojo::URL->new($url) unless ref $url;
+    return unless $url->is_abs && (my $wkp = $well_known_ports->{$url->scheme});
+    my $key = $url->scheme. '://'. $url->ihost;
+    return $key unless (my $port = $url->port);
+    $key .= ':'. $port if $port != $wkp;
+    return $key;
 }
 
 1;
