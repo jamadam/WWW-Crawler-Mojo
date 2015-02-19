@@ -9,7 +9,7 @@ use WWW::Crawler::Mojo::UserAgent;
 use WWW::Crawler::Mojo::ScraperUtil qw{resolve_href decoded_body};
 use Mojo::Message::Request;
 use Mojo::Util qw{xml_escape dumper};
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 has clock_speed => 0.25;
 has element_handlers => sub { {
