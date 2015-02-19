@@ -10,10 +10,58 @@ use Mojo::DOM;
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
 use Mojo::Message::Response;
-use Test::More tests => 38;
+use Test::More tests => 47;
 
 sub _weave_form_data {
     WWW::Crawler::Mojo->new->element_handlers->{form}->(@_);
+}
+
+{
+    my $dom = Mojo::DOM->new(<<EOF);
+<div>
+    <form action="/index1.html" method="get">
+        <input type="text" name="foo" value="default">
+        <input type="submit" name='buttonName' value="submit1">
+        <input type="submit" name='buttonName' value="submit2">
+    </form>
+</div>
+EOF
+    my $ret = _weave_form_data($dom->at('form'));
+    is $ret->[0], '/index1.html';
+    is $ret->[1], 'GET';
+    is_deeply $ret->[2]->to_hash, {buttonName => 'submit1', foo => 'default'};
+}
+
+{
+    my $dom = Mojo::DOM->new(<<EOF);
+<div>
+    <form action="/index1.html" method="get">
+        <input type="text" name="foo" value="default">
+        <button type="submit" name="buttonName" value="submit1">btn1</button>
+        <button type="submit" name="buttonName" value="submit2">btn2</button>
+    </form>
+</div>
+EOF
+    my $ret = _weave_form_data($dom->at('form'));
+    is $ret->[0], '/index1.html';
+    is $ret->[1], 'GET';
+    is_deeply $ret->[2]->to_hash, {buttonName => 'submit1', foo => 'default'};
+}
+
+{
+    my $dom = Mojo::DOM->new(<<EOF);
+<div>
+    <form action="/index1.html" method="get">
+        <input type="text" name="foo" value="default">
+        <button type="submit" name="buttonName" value="">btn1</button>
+        <button type="submit" name="buttonName" value="submit2">btn2</button>
+    </form>
+</div>
+EOF
+    my $ret = _weave_form_data($dom->at('form'));
+    is $ret->[0], '/index1.html';
+    is $ret->[1], 'GET';
+    is_deeply $ret->[2]->to_hash, {buttonName => '', foo => 'default'};
 }
 
 {
