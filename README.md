@@ -57,9 +57,9 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
 * [WWW::Crawler::Mojo](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo)
 * [WWW::Crawler::Mojo::Job](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AJob)
 * [WWW::Crawler::Mojo::UserAgent](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AUserAgent)
-* [WWW::Crawler::Mojo::UserAgent](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AQueue)
-* [WWW::Crawler::Mojo::UserAgent](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AScraperUtil)
-* [WWW::Crawler::Mojo::UserAgent](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AQueue%3AMemory)
+* [WWW::Crawler::Mojo::Queue](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AQueue)
+* [WWW::Crawler::Mojo::ScraperUtil](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AScraperUtil)
+* [WWW::Crawler::Mojo::Queue::Memory](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AQueue%3AMemory)
 
 ## Examples
 
