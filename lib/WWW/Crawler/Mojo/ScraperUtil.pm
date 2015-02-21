@@ -4,10 +4,16 @@ use warnings;
 use Mojo::Base -base;
 use Encode qw(find_encoding);
 use Exporter 'import';
+use 5.010;
 
-our @EXPORT_OK = qw(resolve_href guess_encoding encoder decoded_body);
+our @EXPORT_OK = qw(html_handlers resolve_href
+                guess_encoding encoder decoded_body collect_urls_css scrape);
 
 my $charset_re = qr{\bcharset\s*=\s*['"]?([a-zA-Z0-9_\-]+)['"]?}i;
+
+sub collect_urls_css {
+    map { s/^(['"])// && s/$1$//; $_ } (shift || '') =~ m{url\((.+?)\)}ig;
+}
 
 sub decoded_body {
     my $res     = shift;
@@ -31,6 +37,113 @@ sub guess_encoding {
     return _guess_encoding_html($res->body) if ($type =~ qr{text/(html|xml)});
     return _guess_encoding_css($res->body) if ($type =~ qr{text/css});
 }
+
+sub html_handlers {
+    my $handlers = {
+        'script[src]'   => sub { $_[0]->{src} },
+        'link[href]'    => sub { $_[0]->{href} },
+        'a[href]'       => sub { $_[0]->{href} },
+        'img[src]'      => sub { $_[0]->{src} },
+        'area'          => sub { $_[0]->{href}, $_[0]->{ping} },
+        'embed[src]'    => sub { $_[0]->{src} },
+        'frame[src]'    => sub { $_[0]->{src} },
+        'iframe[src]'   => sub { $_[0]->{src} },
+        'input[src]'    => sub { $_[0]->{src} },
+        'object[data]'  => sub { $_[0]->{data} },
+        'form'          => sub {
+            my $dom = shift;
+            my (%seed, $submit);
+            
+            $dom->find("[name]")->each(sub {
+                my $e = shift;
+                $seed{my $name = $e->{name}} ||= [];
+                
+                if ($e->type eq 'select') {
+                    $e->find('option[selected]')->each(sub {
+                        push(@{$seed{$name}}, shift->{value});
+                    });
+                } elsif ($e->type eq 'textarea') {
+                    push(@{$seed{$name}}, $e->text);
+                }
+                
+                return unless (my $type = $e->{type});
+                
+                if (!$submit && grep{$_ eq $type} qw{submit image}) {
+                    $submit = 1;
+                    push(@{$seed{$name}}, $e->{value});
+                } elsif (grep {$_ eq $type} qw{text hidden number}) {
+                    push(@{$seed{$name}}, $e->{value});
+                } elsif (grep {$_ eq $type} qw{checkbox}) {
+                    push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
+                } elsif (grep {$_ eq $type} qw{radio}) {
+                    push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
+                }
+            });
+            
+            return [$dom->{action} || '',
+                        uc ($dom->{method} || 'GET'), Mojo::Parameters->new(%seed)];
+        },
+        'meta[content]' => sub {
+            return $1 if ($_[0] =~ qr{http\-equiv="?Refresh"?}i &&
+                                    (($_[0]->{content} || '') =~ qr{URL=(.+)}i)[0]);
+        },
+        'style' => sub {
+            my $dom = shift;
+            return collect_urls_css($dom->content);
+        },
+        '[style]' => sub {
+            collect_urls_css(shift->{style});
+        },
+        'urlset[xmlns^=http://www.sitemaps.org/schemas/sitemap/]' => sub {
+            @{$_->find('url loc')->map(sub {$_->content})->to_array};
+        }
+    };
+    for (keys %$handlers) {
+        my $cb = $handlers->{$_};
+        $handlers->{$_} = sub {
+            return if ($_[0]->xml && _wrong_dom_detection($_[0]));
+            return $cb->($_[0]);
+        }
+    }
+    return $handlers;
+}
+
+sub scrape {
+    my ($tx, $cb, $cb2) = @_;
+    my $res = $tx->res;
+    my $url = $tx->req->url;
+    return unless $res->headers->content_length && $res->body;
+    
+    my $base = $url;
+    my $type = $res->headers->content_type;
+    
+    if ($type && $type =~ qr{^(text|application)/(html|xml|xhtml)}) {
+        if ((my $base_tag = $res->dom->at('base[href]'))) {
+            $base = resolve_href($base, $base_tag->attr('href'));
+        }
+        my $dom = Mojo::DOM->new(decoded_body($res));
+        state $handlers = html_handlers();
+        for my $selector (sort keys %{$handlers}) {
+            $dom->find($selector)->each(sub {
+                my $dom = shift;
+                for ($handlers->{$selector}->($dom)) {
+                    my $method, my $params;
+                    return unless $url;
+                    ($url, $method, $params) = @$url if (ref $url);
+                    my $resolved = resolve_href($base, $url);
+                    return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});
+                    ($cb2 || $cb)->($_, $dom, $base, $cb);
+                }
+            });
+        }
+    }
+    
+    if ($type && $type =~ qr{text/css}) {
+        for (collect_urls_css(decoded_body($res))) {
+            ($cb2 || $cb)->($_, $url, $base, $cb);
+        }
+    }
+};
 
 sub resolve_href {
     my ($base, $href) = @_;
@@ -58,6 +171,14 @@ sub _guess_encoding_html {
     return $charset;
 }
 
+sub _wrong_dom_detection {
+    my $dom = shift;
+    while ($dom = $dom->parent) {
+        return 1 if ($dom->type && $dom->type eq 'script');
+    }
+    return;
+}
+
 use 5.010;
 
 1;
@@ -73,10 +194,6 @@ WWW::Crawler::Mojo::ScraperUtil - Scraper utitlities
 This class inherits L<Mojo::UserAgent> and override start method for storing
 user info
 
-=head1 ATTRIBUTES
-
-WWW::Crawler::Mojo::UserAgent inherits all attributes from L<Mojo::UserAgent>.
-
 =head1 METHODS
 
 WWW::Crawler::Mojo::UserAgent inherits all methods from L<Mojo::UserAgent>.
@@ -89,6 +206,23 @@ guess_encoding and encoder.
 =head2 encoder
 
 Generates L<Encode> instance for given name. Defaults to L<Encode::utf8>.
+
+=head2 html_handlers
+
+HTML element handler presets on scraping.
+
+    my $handlers = html_handlers();
+    $handlers->{img} = sub {
+        my $dom = shift;
+        return $dom->{src};
+    };
+    
+    my @urls;
+    for my $selector (sort keys %{$handlers}) {
+        $dom->find($selector)->each(sub {
+            push(@urls, $handlers->{$selector}->(shift));
+        })->to_array;
+    }
 
 =head2 resolve_href
 

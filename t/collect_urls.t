@@ -7,8 +7,10 @@ use lib catdir(dirname(__FILE__), '../lib');
 use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 use Mojo::DOM;
+use Mojo::Transaction::HTTP;
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
+use WWW::Crawler::Mojo::ScraperUtil qw{scrape};
 use Test::More tests => 38;
 
 my @array;
@@ -48,16 +50,18 @@ EOF
 
 @array = ();
 {
+    my $tx = Mojo::Transaction::HTTP->new;
     my $res = Mojo::Message::Response->new;
-    $res->code(200);
-    $res->headers->content_type('text/html');
-    $res->headers->content_length(length($html));
-    $res->body(Mojo::DOM->new($html));
-    my $job = WWW::Crawler::Mojo::Job->new(url => 'http://example.com/');
+    $tx->req->url('http://example.com/');
+    $tx->res->code(200);
+    $tx->res->headers->content_type('text/html');
+    $tx->res->headers->content_length(length($html));
+    $tx->res->body(Mojo::DOM->new($html));
+    my $job = WWW::Crawler::Mojo::Job->new(url => $tx->req->url);
     my $bot = WWW::Crawler::Mojo->new;
-    $bot->scrape($res, $job, sub {
-        my ($bot, $enqueue, $job, $context) = @_;
-        push(@array, $job->literal_uri);
+    scrape($tx, sub {
+        my ($url, $context) = @_;
+        push(@array, $url);
         push(@array, $context);
     });
 }
@@ -150,7 +154,7 @@ EOF
     $res->body(Mojo::DOM->new($xhtml));
     my $job = WWW::Crawler::Mojo::Job->new(url => 'http://example.com/');
     my $bot = WWW::Crawler::Mojo->new;
-    $bot->scrape($res, $job, sub {
+    scrape($res, $job, sub {
         my ($bot, $enqueue, $job, $context) = @_;
         push(@array, $job->literal_uri);
         push(@array, $context);
