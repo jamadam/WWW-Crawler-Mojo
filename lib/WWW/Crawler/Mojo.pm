@@ -6,71 +6,13 @@ use Mojo::Base 'Mojo::EventEmitter';
 use WWW::Crawler::Mojo::Job;
 use WWW::Crawler::Mojo::Queue::Memory;
 use WWW::Crawler::Mojo::UserAgent;
-use WWW::Crawler::Mojo::ScraperUtil qw{resolve_href decoded_body};
+use WWW::Crawler::Mojo::ScraperUtil qw{
+            collect_urls_css html_handlers resolve_href decoded_body};
 use Mojo::Message::Request;
 use Mojo::Util qw{xml_escape dumper};
 our $VERSION = '0.12';
 
 has clock_speed => 0.25;
-has element_handlers => sub { {
-    'script[src]'   => sub { $_[0]->{src} },
-    'link[href]'    => sub { $_[0]->{href} },
-    'a[href]'       => sub { $_[0]->{href} },
-    'img[src]'      => sub { $_[0]->{src} },
-    'area'          => sub { $_[0]->{href}, $_[0]->{ping} },
-    'embed[src]'    => sub { $_[0]->{src} },
-    'frame[src]'    => sub { $_[0]->{src} },
-    'iframe[src]'   => sub { $_[0]->{src} },
-    'input[src]'    => sub { $_[0]->{src} },
-    'object[data]'  => sub { $_[0]->{data} },
-    'form'          => sub {
-        my $dom = shift;
-        my (%seed, $submit);
-        
-        $dom->find("[name]")->each(sub {
-            my $e = shift;
-            $seed{my $name = $e->{name}} ||= [];
-            
-            if ($e->type eq 'select') {
-                $e->find('option[selected]')->each(sub {
-                    push(@{$seed{$name}}, shift->{value});
-                });
-            } elsif ($e->type eq 'textarea') {
-                push(@{$seed{$name}}, $e->text);
-            }
-            
-            return unless (my $type = $e->{type});
-            
-            if (!$submit && grep{$_ eq $type} qw{submit image}) {
-                $submit = 1;
-                push(@{$seed{$name}}, $e->{value});
-            } elsif (grep {$_ eq $type} qw{text hidden number}) {
-                push(@{$seed{$name}}, $e->{value});
-            } elsif (grep {$_ eq $type} qw{checkbox}) {
-                push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
-            } elsif (grep {$_ eq $type} qw{radio}) {
-                push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
-            }
-        });
-        
-        return [$dom->{action} || '',
-                    uc ($dom->{method} || 'GET'), Mojo::Parameters->new(%seed)];
-    },
-    'meta[content]' => sub {
-        return $1 if ($_[0] =~ qr{http\-equiv="?Refresh"?}i &&
-                                (($_[0]->{content} || '') =~ qr{URL=(.+)}i)[0]);
-    },
-    'style' => sub {
-        my $dom = shift;
-        return collect_urls_css($dom->content);
-    },
-    '[style]' => sub {
-        collect_urls_css(shift->{style});
-    },
-    'urlset[xmlns^=http://www.sitemaps.org/schemas/sitemap/]' => sub {
-        @{$_->find('url loc')->map(sub {$_->content})->to_array};
-    }
-} };
 has max_conn => 1;
 has max_conn_per_host => 1;
 has queue => sub { WWW::Crawler::Mojo::Queue::Memory->new };
@@ -178,11 +120,11 @@ sub scrape {
             $base = resolve_href($base, $base_tag->attr('href'));
         }
         my $dom = Mojo::DOM->new(decoded_body($res));
-        for my $selector (sort keys %{$self->element_handlers}) {
+        state $handlers = html_handlers();
+        for my $selector (sort keys %{$handlers}) {
             $dom->find($selector)->each(sub {
                 my $dom = shift;
-                return if ($dom->xml && _wrong_dom_detection($dom));
-                for ($self->element_handlers->{$selector}->($dom)) {
+                for ($handlers->{$selector}->($dom)) {
                     $self->_delegate_enqueue($_, $dom, $job, $base, $cb);
                 }
             });
@@ -195,10 +137,6 @@ sub scrape {
         }
     }
 };
-
-sub collect_urls_css {
-    map { s/^(['"])// && s/$1$//; $_ } (shift || '') =~ m{url\((.+?)\)}ig;
-}
 
 sub _delegate_enqueue {
     my ($self, $url, $context, $job, $base, $cb) = @_;
@@ -245,14 +183,6 @@ sub _urls_redirect {
     return @urls;
 }
 
-sub _wrong_dom_detection {
-    my $dom = shift;
-    while ($dom = $dom->parent) {
-        return 1 if ($dom->type && $dom->type eq 'script');
-    }
-    return;
-}
-
 1;
 
 =head1 NAME
@@ -294,16 +224,6 @@ moderate range of web pages so DO NOT use it for persistent crawler jobs.
 
 L<WWW::Crawler::Mojo> inherits all attributes from L<Mojo::EventEmitter> and
 implements the following new ones.
-
-=head2 element_handlers
-
-HTML element handler on scraping.
-
-    my $handlers = $bot->element_handlers;
-    $bot->element_handlers->{img} = sub {
-        my $dom = shift;
-        return $dom->{src};
-    };
 
 =head2 clock_speed
 
@@ -526,12 +446,6 @@ Collects URLs out of HTML.
     $bot->collect_urls_html($dom, sub {
         my ($uri, $dom) = @_;
     });
-
-=head2 collect_urls_css
-
-Collects URLs out of CSS.
-
-    @urls = collect_urls_css($dom);
 
 =head1 EXAMPLE
 
