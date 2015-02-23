@@ -9,7 +9,6 @@ use WWW::Crawler::Mojo::UserAgent;
 use WWW::Crawler::Mojo::ScraperUtil qw{
             collect_urls_css html_handlers resolve_href decoded_body};
 use Mojo::Message::Request;
-use Mojo::Util qw{xml_escape dumper};
 our $VERSION = '0.12';
 
 has clock_speed => 0.25;
@@ -40,8 +39,7 @@ sub init {
                                         unless $self->has_subscribers('empty');
     $self->on('error', sub { say "An error occured during crawling $_[0]: $_[1]" })
                                         unless $self->has_subscribers('error');
-    $self->on('res', sub { $_[1]->() })
-                                        unless $self->has_subscribers('res');
+    $self->on('res', sub { $_[1]->() }) unless $self->has_subscribers('res');
     
     $self->ua->transactor->name($self->ua_name);
     $self->ua->max_redirects(5);
@@ -59,17 +57,18 @@ sub init {
 
 sub process_job {
     my $self = shift;
+    my $queue = $self->queue;
     
-    if (!$self->queue->length) {
+    if (!$queue->length) {
         $self->emit('empty') if (!$self->ua->active_conn);
         return;
     }
     if ($self->ua->active_conn >= $self->max_conn ||
-        $self->ua->active_host($self->queue->next->url) >= $self->max_conn_per_host) {
+        $self->ua->active_host($queue->next->url) >= $self->max_conn_per_host) {
         return;
     }
     
-    my $job = $self->queue->dequeue;
+    my $job = $queue->dequeue;
     my $url = $job->url;
     my $ua = $self->ua;
     my $tx = $ua->build_tx($job->method || 'get' => $url => $job->tx_params);
@@ -87,9 +86,8 @@ sub process_job {
             return;
         }
         
-        $self->emit('res', sub {
-            $self->scrape($res, $job, $_[0]);
-        }, $job, $res);
+        $self->emit('res',
+                        sub { $self->scrape($res, $job, $_[0]) }, $job, $res);
         
         $job->close;
     });

@@ -117,7 +117,8 @@ sub resolve_href {
     while ($abs->path->parts->[0] && $abs->path->parts->[0] =~ /^\./) {
         shift @{$abs->path->parts};
     }
-    $abs->path->trailing_slash($base->path->trailing_slash) if (!$href->path->to_string);
+    $abs->path->trailing_slash($base->path->trailing_slash)
+                                                if (!$href->path->to_string);
     return $abs;
 }
 
