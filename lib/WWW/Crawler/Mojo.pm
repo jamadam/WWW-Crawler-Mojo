@@ -201,7 +201,7 @@ sub collect_urls_css {
 }
 
 sub _delegate_enqueue {
-    my ($self, $url, $dom, $job, $base, $cb) = @_;
+    my ($self, $url, $context, $job, $base, $cb) = @_;
     my $method, my $params;
     
     return unless $url;
@@ -224,7 +224,7 @@ sub _delegate_enqueue {
     }
     
     $cb ||= sub { $_[1]->() };
-    $cb->($self, sub { $self->enqueue($_[0] || $child) }, $child, $dom);
+    $cb->($self, sub { $self->enqueue($_[0] || $child) }, $child, $context);
 }
 
 sub enqueue {
