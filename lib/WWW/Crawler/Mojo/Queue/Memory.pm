@@ -42,7 +42,7 @@ sub _enqueue {
     
     push(@{$self->jobs}, $job);
     
-    $self->fix->{$digest} = undef;
+    $self->fix->{$digest} = 1;
     
     return $self;
 }
