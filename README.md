@@ -124,6 +124,22 @@ Excepting following URLs by path.
         });
     });
 
+Crawl only preset URLs.
+
+    $bot->on(res => sub {
+        my ($bot, $scrape, $job, $res) = @_;
+        
+        $scrape->(sub {});
+    });
+	
+	$bot->enqueue(
+    	'http://example.com/1',
+    	'http://example.com/3',
+    	'http://example.com/5',
+    );
+	
+	$bot->crawl;
+
 Speed up.
 
     $bot->max_conn(5);
