@@ -56,11 +56,11 @@ my $handlers = {
             my $e = shift;
             $seed{my $name = $e->{name}} ||= [];
             
-            if ($e->type eq 'select') {
+            if ($e->tag eq 'select') {
                 $e->find('option[selected]')->each(sub {
                     push(@{$seed{$name}}, shift->{value});
                 });
-            } elsif ($e->type eq 'textarea') {
+            } elsif ($e->tag eq 'textarea') {
                 push(@{$seed{$name}}, $e->text);
             }
             
@@ -138,7 +138,7 @@ sub _guess_encoding_html {
 sub _wrong_dom_detection {
     my $dom = shift;
     while ($dom = $dom->parent) {
-        return 1 if ($dom->type && $dom->type eq 'script');
+        return 1 if ($dom->tag && $dom->tag eq 'script');
     }
     return;
 }

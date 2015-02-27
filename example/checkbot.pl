@@ -49,8 +49,8 @@ $bot->on(res => sub {
             report_stdout($msg, $job2->url, $job->url);
         }
         
-        $enqueue->() if ($job->url->host eq $start->host);
-        #$enqueue->() ;
+        #$enqueue->() if ($job->url->host eq $start->host);
+        $enqueue->() ;
     });
 });
 
@@ -80,7 +80,7 @@ sub security_warning {
     
     if ($scheme1 eq 'https' && $scheme2 ne 'https') {
         return 1 if (!ref $context || ref $context ne 'Mojo::DOM');
-        return 0 if ($context->type eq 'a');
+        return 0 if ($context->tag eq 'a');
         return 1;
     }
     

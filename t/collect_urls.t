@@ -62,33 +62,33 @@ EOF
     });
 }
 is shift @array, 'http://example.com/bgimg2.png', 'right url';
-is shift(@array)->type, 'a', 'right type';
+is shift(@array)->tag, 'a', 'right type';
 is shift @array, 'index1.html', 'right url';
-is shift(@array)->type, 'a', 'right type';
+is shift(@array)->tag, 'a', 'right type';
 is shift @array, 'index2.html', 'right url';
-is shift(@array)->type, 'a', 'right type';
+is shift(@array)->tag, 'a', 'right type';
 is shift @array, 'escaped?foo=bar&baz=yada', 'right url';
-is shift(@array)->type, 'a', 'right type';
+is shift(@array)->tag, 'a', 'right type';
 is shift @array, '//example.com', 'right url';
-is shift(@array)->type, 'a', 'right type';
+is shift(@array)->tag, 'a', 'right type';
 is shift @array, 'http://doublehit.com/', 'right url';
-is shift(@array)->type, 'a', 'right type';
+is shift(@array)->tag, 'a', 'right type';
 is shift @array, 'index3.html', 'right url';
-is shift(@array)->type, 'area', 'right type';
+is shift(@array)->tag, 'area', 'right type';
 is shift @array, 'http://example.com/', 'right url';
-is shift(@array)->type, 'area', 'right type';
+is shift(@array)->tag, 'area', 'right type';
 is shift @array, 'css1.css', 'right url';
-is shift(@array)->type, 'link', 'right type';
+is shift(@array)->tag, 'link', 'right type';
 is shift @array, 'css2.css', 'right url';
-is shift(@array)->type, 'link', 'right type';
+is shift(@array)->tag, 'link', 'right type';
 is shift @array, 'http://example.com/redirected', 'right url';
-is shift(@array)->type, 'meta', 'right type';
+is shift(@array)->tag, 'meta', 'right type';
 is shift @array, 'js1.js', 'right url';
-is shift(@array)->type, 'script', 'right type';
+is shift(@array)->tag, 'script', 'right type';
 is shift @array, 'js2.js', 'right url';
-is shift(@array)->type, 'script', 'right type';
+is shift(@array)->tag, 'script', 'right type';
 is shift @array, 'http://example.com/bgimg.png', 'right url';
-is shift(@array)->type, 'style', 'right type';
+is shift(@array)->tag, 'style', 'right type';
 is shift @array, undef, 'no more urls';
 
 {

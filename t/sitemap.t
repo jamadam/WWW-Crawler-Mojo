@@ -45,9 +45,9 @@ EOF
     });
 }
 is shift @array, 'http://example.com/1', 'right url';
-is shift(@array)->type, 'urlset', 'right type';
+is shift(@array)->tag, 'urlset', 'right type';
 is shift @array, 'http://example.com/2', 'right url';
-is shift(@array)->type, 'urlset', 'right type';
+is shift(@array)->tag, 'urlset', 'right type';
 is shift(@array), undef, 'right type';
 
 $xml = <<EOF;
