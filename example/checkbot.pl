@@ -8,7 +8,7 @@ use Mojo::URL;
 my $bot = WWW::Crawler::Mojo->new;
 my %count;
 
-my $start = Mojo::URL->new(pop @ARGV);
+my $start = Mojo::URL->new(pop @ARGV || die 'Starting URL must given');
 
 $bot->on(start => sub {
     shift->say_start;
