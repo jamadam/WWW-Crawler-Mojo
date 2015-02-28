@@ -6,7 +6,7 @@ use Mojo::URL;
 use 5.010;
 
 has active_conn => 0;
-has active_conns_per_host => sub { {} };
+has active_conn_per_host => sub { {} };
 has credentials => sub {{}};
 has keep_credentials => 1;
 
@@ -40,7 +40,7 @@ sub new {
 sub active_host {
     my ($self, $url, $inc) = @_;
     my $key = _host_key($url);
-    my $hosts = $self->active_conns_per_host;
+    my $hosts = $self->active_conn_per_host;
     if ($inc) {
         $self->{active_conn} += $inc;
         $hosts->{$key} += $inc;
@@ -90,12 +90,12 @@ A number of current connections.
     $bot->active_conn($bot->active_conn + 1);
     say $bot->active_conn;
 
-=head2 active_conns_per_host
+=head2 active_conn_per_host
 
 A number of current connections per host.
 
-    $bot->active_conns_per_host($bot->active_conns_per_host + 1);
-    say $bot->active_conns_per_host;
+    $bot->active_conn_per_host($bot->active_conn_per_host + 1);
+    say $bot->active_conn_per_host;
 
 =head2 keep_credentials
 
