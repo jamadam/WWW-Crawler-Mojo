@@ -164,6 +164,16 @@ You can fulfill any prerequisites such as login form submittion so that a login 
 * [WWW-Flatten](https://github.com/jamadam/WWW-Flatten)
 * See the scripts under the example directory.
 
+## Broad crawling
+
+Althogh the module is only well tested for "focused crawl" at this point,
+you can also use it for endless crawling by taking special care of memory usage.
+
+* Restrict queue size by yourself.
+* Replace redundant detecter code.
+
+	$bot->queue->redundancy(sub {...});
+
 ## Copyright
 
 Copyright (C) jamadam

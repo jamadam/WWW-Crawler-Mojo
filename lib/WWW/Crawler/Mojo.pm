@@ -212,7 +212,7 @@ L<WWW::Crawler::Mojo> is a web crawling framework for those who familier with
 L<Mojo>::* APIs.
 
 Althogh the module is only well tested for "focused crawl" at this point,
-by taking special care of memory usage you can also use it for endless crawling.
+you can also use it for endless crawling by taking special care of memory usage.
 
 =head1 ATTRIBUTES
 
