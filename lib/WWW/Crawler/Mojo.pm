@@ -45,7 +45,17 @@ sub init {
     $self->ua->max_redirects(5);
     
     Mojo::IOLoop->recurring($self->clock_speed => sub {
-        $self->process_job(@_);
+        my $queue = $self->queue;
+        
+        if (!$queue->length) {
+            $self->emit('empty') if (!$self->ua->active_conn);
+            return;
+        }
+        if ($self->ua->active_conn >= $self->max_conn ||
+            $self->ua->active_host($queue->next->url) >= $self->max_conn_per_host) {
+            return;
+        }
+        $self->process_job($queue->dequeue);
     });
     
     if ($self->shuffle) {
@@ -56,19 +66,7 @@ sub init {
 }
 
 sub process_job {
-    my $self = shift;
-    my $queue = $self->queue;
-    
-    if (!$queue->length) {
-        $self->emit('empty') if (!$self->ua->active_conn);
-        return;
-    }
-    if ($self->ua->active_conn >= $self->max_conn ||
-        $self->ua->active_host($queue->next->url) >= $self->max_conn_per_host) {
-        return;
-    }
-    
-    my $job = $queue->dequeue;
+    my ($self, $job) = @_;
     my $url = $job->url;
     my $ua = $self->ua;
     my $tx = $ua->build_tx($job->method || 'get' => $url => $job->tx_params);
