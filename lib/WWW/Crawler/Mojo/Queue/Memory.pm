@@ -5,8 +5,16 @@ use utf8;
 use Mojo::Base 'WWW::Crawler::Mojo::Queue';
 use List::Util;
 
-has fix => sub { {} };
 has jobs => sub { [] };
+has redundancy => sub {
+    my %fix;
+    return sub {
+        my $d = $_[0]->digest;
+        return 1 if $fix{$d};
+        $fix{$d} = 1;
+        return;
+    };
+};
 
 sub dequeue {
     return shift(@{shift->jobs});
@@ -35,15 +43,8 @@ sub shuffle {
 
 sub _enqueue {
     my ($self, $job, $requeue) = @_;
-    
-    my $digest = $job->digest;
-    
-    return if (!$requeue && exists($self->fix->{$digest}));
-    
+    return if (!$requeue && $self->redundancy->($job));
     push(@{$self->jobs}, $job);
-    
-    $self->fix->{$digest} = 1;
-    
     return $self;
 }
 
@@ -64,9 +65,24 @@ Crawler queue with memory.
 This class inherits all methods from L<WWW::Crawler::Mojo::Queue> and implements
 following new ones.
 
-=head2 fix
+=head2 redundancy
 
-A hash whoes keys are md5 hashes of enqueued URLs.
+An subroutine reference called on enqueue process for avoiding redundant
+requests. It marks the job 'done' and returns 0, and next time returns 1.
+
+    if (!$queue->redundancy->($job)) {
+        $queue->enqueue($job);
+    }
+
+Defaults to a code that uses "no cleanup" storage. By replacing this you can
+control the memory usage.
+
+    $queue->redundancy(sub {
+        my $d = $_[0]->digest;
+        return 1 if $your_storage{$d};
+        $your_storage{$d} = 1;
+        return;
+    });
 
 =head2 jobs
 
@@ -74,31 +90,32 @@ jobs.
 
 =head1 METHODS
 
-This class inherits all methods from L<WWW::Crawler::Mojo::Queue>.
+This class inherits all methods from L<WWW::Crawler::Mojo::Queue> class and
+implements following new ones.
 
 =head2 dequeue
 
-Implement for L<WWW::Crawler::Mojo::Queue> interface.
+Implementation for L<WWW::Crawler::Mojo::Queue> interface.
 
 =head2 enqueue
 
-Implement for L<WWW::Crawler::Mojo::Queue> interface.
+Implementation for L<WWW::Crawler::Mojo::Queue> interface.
 
 =head2 length
 
-Implement for L<WWW::Crawler::Mojo::Queue> interface.
+Implementation for L<WWW::Crawler::Mojo::Queue> interface.
 
 =head2 next
 
-Implement for L<WWW::Crawler::Mojo::Queue> interface.
+Implementation for L<WWW::Crawler::Mojo::Queue> interface.
 
 =head2 requeue
 
-Implement for L<WWW::Crawler::Mojo::Queue> interface.
+Implementation for L<WWW::Crawler::Mojo::Queue> interface.
 
 =head2 shuffle
 
-Implement for L<WWW::Crawler::Mojo::Queue> interface.
+Implementation for L<WWW::Crawler::Mojo::Queue> interface.
 
 =head1 AUTHOR
 
