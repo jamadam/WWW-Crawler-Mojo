@@ -31,41 +31,46 @@ WWW::Crawler::Mojo::Queue - Crawler queue base class
 
 This class represents a FIFO queue.
 
-=head1 ATTRIBUTES
-
-=head2 fix
-
-A hash whoes keys are md5 hashes of enqueued URLs.
-
-=head2 jobs
-
-jobs.
-
 =head1 METHODS
 
 =head2 dequeue
 
 Shift the oldest job and returns it. 
 
+    my $job = $queue->deuque;
+
 =head2 enqueue
 
-Pushes a job.
+    $queue->enqueue($job);
+
+Pushes a job unless the job has been already pushed before.
 
 =head2 next
 
-Returns the oldest job.
+Returns the job which will be dequeued next. It also accept an offset to get any
+future job.
+
+    $queue->next; # meaning $queue->next(0)
+    $queue->next(1);
+    $queue->next(2);
 
 =head2 length
 
 Returns queue length
 
+    say $queue->length
+
 =head2 requeue
 
-Pushes a job wether the job has been enqueued once or not.
+Pushes a job regardless of the job has been enqueued before or not.
+
+    $queue->requeue($job);
 
 =head2 shuffle
 
 Shuffle the queue array.
+
+    $queue->shuffle;
 
 =head1 AUTHOR
 

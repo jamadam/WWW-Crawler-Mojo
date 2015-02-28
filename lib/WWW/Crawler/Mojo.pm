@@ -213,8 +213,8 @@ WWW::Crawler::Mojo - A web crawling framework for Perl
 L<WWW::Crawler::Mojo> is a web crawling framework for those who familier with
 L<Mojo>::* APIs.
 
-Note that the module is aimed at trivial use cases of crawling within a
-moderate range of web pages so DO NOT use it for persistent crawler jobs.
+Althogh the module is only well tested for "focused crawl" at this point,
+by taking special care of memory usage you can also use it for endless crawling.
 
 =head1 ATTRIBUTES
 
@@ -223,21 +223,21 @@ implements the following new ones.
 
 =head2 clock_speed
 
-A number of millisecond for main event loop interval. Defaults to 0.25.
+A number of main event loop interval in milliseconds. Defaults to 0.25.
 
     $bot->clock_speed(2);
     my $clock = $bot->clock_speed; # 2
 
 =head2 max_conn
 
-A number of max connections.
+An amount of max connections.
 
     $bot->max_conn(5);
     say $bot->max_conn; # 5
 
 =head2 max_conn_per_host
 
-A number of max connections per host.
+An amount of max connections per host.
 
     $bot->max_conn_per_host(5);
     say $bot->max_conn_per_host; # 5
@@ -259,10 +259,10 @@ for disabling/enabling the feature. Defaults to undef, meaning disable.
 
 =head2 ua
 
-A L<Mojo::UserAgent> instance.
+A L<WWW::Crawler::Mojo::UserAgent> instance.
 
     my $ua = $bot->ua;
-    $bot->ua(Mojo::UserAgent->new);
+    $bot->ua(WWW::Crawler::Mojo::UserAgent->new);
 
 =head2 ua_name
 
@@ -302,30 +302,19 @@ argument in case a URL found.
 
     $scrape(sub {
         my ($bot, $enqueue, $job, $context) = @_;
-        ...
+        
+        $bot # WWW::Crawler::Mojo instance.
     });
-
-=over
-
-=item $bot
-
-L<WWW::Crawler::Mojo> instance.
-
-=item $enqueue
-
-Enqueue code reference for current URL. This is a shorthand of..
-
-    $bot->enqueue($job)
-
-=item $job
-
-L<WWW::Crawler::Mojo::Job> instance.
-
-=item $context
-
-Either L<Mojo::DOM> or L<Mojo::URL> instance.
-
-=back
+    
+    # Enqueue code reference for current URL. This is a shorthand of..
+    # $bot->enqueue($job)
+    $enqueue 
+    
+    # WWW::Crawler::Mojo::Job instance.
+    $job
+    
+    # Either Mojo::DOM or Mojo::URL instance.
+    $context
 
 =head3 $job
 
@@ -337,7 +326,7 @@ L<Mojo::Message::Response> instance.
 
 =head2 empty
 
-Emitted when queue length got zero. The length is checked every 5 seconds.
+Emitted when queue length gets zero.
 
     $bot->on(empty => sub {
         my ($bot) = @_;

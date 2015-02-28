@@ -149,7 +149,7 @@ Authentication. The user agent automatically reuses the credential for the host.
 
     $bot->enqueue('http://jamadam:password@example.com');
 
-You can fulfill any prerequisites such as login form submittion so that a login session will be established with cookie or something.
+You can fulfill any prerequisites such as login form submittion so that a login session will be established with cookie or something which you don't have to worry about.
 
     my $bot = WWW::Crawler::Mojo->new;
     $bot->ua->post('http://example.com/admin/login', form => {
