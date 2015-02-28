@@ -86,8 +86,7 @@ my $handlers = {
                                 (($_[0]->{content} || '') =~ qr{URL=(.+)}i)[0]);
     },
     'style' => sub {
-        my $dom = shift;
-        return collect_urls_css($dom->content);
+        collect_urls_css(shift->content);
     },
     '[style]' => sub {
         collect_urls_css(shift->{style});
