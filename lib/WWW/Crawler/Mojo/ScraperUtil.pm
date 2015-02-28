@@ -84,6 +84,7 @@ my $handlers = {
     'meta[content]' => sub {
         return $1 if ($_[0] =~ qr{http\-equiv="?Refresh"?}i &&
                                 (($_[0]->{content} || '') =~ qr{URL=(.+)}i)[0]);
+        return;
     },
     'style' => sub {
         collect_urls_css(shift->content);
