@@ -8,7 +8,7 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
 
 * Easy to rule your crawler.
 * Allows to use [Mojo::URL] for URL manipulations, [Mojo::Message::Response] for response manipulation and [Mojo::DOM] for DOM inspection.
-* Internally uses [Mojo::UserAgent] which is a full featured non-blocking I/O HTTP and WebSocket with IPv6, TLS, SNI, IDNA, HTTP/SOCKS5 proxy, Comet (long polling), keep-alive, connection pooling, timeout, cookie, multipart, gzip compression and multiple event loop.
+* Internally uses [Mojo::UserAgent] which is a full featured non-blocking I/O HTTP and WebSocket user agent, with IPv6, TLS, SNI, IDNA, HTTP/SOCKS5 proxy, Comet (long polling), keep-alive, connection pooling, timeout, cookie, multipart, gzip compression and multiple event loop.
 * Throttle the connection with max connection and max connection per host options.
 * Depth detection.
 * Tracks 301 HTTP redirects.
