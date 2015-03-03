@@ -7,7 +7,7 @@ use 5.010;
 
 has active_conn => 0;
 has active_conn_per_host => sub { {} };
-has credentials => sub {{}};
+has '_creds';
 has keep_credentials => 1;
 
 sub new {
@@ -15,14 +15,15 @@ sub new {
     my $self = $class->SUPER::new(@_);
     
     if ($self->keep_credentials) {
+        $self->_creds({});
         $self->on(start => sub {
             my ($self, $tx) = @_;
             my $url = $tx->req->url;
             my $host_key = _host_key($url) or return;
             if ($url->userinfo) {
-                $self->credentials->{$host_key} = $url->userinfo;
+                $self->{_creds}->{$host_key} = $url->userinfo;
             } else {
-                $url->userinfo($self->credentials->{$host_key});
+                $url->userinfo($self->{_creds}->{$host_key});
             }
         });
     }
@@ -49,6 +50,13 @@ sub active_host {
     return $hosts->{$key} || 0;
 }
 
+sub credentials {
+    my ($self, %credentials) = @_;
+    while (my ($url, $cred) = each(%credentials)) {
+        $self->{_creds}->{_host_key($url)} = $cred;
+    }
+}
+
 sub _host_key {
     state $well_known_ports = {http => 80, https => 443};
     my $url = shift;
@@ -64,20 +72,31 @@ sub _host_key {
 
 =head1 NAME
 
-WWW::Crawler::Mojo::UserAgent - Mojo::UserAgent sub class for userinfo storage
+WWW::Crawler::Mojo::UserAgent - Crawler specific featured user agent
 
 =head1 SYNOPSIS
 
     my $ua = WWW::Crawler::Mojo::UserAgent->new;
     $ua->keep_credentials(1);
-    $ua->credentials->{'http://example.com:80'} = 'jamadam:password';
+    $ua->credentials(
+        'http://example.com:8080' => 'jamadam:password1',
+        'http://example2.com:8080' => 'jamadam:password2',
+    );
     my $tx = $ua->get('http://example.com/');
     say $tx->req->url # http://jamadam:passowrd@example.com/
+    
+    if ($ua->active_conn < $max_conn) {
+        $ua->get(...);
+    }
+    
+    if ($ua->active_host($url) < $max_conn_per_host) {
+        $ua->get(...);
+    }
 
 =head1 DESCRIPTION
 
-This class inherits L<Mojo::UserAgent> and override start method for storing user
-info
+This class inherits L<Mojo::UserAgent> and adds credential storage and
+active connection counter.
 
 =head1 ATTRIBUTES
 
@@ -99,15 +118,9 @@ A number of current connections per host.
 
 =head2 keep_credentials
 
-Set true to set the feature on, defaults to 1.
+Set true to activate the feature. Defaults to 1.
 
     $ua->keep_credentials(1);
-
-=head2 credentials
-
-Storage for credentials.
-
-    $ua->credentials->{'http://example.com:80'} = 'jamadam:password';
 
 =head1 METHODS
 
@@ -120,6 +133,15 @@ Maintenance the numbers of active connections.
     $ua->active_host($url, 1);
     $ua->active_host($url, -1);
     my $amount = $ua->active_host($url);
+
+=head2 credentials
+
+Stores credentials.
+
+    $ua->credentials(
+        'http://example.com:8080' => 'jamadam:password1',
+        'http://example2.com:8080' => 'jamadam:password2',
+    );
 
 =head2 new
 

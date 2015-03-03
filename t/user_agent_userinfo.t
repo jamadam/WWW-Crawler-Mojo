@@ -80,7 +80,7 @@ my $ua = WWW::Crawler::Mojo::UserAgent->new(ioloop => Mojo::IOLoop->singleton);
     
     my $port = Mojo::IOLoop->acceptor($id1)->handle->sockport;
     
-    $ua->credentials->{"http://127.0.0.1:$port"} = "a:b";
+    $ua->credentials("http://127.0.0.1:$port" => "a:b");
     $ua->get("http://127.0.0.1:$port/file1");
 
     my $id2 = Mojo::IOLoop->server({address => '127.0.0.1'}, sub {
@@ -152,8 +152,10 @@ $ua = WWW::Crawler::Mojo::UserAgent->new(ioloop => Mojo::IOLoop->singleton);
     my $port2 = Mojo::IOLoop->acceptor($id2)->handle->sockport;
     
     $ua->max_redirects(1);
-    $ua->credentials->{"http://127.0.0.1:$port1"} = "b:c";
-    $ua->credentials->{"http://127.0.0.1:$port2"} = "a:b";
+    $ua->credentials(
+        "http://127.0.0.1:$port1" => "b:c",
+        "http://127.0.0.1:$port2" => "a:b",
+    );
     my $delay = Mojo::IOLoop->delay;
     my $sum = 0;
     for (1..2) {
