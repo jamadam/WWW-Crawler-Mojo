@@ -8,7 +8,7 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
 
 * Easy to rule your crawler.
 * Allows to use [Mojo::URL] for URL manipulations, [Mojo::Message::Response] for response manipulation and [Mojo::DOM] for DOM inspection.
-* Internally uses [Mojo::UserAgent] which supports non-blocking I/O HTTP and WebSocket with IPv6, TLS, SNI, IDNA, HTTP/SOCKS5 proxy, Comet (long polling), keep-alive, connection pooling, timeout, cookie, multipart, gzip compression.
+* Internally uses [Mojo::UserAgent] which is a full featured non-blocking I/O HTTP and WebSocket with IPv6, TLS, SNI, IDNA, HTTP/SOCKS5 proxy, Comet (long polling), keep-alive, connection pooling, timeout, cookie, multipart, gzip compression and multiple event loop.
 * Throttle the connection with max connection and max connection per host options.
 * Depth detection.
 * Tracks 301 HTTP redirects.
@@ -27,6 +27,10 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
 
 * Perl 5.14
 * Mojolicious 6.0
+
+## Installation
+
+    $ curl -L cpanmin.us | perl - -n WWW::Crawler::Mojo
 
 ## Synopsis
 
@@ -48,18 +52,14 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
     $bot->enqueue('http://example.com/');
     $bot->crawl;
 
-## Installation
-
-    $ cpanm WWW::Crawler::Mojo
-
 ## Documentation
 
 * [WWW::Crawler::Mojo](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo)
 * [WWW::Crawler::Mojo::Job](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AJob)
 * [WWW::Crawler::Mojo::UserAgent](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AUserAgent)
 * [WWW::Crawler::Mojo::Queue](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AQueue)
-* [WWW::Crawler::Mojo::ScraperUtil](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AScraperUtil)
 * [WWW::Crawler::Mojo::Queue::Memory](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AQueue%3AMemory)
+* [WWW::Crawler::Mojo::ScraperUtil](http://search.cpan.org/perldoc?WWW%3A%3ACrawler%3A%3AMojo%3A%3AScraperUtil)
 
 ## Examples
 
@@ -167,7 +167,7 @@ You can fulfill any prerequisites such as login form submittion so that a login 
 ## Broad crawling
 
 Althogh the module is only well tested for "focused crawl" at this point,
-you can also use it for endless crawling by taking special care of memory usage.
+you can also use it for endless crawling by taking special care of memory usage including;
 
 * Restrict queue size by yourself.
 * Replace redundant detecter code.

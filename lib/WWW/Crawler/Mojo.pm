@@ -298,21 +298,21 @@ L<WWW::Crawler::Mojo> instance.
 Scraper code reference for current document. The code takes a callback for
 argument in case a URL found.
 
-    $scrape(sub {
+    $scrape->(sub {
         my ($bot, $enqueue, $job, $context) = @_;
         
         $bot # WWW::Crawler::Mojo instance.
+        
+        # Enqueue code reference for current URL. This is a shorthand of..
+        # $bot->enqueue($job)
+        $enqueue->();
+        
+        # WWW::Crawler::Mojo::Job instance.
+        $job
+        
+        # Either Mojo::DOM or Mojo::URL instance.
+        $context
     });
-    
-    # Enqueue code reference for current URL. This is a shorthand of..
-    # $bot->enqueue($job)
-    $enqueue 
-    
-    # WWW::Crawler::Mojo::Job instance.
-    $job
-    
-    # Either Mojo::DOM or Mojo::URL instance.
-    $context
 
 =head3 $job
 
@@ -436,7 +436,7 @@ L<https://github.com/jamadam/WWW-Flatten>
 
 =head1 AUTHOR
 
-Sugama Keita, E<lt>sugama@jamadam.comE<gt>
+Keita Sugama, E<lt>sugama@jamadam.comE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 

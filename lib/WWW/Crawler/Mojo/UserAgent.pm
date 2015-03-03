@@ -151,11 +151,11 @@ Constructer.
 
 =head1 AUTHOR
 
-Sugama Keita, E<lt>sugama@jamadam.comE<gt>
+Keita Sugama, E<lt>sugama@jamadam.comE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) Sugama Keita.
+Copyright (C) Keita Sugama.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

@@ -188,15 +188,15 @@ Close the job and cut the referrer series.
 
 =head2 child
 
-Instantiate a child job by parent job. The parent uri is set to child referrer.
+Instantiate a child job by parent job. The parent URL is set to child referrer.
 
-    my $job1 = WWW::Crawler::Mojo::Job->new(url => 'http://a/1');
-    my $job2 = $job1->child(url => 'http://a/2');
-    say $job2->referrer->url # 'http://a/1'
+    my $job1 = WWW::Crawler::Mojo::Job->new(url => 'http://example.com/1');
+    my $job2 = $job1->child(url => 'http://example.com/2');
+    say $job2->referrer->url # 'http://example.com/1'
 
 =head2 digest
 
-Generate digest string with url, method, tx_params attributes.
+Generate digest string with C<url>, C<method>, C<tx_params> attributes.
 
     say $job->digest;
 
@@ -212,12 +212,12 @@ Replaces the resolved URL and history at once.
 
 =head2 original_uri [DEPRECATED]
 
-An alias for original_url.
+An alias for C<original_url>.
 
 =head2 original_url
 
 Returns the original URL of redirected job. If redirected, returns last element
-of redirect_histroy attribute, otherwise returns url attribute.
+of C<redirect_histroy> attribute, otherwise returns C<url> attribute.
 
     $job1->redirect_history([$url1, $url2, $url3]);
     my $url4 = $job1->original_url; # $url4 is $url3
@@ -228,11 +228,11 @@ Instanciate a job with string or a L<Mojo::URL> instance.
 
 =head1 AUTHOR
 
-Sugama Keita, E<lt>sugama@jamadam.comE<gt>
+Keita Sugama, E<lt>sugama@jamadam.comE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) Sugama Keita.
+Copyright (C) Keita Sugama.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
