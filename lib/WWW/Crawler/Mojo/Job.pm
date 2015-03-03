@@ -10,7 +10,6 @@ has depth => 0;
 has 'literal_uri';
 has 'method';
 has 'referrer';
-has 'referrer_url';
 has redirect_history => sub { [] };
 has 'tx_params';
 has 'url';
@@ -39,7 +38,7 @@ sub close {
 
 sub child {
     my $self = shift;
-    return __PACKAGE__->new(@_, referrer => $self, referrer_url => $self->url,
+    return __PACKAGE__->new(@_, referrer => $self, _referrer_url => $self->url,
                                                     depth => $self->depth + 1);
 }
 
@@ -54,6 +53,12 @@ sub redirect {
     my ($self, $last, @history) = @_;
     $self->url($last);
     $self->redirect_history(\@history);
+}
+
+sub referrer_url {
+    deprecated 'referrer_url is DEPRECATED';
+    return $_[0]->{_referrer_url} = $_[1] if (scalar @_ == 2);
+    return $_[0]->{_referrer_url} //= '';
 }
 
 sub resolved_uri {
@@ -94,7 +99,7 @@ This class represents a single crawler job.
 
 =head2 closed
 
-A flag that the job has been closed or not.
+A flag indecates weither the job is closed or not.
 
     $job->closed(1);
     say $job->closed;
@@ -120,7 +125,7 @@ document.
 
 =head2 resolved_uri [DEPRECATED]
 
-A L<Mojo::URL> instance of the resolved URL. Use url instead.
+A L<Mojo::URL> instance of the resolved URL. Use C<url> method instead.
 
     $job1->resolved_uri('http://example.com/');
     say $job1->resolved_uri; # 'http://example.com/'
@@ -139,7 +144,7 @@ An array reference that contains URLs of redirect history.
     $job1->redirect_history([$url1, $url2, $url3]);
     my $history = $job1->redirect_history;
 
-=head2 url [DEPRECATED]
+=head2 url
 
 A L<Mojo::URL> instance of the resolved URL.
 
@@ -148,7 +153,7 @@ A L<Mojo::URL> instance of the resolved URL.
 
 =head2 method
 
-HTTP request method such as get or post.
+HTTP request method such as GET or POST.
 
     $job1->method('GET');
     say $job1->method; # GET
@@ -160,7 +165,7 @@ A hash reference that contains params for L<Mojo::Transaction>.
     $job1->tx_params({foo => 'bar'});
     $params = $job1->tx_params;
 
-=head2 referrer_url
+=head2 referrer_url [DEPRECATED]
 
 A L<Mojo::URL> instance for referrer URL.
 

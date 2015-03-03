@@ -7,7 +7,7 @@ use Data::Dumper;
 use Mojo::IOLoop;
 use WWW::Crawler::Mojo;
 
-use Test::More tests => 39;
+use Test::More tests => 31;
 
 {
     package MockServer;
@@ -57,51 +57,42 @@ $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/index.html')};
 is $q->depth, 0;
 is $q->referrer, undef;
 is $contexts{$q}, undef;
-my $parent = $q;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/js/js1.js')};
 is $q->depth, 1;
-is $q->referrer_url, $parent->url;
 is ref $contexts{$q}, 'Mojo::DOM';
 is $contexts{$q},
     qq{<script src="./js/js1.js" type="text/javascript"></script>};
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/css/css1.css')};
 is $q->depth, 1;
-is $q->referrer_url, $parent->url;
 is ref $contexts{$q}, 'Mojo::DOM';
 is $contexts{$q},
     qq{<link href="./css/css1.css" rel="stylesheet" type="text/css">};
 my $parent2 = $q;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/img/png1.png')};
 is $q->depth, 1;
-is $q->referrer_url, $parent->url;
 is ref $contexts{$q}, 'Mojo::DOM';
 is $contexts{$q}, qq{<img alt="png1" src="./img/png1.png">};
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/img/png2.png')};
 is $q->depth, 2;
-is $q->referrer_url, $parent2->url;
 is ref $contexts{$q}, 'Mojo::URL';
 is $contexts{$q}, qq{http://127.0.0.1:$port/css/css1.css};
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/img/png3.png')};
 is $q->depth, 1;
-is $q->referrer_url, $parent->url;
 is ref $contexts{$q}, 'Mojo::DOM';
 like $contexts{$q},
     qr{<div style="background-image:url\(\./img/png3.png\)">.+</div>}s;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/space.txt')};
 is $q->depth, 1;
-is $q->referrer_url, $parent->url;
 is ref $contexts{$q}, 'Mojo::DOM';
 like $contexts{$q}, qr{<a href=" ./space.txt ">foo</a>}s;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/form_receptor1')};
 is $q->url, "http://127.0.0.1:$port/form_receptor1";
 is $q->depth, 1;
-is $q->referrer_url, $parent->url;
 is ref $contexts{$q}, 'Mojo::DOM';
 like $contexts{$q}, qr{<form action="/form_receptor1" method="post">.+}s;
 $q = $urls{WWW::Crawler::Mojo::resolve_href($base, '/form_receptor2?a=b&query2=default')};
 is $q->url, "http://127.0.0.1:$port/form_receptor2?a=b&query2=default";
 is $q->depth, 1;
-is $q->referrer_url, $parent->url;
 is ref $contexts{$q}, 'Mojo::DOM';
 like $contexts{$q}, qr{<form action="/form_receptor2\?a=b" method="get">.+}s;
 
