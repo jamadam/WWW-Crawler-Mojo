@@ -68,7 +68,7 @@ sub report_stdout {
     my ($msg, $url, $url_referrer) = @_;
     state $index = 1;
     say sprintf(
-        '%s: %s at %s referred by %s',
+        '%s: %s at %s <= %s',
         $index++,
         $msg,
         $url,
