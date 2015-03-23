@@ -85,7 +85,7 @@ sub process_job {
         }
         
         $self->emit('res',
-                        sub { $self->scrape($res, $job, $_[0]) }, $job, $res);
+                sub { $self->scrape($res, $job, $_[0], $_[1]) }, $job, $res);
         
         $job->close;
     });
@@ -104,7 +104,7 @@ EOF
 }
 
 sub scrape {
-    my ($self, $res, $job, $cb) = @_;
+    my ($self, $res, $job, $cb, $context) = @_;
     
     return unless $res->headers->content_length && $res->body;
     
@@ -116,7 +116,7 @@ sub scrape {
             $base = resolve_href($base, $base_tag->attr('href'));
         }
         my $dom = Mojo::DOM->new(decoded_body($res));
-        state $handlers = html_handlers();
+        my $handlers = html_handlers($context);
         for my $selector (sort keys %{$handlers}) {
             $dom->find($selector)->each(sub {
                 my $dom = shift;

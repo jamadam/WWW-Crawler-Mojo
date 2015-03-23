@@ -9,9 +9,10 @@ use Test::More;
 use Mojo::DOM;
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
-use Test::More tests => 38;
+use Test::More tests => 54;
 
 my @array;
+my @array2;
 
 my $html = <<EOF;
 <html>
@@ -47,6 +48,7 @@ my $html = <<EOF;
 EOF
 
 @array = ();
+@array2 = ();
 {
     my $res = Mojo::Message::Response->new;
     $res->code(200);
@@ -60,6 +62,11 @@ EOF
         push(@array, $job->literal_uri);
         push(@array, $context);
     });
+    $bot->scrape($res, $job, sub {
+        my ($bot, $enqueue, $job, $context) = @_;
+        push(@array2, $job->literal_uri);
+        push(@array2, $context);
+    }, 'body');
 }
 is shift @array, 'http://example.com/bgimg2.png', 'right url';
 is shift(@array)->tag, 'a', 'right type';
@@ -90,6 +97,23 @@ is shift(@array)->tag, 'script', 'right type';
 is shift @array, 'http://example.com/bgimg.png', 'right url';
 is shift(@array)->tag, 'style', 'right type';
 is shift @array, undef, 'no more urls';
+
+is shift @array2, 'http://example.com/bgimg2.png', 'right url';
+is shift(@array2)->tag, 'a', 'right type';
+is shift @array2, 'index1.html', 'right url';
+is shift(@array2)->tag, 'a', 'right type';
+is shift @array2, 'index2.html', 'right url';
+is shift(@array2)->tag, 'a', 'right type';
+is shift @array2, 'escaped?foo=bar&baz=yada', 'right url';
+is shift(@array2)->tag, 'a', 'right type';
+is shift @array2, '//example.com', 'right url';
+is shift(@array2)->tag, 'a', 'right type';
+is shift @array2, 'http://doublehit.com/', 'right url';
+is shift(@array2)->tag, 'a', 'right type';
+is shift @array2, 'index3.html', 'right url';
+is shift(@array2)->tag, 'area', 'right type';
+is shift @array2, 'http://example.com/', 'right url';
+is shift(@array2)->tag, 'area', 'right type';
 
 {
     my $css = <<EOF;

@@ -98,14 +98,17 @@ my $handlers = {
 };
 
 sub html_handlers {
+    my $context = shift;
+    my $ret;
     for (keys %$handlers) {
         my $cb = $handlers->{$_};
-        $handlers->{$_} = sub {
+        my $key = ($context ? $context. ' ' : ''). $_;
+        $ret->{$key} = sub {
             return if ($_[0]->xml && _wrong_dom_detection($_[0]));
             return $cb->($_[0]);
         }
     }
-    return $handlers;
+    return $ret;
 }
 
 sub resolve_href {
