@@ -8,7 +8,9 @@ use Mojo::URL;
 my $bot = WWW::Crawler::Mojo->new;
 my %count;
 
-my $start = Mojo::URL->new(pop @ARGV || die 'Starting URL must given');
+@ARGV || die 'Starting URL must given';
+my @start = map {Mojo::URL->new($_)} @ARGV;
+my @hosts = map {$_->host} @start;
 
 $bot->on(start => sub {
     shift->say_start;
@@ -31,14 +33,17 @@ $bot->on(res => sub {
     
     $count{$res->code}++;
     
-    if ($res->code =~ qr{[54]..}) {
+    if ($res->code =~ qr{[245]..}) {
         my $msg = $res->code. ' occured!';
-        report_stdout($msg, $job->url, $job->referrer->url);
+        report_stdout(
+                $msg, $job->url, $job->referrer ? $job->referrer->url : '-');
     }
     
     $count{QUEUE} = $bot->queue->length;
     my @props = map { join(':', $_, $count{$_}) } (sort keys %count);
     print join(' / ', @props), ' ' x 30, "\r";
+    
+    return unless grep {$_ eq $job->url->host} @hosts;
     
     $scrape->(sub {
         my ($bot, $enqueue, $job2, $context) = @_;
@@ -49,7 +54,6 @@ $bot->on(res => sub {
             report_stdout($msg, $job2->url, $job->url);
         }
         
-        #$enqueue->() if ($job->url->host eq $start->host);
         $enqueue->() ;
     });
 });
@@ -57,7 +61,7 @@ $bot->on(res => sub {
 $bot->shuffle(5);
 $bot->max_conn_per_host(2);
 $bot->max_conn(5);
-$bot->enqueue($start);
+$bot->enqueue(@start);
 $bot->crawl;
 
 sub report_stdout {
