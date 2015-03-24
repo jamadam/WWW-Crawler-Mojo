@@ -98,14 +98,16 @@ my $handlers = {
 };
 
 sub html_handlers {
-    my $context = shift;
+    my $contexts = ref $_[0] ? $_[0] : [$_[0]];
     my $ret;
     for (keys %$handlers) {
         my $cb = $handlers->{$_};
-        my $key = ($context ? $context. ' ' : ''). $_;
-        $ret->{$key} = sub {
-            return if ($_[0]->xml && _wrong_dom_detection($_[0]));
-            return $cb->($_[0]);
+        for my $cont (@$contexts) {
+            my $key = ($cont ? $cont. ' ' : ''). $_;
+            $ret->{$key} = sub {
+                return if ($_[0]->xml && _wrong_dom_detection($_[0]));
+                return $cb->($_[0]);
+            }
         }
     }
     return $ret;
@@ -186,9 +188,11 @@ Generates L<Encode> instance for given name. Defaults to L<Encode::utf8>.
 
 =head2 html_handlers
 
-HTML element handler presets on scraping.
+HTML element handler presets on scraping. Optional argument narrows the preset
+selector into certain containers.
 
-    my $handlers = html_handlers();
+    my $handlers = html_handlers(['#header', '#footer li']);
+    
     $handlers->{img} = sub {
         my $dom = shift;
         return $dom->{src};

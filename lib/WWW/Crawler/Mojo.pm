@@ -104,7 +104,7 @@ EOF
 }
 
 sub scrape {
-    my ($self, $res, $job, $cb, $context) = @_;
+    my ($self, $res, $job, $cb, $contexts) = @_;
     
     return unless $res->headers->content_length && $res->body;
     
@@ -116,7 +116,7 @@ sub scrape {
             $base = resolve_href($base, $base_tag->attr('href'));
         }
         my $dom = Mojo::DOM->new(decoded_body($res));
-        my $handlers = html_handlers($context);
+        my $handlers = html_handlers($contexts);
         for my $selector (sort keys %{$handlers}) {
             $dom->find($selector)->each(sub {
                 my $dom = shift;
@@ -200,7 +200,7 @@ WWW::Crawler::Mojo - A web crawling framework for Perl
             my ($bot, $enqueue, $job2, $context) = @_;
             
             $enqueue->();
-        });
+        }, '#content');
     });
     
     $bot->enqueue('http://example.com/');
@@ -314,6 +314,11 @@ argument in case a URL found.
         $context
     });
 
+Optionally you can specify a scraping target container in CSS selector.
+
+    $scrape->(sub {...}, '#container');
+    $scrape->(sub {...}, ['#container1', '#container2']);
+
 =head3 $job
 
 L<WWW::Crawler::Mojo::Job> instance.
@@ -387,10 +392,13 @@ Displays starting messages to STDOUT
 
 =head2 scrape
 
-Parses and discovers links in a web page. Each links are appended to FIFO array.
-This performs scraping.
+Parses and discovers links in a web page and CSS. This performs scraping.
+With the optional 4th argument, you can specify a CSS selector to container
+you would collect URLs within.
 
     $bot->scrape($res, $job, $cb);
+    $bot->scrape($res, $job, $cb, $selector);
+    $bot->scrape($res, $job, $cb, [$selector1, $selector2]);
 
 =head2 enqueue
 

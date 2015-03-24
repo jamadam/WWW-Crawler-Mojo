@@ -9,10 +9,11 @@ use Test::More;
 use Mojo::DOM;
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
-use Test::More tests => 54;
+use Test::More tests => 50;
 
 my @array;
 my @array2;
+my @array3;
 
 my $html = <<EOF;
 <html>
@@ -40,15 +41,20 @@ my $html = <<EOF;
 <script>
     var a = "<a href='hoge'>F</a>";
 </script>
-<a href="escaped?foo=bar&amp;baz=yada">G</a>
-<a href="//example.com">ommit scheme</a>
-<a href="http://doublehit.com/" style="background-image:url(http://example.com/bgimg2.png);"></a>
+<div id="cont1">
+    <a href="escaped?foo=bar&amp;baz=yada">G</a>
+</div>
+<div id="cont2">
+    <a href="//example.com">ommit scheme</a>
+    <a href="http://doublehit.com/" style="background-image:url(http://example.com/bgimg2.png);"></a>
+</div>
 </body>
 </html>
 EOF
 
 @array = ();
 @array2 = ();
+@array3 = ();
 {
     my $res = Mojo::Message::Response->new;
     $res->code(200);
@@ -66,7 +72,12 @@ EOF
         my ($bot, $enqueue, $job, $context) = @_;
         push(@array2, $job->literal_uri);
         push(@array2, $context);
-    }, 'body');
+    }, '#cont1');
+    $bot->scrape($res, $job, sub {
+        my ($bot, $enqueue, $job, $context) = @_;
+        push(@array3, $job->literal_uri);
+        push(@array3, $context);
+    }, ['#cont1', '#cont2']);
 }
 is shift @array, 'http://example.com/bgimg2.png', 'right url';
 is shift(@array)->tag, 'a', 'right type';
@@ -98,22 +109,19 @@ is shift @array, 'http://example.com/bgimg.png', 'right url';
 is shift(@array)->tag, 'style', 'right type';
 is shift @array, undef, 'no more urls';
 
-is shift @array2, 'http://example.com/bgimg2.png', 'right url';
-is shift(@array2)->tag, 'a', 'right type';
-is shift @array2, 'index1.html', 'right url';
-is shift(@array2)->tag, 'a', 'right type';
-is shift @array2, 'index2.html', 'right url';
-is shift(@array2)->tag, 'a', 'right type';
 is shift @array2, 'escaped?foo=bar&baz=yada', 'right url';
 is shift(@array2)->tag, 'a', 'right type';
-is shift @array2, '//example.com', 'right url';
-is shift(@array2)->tag, 'a', 'right type';
-is shift @array2, 'http://doublehit.com/', 'right url';
-is shift(@array2)->tag, 'a', 'right type';
-is shift @array2, 'index3.html', 'right url';
-is shift(@array2)->tag, 'area', 'right type';
-is shift @array2, 'http://example.com/', 'right url';
-is shift(@array2)->tag, 'area', 'right type';
+is shift @array, undef, 'no more urls';
+
+is shift @array3, 'escaped?foo=bar&baz=yada', 'right url';
+is shift(@array3)->tag, 'a', 'right type';
+is shift @array3, 'http://example.com/bgimg2.png', 'right url';
+is shift(@array3)->tag, 'a', 'right type';
+is shift @array3, '//example.com', 'right url';
+is shift(@array3)->tag, 'a', 'right type';
+is shift @array3, 'http://doublehit.com/', 'right url';
+is shift(@array3)->tag, 'a', 'right type';
+is shift @array, undef, 'no more urls';
 
 {
     my $css = <<EOF;
