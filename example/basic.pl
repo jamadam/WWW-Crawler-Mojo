@@ -4,6 +4,9 @@ use utf8;
 use WWW::Crawler::Mojo;
 use 5.10.0;
 
+@ARGV || die 'Starting URL must given';
+my @start = map {Mojo::URL->new($_)} @ARGV;
+
 my $bot = WWW::Crawler::Mojo->new;
 
 $bot->on(start => sub {
@@ -26,5 +29,5 @@ $bot->on(error => sub {
     $bot->requeue($job);
 });
 
-$bot->enqueue('http://example.com/');
+$bot->enqueue(@start);
 $bot->crawl;

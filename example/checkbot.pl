@@ -1,3 +1,7 @@
+#
+# Validate every links within html pages and csses.
+#
+
 use strict;
 use warnings;
 use utf8;
@@ -5,12 +9,12 @@ use WWW::Crawler::Mojo;
 use 5.10.0;
 use Mojo::URL;
 
-my $bot = WWW::Crawler::Mojo->new;
-my %count;
-
 @ARGV || die 'Starting URL must given';
 my @start = map {Mojo::URL->new($_)} @ARGV;
 my @hosts = map {$_->host} @start;
+
+my $bot = WWW::Crawler::Mojo->new;
+my %count;
 
 $bot->on(start => sub {
     shift->say_start;
