@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use utf8;
 use Mojo::Base -base;
-use Mojo::Util qw(md5_sum deprecated);
+use Mojo::Util qw(md5_sum);
 
 has 'closed';
 has 'context';
@@ -39,8 +39,7 @@ sub close {
 
 sub child {
     my $self = shift;
-    return __PACKAGE__->new(@_, referrer => $self, _referrer_url => $self->url,
-                                                    depth => $self->depth + 1);
+    return __PACKAGE__->new(@_, referrer => $self, depth => $self->depth + 1);
 }
 
 sub digest {
@@ -54,23 +53,6 @@ sub redirect {
     my ($self, $last, @history) = @_;
     $self->url($last);
     $self->redirect_history(\@history);
-}
-
-sub referrer_url {
-    deprecated 'referrer_url is DEPRECATED';
-    return $_[0]->{_referrer_url} = $_[1] if (scalar @_ == 2);
-    return $_[0]->{_referrer_url} //= '';
-}
-
-sub resolved_uri {
-    deprecated 'resolved_uri is DEPRECATED in favor of url';
-    return $_[0]->{resolved_uri} = $_[1] if (scalar @_ == 2);
-    return $_[0]->{resolved_uri} //= '';
-}
-
-sub original_uri {
-    deprecated 'original_uri is DEPRECATED in favor of original_url';
-    return shift->original_url(@_);
 }
 
 sub original_url {
@@ -131,13 +113,6 @@ document.
     $job1->literal_uri('./index.html');
     say $job1->literal_uri; # './index.html'
 
-=head2 resolved_uri [DEPRECATED]
-
-A L<Mojo::URL> instance of the resolved URL. Use C<url> method instead.
-
-    $job1->resolved_uri('http://example.com/');
-    say $job1->resolved_uri; # 'http://example.com/'
-
 =head2 referrer
 
 A job instance that has referred the URL.
@@ -172,13 +147,6 @@ A hash reference that contains params for L<Mojo::Transaction>.
 
     $job1->tx_params({foo => 'bar'});
     $params = $job1->tx_params;
-
-=head2 referrer_url [DEPRECATED]
-
-A L<Mojo::URL> instance for referrer URL.
-
-    $job->referrer_url($url);
-    say $job->referrer_url;
 
 =head1 METHODS
 
@@ -217,10 +185,6 @@ Replaces the resolved URL and history at once.
     $job->redirect($url2, $url3);
     say $job->url # $url2
     say $job->redirect_history # [$url1, $url3]
-
-=head2 original_uri [DEPRECATED]
-
-An alias for C<original_url>.
 
 =head2 original_url
 
