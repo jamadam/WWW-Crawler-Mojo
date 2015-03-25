@@ -33,8 +33,8 @@ $bot->on(res => sub {
     return unless grep {$_ eq $job->url->host} @hosts;
     
     for my $job2 ($scrape->()) {
-        return unless (ref $job2->context eq 'Mojo::DOM' && $job->context->tag eq 'a');
-        return unless grep {$_ eq $job2->url->host} @hosts;
+        next unless (ref $job2->context eq 'Mojo::DOM' && $job->context->tag eq 'a');
+        next unless grep {$_ eq $job2->url->host} @hosts;
         $bot->enqueue($job2);
     }
 });

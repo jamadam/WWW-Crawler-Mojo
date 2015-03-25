@@ -84,7 +84,7 @@ Restrict following URLs by depth.
         my ($bot, $scrape, $job, $res) = @_;
         
         for my $job ($scrape->()) {
-            return unless ($job->depth < 5)
+            next unless ($job->depth < 5)
             $bot->enqnene($job);
         }
     });
