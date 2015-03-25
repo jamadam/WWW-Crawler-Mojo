@@ -8,6 +8,7 @@ use WWW::Crawler::Mojo::Queue::Memory;
 use WWW::Crawler::Mojo::UserAgent;
 use WWW::Crawler::Mojo::ScraperUtil qw{
             collect_urls_css html_handlers resolve_href decoded_body};
+use Mojo::Util 'deprecated';
 use Mojo::Message::Request;
 our $VERSION = '0.13';
 
@@ -85,7 +86,7 @@ sub process_job {
         }
         
         $self->emit('res',
-                sub { $self->scrape($res, $job, $_[0], $_[1]) }, $job, $res);
+                sub { $self->scrape($res, $job, $_[0]) }, $job, $res);
         
         $job->close;
     });
@@ -104,7 +105,11 @@ EOF
 }
 
 sub scrape {
-    my ($self, $res, $job, $cb, $contexts) = @_;
+    die 'scrape method with 4 argments has been removed'
+                                    if (scalar @_ == 5 || ref $_[3] eq 'CODE');
+    
+    my ($self, $res, $job, $contexts) = @_;
+    my @ret;
     
     return unless $res->headers->content_length && $res->body;
     
@@ -121,7 +126,7 @@ sub scrape {
             $dom->find($selector)->each(sub {
                 my $dom = shift;
                 for ($handlers->{$selector}->($dom)) {
-                    $self->_delegate_enqueue($_, $dom, $job, $base, $cb);
+                    push(@ret, $self->_make_child($_, $dom, $job, $base));
                 }
             });
         }
@@ -129,13 +134,15 @@ sub scrape {
     
     if ($type && $type =~ qr{text/css}) {
         for (collect_urls_css(decoded_body($res))) {
-            $self->_delegate_enqueue($_, $job->url, $job, $base, $cb);
+            push(@ret, $self->_make_child($_, $job->url, $job, $base));
         }
     }
-};
+    
+    return @ret;
+}
 
-sub _delegate_enqueue {
-    my ($self, $url, $context, $job, $base, $cb) = @_;
+sub _make_child {
+    my ($self, $url, $context, $job, $base) = @_;
     my $method, my $params;
     
     return unless $url;
@@ -145,7 +152,8 @@ sub _delegate_enqueue {
     
     return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});
     
-    my $child = $job->child(url => $resolved, literal_uri => $url);
+    my $child =
+        $job->child(url => $resolved, literal_uri => $url, context => $context);
     
     $child->method($method) if $method;
     
@@ -157,8 +165,7 @@ sub _delegate_enqueue {
         }
     }
     
-    $cb ||= sub { $_[1]->() };
-    $cb->($self, sub { $self->enqueue($_[0] || $child) }, $child, $context);
+    return $child;
 }
 
 sub enqueue {
@@ -196,11 +203,7 @@ WWW::Crawler::Mojo - A web crawling framework for Perl
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
         
-        $scrape->(sub {
-            my ($bot, $enqueue, $job2, $context) = @_;
-            
-            $enqueue->();
-        }, '#content');
+        $bot->enqueue($_) for $scrape->('#context');
     });
     
     $bot->enqueue('http://example.com/');
@@ -281,9 +284,7 @@ Emitted when crawler got response from server. The callback takes 4 arguments.
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
         if (...) {
-            $scrape->(sub {
-                # called when URL found
-            });
+            $bot->enqueue($_) for $scrape->();
         } else {
             # DO NOTHING
         }
@@ -295,29 +296,17 @@ L<WWW::Crawler::Mojo> instance.
 
 =head3 $scrape
 
-Scraper code reference for current document. The code takes a callback for
-argument in case a URL found.
+Scraper code reference for current document. The code takes optional argument
+CSS selector for context and returns new jobs.
 
-    $scrape->(sub {
-        my ($bot, $enqueue, $job, $context) = @_;
-        
-        $bot # WWW::Crawler::Mojo instance.
-        
-        # Enqueue code reference for current URL. This is a shorthand of..
-        # $bot->enqueue($job)
-        $enqueue->();
-        
-        # WWW::Crawler::Mojo::Job instance.
-        $job
-        
-        # Either Mojo::DOM or Mojo::URL instance.
-        $context
-    });
+    for my $job ($scrape->($context)) {
+        $bot->enqueue($job)
+    }
 
 Optionally you can specify a scraping target container in CSS selector.
 
-    $scrape->(sub {...}, '#container');
-    $scrape->(sub {...}, ['#container1', '#container2']);
+    @jobs = $scrape->('#container');
+    @jobs = $scrape->(['#container1', '#container2']);
 
 =head3 $job
 
@@ -396,9 +385,9 @@ Parses and discovers links in a web page and CSS. This performs scraping.
 With the optional 4th argument, you can specify a CSS selector to container
 you would collect URLs within.
 
-    $bot->scrape($res, $job, $cb);
-    $bot->scrape($res, $job, $cb, $selector);
-    $bot->scrape($res, $job, $cb, [$selector1, $selector2]);
+    $bot->scrape($res, $job, );
+    $bot->scrape($res, $job, $selector);
+    $bot->scrape($res, $job, [$selector1, $selector2]);
 
 =head2 enqueue
 

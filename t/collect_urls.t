@@ -63,21 +63,18 @@ EOF
     $res->body(Mojo::DOM->new($html));
     my $job = WWW::Crawler::Mojo::Job->new(url => 'http://example.com/');
     my $bot = WWW::Crawler::Mojo->new;
-    $bot->scrape($res, $job, sub {
-        my ($bot, $enqueue, $job, $context) = @_;
-        push(@array, $job->literal_uri);
-        push(@array, $context);
-    });
-    $bot->scrape($res, $job, sub {
-        my ($bot, $enqueue, $job, $context) = @_;
-        push(@array2, $job->literal_uri);
-        push(@array2, $context);
-    }, '#cont1');
-    $bot->scrape($res, $job, sub {
-        my ($bot, $enqueue, $job, $context) = @_;
-        push(@array3, $job->literal_uri);
-        push(@array3, $context);
-    }, ['#cont1', '#cont2']);
+    for ($bot->scrape($res, $job)) {
+        push(@array, $_->literal_uri);
+        push(@array, $_->context);
+    }
+    for ($bot->scrape($res, $job, '#cont1')) {
+        push(@array2, $_->literal_uri);
+        push(@array2, $_->context);
+    }
+    for ($bot->scrape($res, $job, ['#cont1', '#cont2'])) {
+        push(@array3, $_->literal_uri);
+        push(@array3, $_->context);
+    }
 }
 is shift @array, 'http://example.com/bgimg2.png', 'right url';
 is shift(@array)->tag, 'a', 'right type';
@@ -182,10 +179,10 @@ EOF
     $res->body(Mojo::DOM->new($xhtml));
     my $job = WWW::Crawler::Mojo::Job->new(url => 'http://example.com/');
     my $bot = WWW::Crawler::Mojo->new;
-    $bot->scrape($res, $job, sub {
-        my ($bot, $enqueue, $job, $context) = @_;
+    for ($bot->scrape($res, $job)) {
+        $bot->enqueue($_);
         push(@array, $job->literal_uri);
-        push(@array, $context);
-    });
+        push(@array, $job->context);
+    }
 }
 is(scalar @array, 0, 'right length');

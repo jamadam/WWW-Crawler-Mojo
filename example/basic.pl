@@ -16,10 +16,7 @@ $bot->on(start => sub {
 $bot->on(res => sub {
     my ($bot, $scrape, $job, $res) = @_;
     say sprintf('fetching %s resulted status %s', $job->url, $res->code);
-    $scrape->(sub {
-        my ($bot, $enqueue, $job2, $context) = @_;
-        $enqueue->();
-    });
+    $bot->enqueue($_) for $scrape->();
 });
 
 $bot->on(error => sub {

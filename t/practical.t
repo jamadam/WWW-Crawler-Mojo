@@ -39,11 +39,10 @@ $bot->on('res' => sub {
     my ($bot, $scrape, $job, $res) = @_;
     $urls{$job->url} = $job;
     return unless $res->code == 200;
-    $scrape->(sub {
-        my ($bot, $enqueue, $job, $context) = @_;
-        $enqueue->();
-        $contexts{$job} = $context;
-    });
+    for my $job ($scrape->()) {
+        $bot->enqueue($job);
+        $contexts{$job} = $job->context;
+    }
 });
 
 $bot->init;

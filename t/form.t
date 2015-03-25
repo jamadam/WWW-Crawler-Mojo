@@ -336,7 +336,9 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'));
+    for ($bot->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'))) {
+        $bot->enqueue($_);
+    }
     
     my $job;
     $job = $bot->queue->dequeue;
@@ -379,7 +381,9 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'));
+    for ($bot->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'))) {
+        $bot->enqueue($_);
+    }
     
     my $job;
     $job = $bot->queue->dequeue;

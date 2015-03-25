@@ -38,11 +38,10 @@ EOF
     $res->body(Mojo::DOM->new($xml));
     my $job = WWW::Crawler::Mojo::Job->new(url => 'http://example.com/');
     my $bot = WWW::Crawler::Mojo->new;
-    $bot->scrape($res, $job, sub {
-        my ($bot, $enqueue, $job, $context) = @_;
+    for my $job ($bot->scrape($res, $job)) {
         push(@array, $job->literal_uri);
-        push(@array, $context);
-    });
+        push(@array, $job->context);
+    }
 }
 is shift @array, 'http://example.com/1', 'right url';
 is shift(@array)->tag, 'urlset', 'right type';
@@ -71,10 +70,9 @@ EOF
     $res->body(Mojo::DOM->new($xml));
     my $job = WWW::Crawler::Mojo::Job->new(url => 'http://example.com/');
     my $bot = WWW::Crawler::Mojo->new;
-    $bot->scrape($res, $job, sub {
-        my ($bot, $enqueue, $job, $context) = @_;
+    for my $job ($bot->scrape($res, $job)) {
         push(@array, $job->literal_uri);
-        push(@array, $context);
-    });
+        push(@array, $job->context);
+    }
 }
 is shift(@array), undef, 'right type';

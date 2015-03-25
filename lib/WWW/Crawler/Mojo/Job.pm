@@ -6,6 +6,7 @@ use Mojo::Base -base;
 use Mojo::Util qw(md5_sum deprecated);
 
 has 'closed';
+has 'context';
 has depth => 0;
 has 'literal_uri';
 has 'method';
@@ -96,6 +97,13 @@ WWW::Crawler::Mojo::Job - Single crawler job
 This class represents a single crawler job.
 
 =head1 ATTRIBUTES
+
+=head2 context
+
+Whether L<Mojo::DOM> or L<Mojo::URL> instance that the job is referrered by.
+
+    $job->context($dom);
+    say $job->context;
 
 =head2 closed
 

@@ -38,6 +38,7 @@ my %urls;
 $bot->on('res' => sub {
     my ($bot, $scrape, $job, $res) = @_;
     $scrape->();
+    $bot->enqueue($_) for ($scrape->());
     $urls{$job->url} = $job;
 });
 

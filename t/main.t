@@ -45,7 +45,9 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'));
+    for ($bot->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'))) {
+        $bot->enqueue($_);
+    }
     
     my $job;
     $job = $bot->queue->dequeue;
@@ -77,7 +79,9 @@ EOF
     
     my $bot2 = WWW::Crawler::Mojo->new;
     $bot2->init;
-    $bot2->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/a'));
+    for ($bot2->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/a'))) {
+        $bot2->enqueue($_);
+    }
     
     $job = $bot2->queue->dequeue;
     $job = $bot2->queue->dequeue;
@@ -88,7 +92,9 @@ EOF
     
     my $bot3 = WWW::Crawler::Mojo->new;
     $bot3->init;
-    $bot3->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'https://example.com/'));
+    for ($bot3->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'https://example.com/'))) {
+        $bot3->enqueue($_);
+    }
     
     $job = $bot3->queue->dequeue;
     $job = $bot3->queue->dequeue;
@@ -124,7 +130,9 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'));
+    for ($bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'))) {
+        $bot->enqueue($_);
+    }
     
     my $job;
     $job = $bot->queue->dequeue;
@@ -133,7 +141,9 @@ EOF
     
     $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/'));
+    for ($bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/'))) {
+        $bot->enqueue($_);
+    }
     
     $job = $bot->queue->dequeue;
     is $job->literal_uri, 'css1.css', 'right url';
@@ -160,7 +170,9 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'));
+    for ($bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'))) {
+        $bot->enqueue($_);
+    }
     
     my $job;
     $job = $bot->queue->dequeue;
@@ -169,7 +181,9 @@ EOF
     
     $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/'));
+    for ($bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/'))) {
+        $bot->enqueue($_);
+    }
     
     $job = $bot->queue->dequeue;
     is $job->literal_uri, 'css1.css', 'right url';
@@ -196,7 +210,9 @@ EOF
     
     my $bot = WWW::Crawler::Mojo->new;
     $bot->init;
-    $bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'));
+    for ($bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'))) {
+        $bot->enqueue($_);
+    }
     
     my $job;
     $job = $bot->queue->dequeue;

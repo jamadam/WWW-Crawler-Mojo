@@ -32,20 +32,11 @@ $bot->on(res => sub {
     return if ($res->code !~ qr{[2]..});
     return unless grep {$_ eq $job->url->host} @hosts;
     
-    if ($job->url =~ /product/) {
-        $scrape->(sub {
-            my ($bot, $enqueue, $job2, $context) = @_;
-            return unless (ref $context eq 'Mojo::DOM' && $context->tag eq 'a');
-            say qq!"@{[ $job->url ]}"\t"@{[ $job2->url ]}"!;
-        });
-    }
-    
-    $scrape->(sub {
-        my ($bot, $enqueue, $job2, $context) = @_;
-        return unless (ref $context eq 'Mojo::DOM' && $context->tag eq 'a');
+    for my $job2 ($scrape->()) {
+        return unless (ref $job2->context eq 'Mojo::DOM' && $job->context->tag eq 'a');
         return unless grep {$_ eq $job2->url->host} @hosts;
-        $enqueue->();
-    });
+        $bot->enqueue($job2);
+    }
 });
 
 $bot->enqueue(@start);

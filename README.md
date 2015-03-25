@@ -40,13 +40,12 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
     
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
-
-        $cb = sub {
-            my ($bot, $enqueue, $job, $context) = @_;
-            $enqueue->() if (...); # enqueue this job
-        }
         
-        $scrape->($cb) if (...); # collect URLs from this document
+        for my $job ($scrape->($css_selector)) {
+        	if (...) {
+            	$bot->enqueue($job);
+            }
+        }
     });
     
     $bot->enqueue('http://example.com/');
@@ -68,7 +67,7 @@ Restricting scraping URLs by status code.
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
         return unless ($res->code == 200);
-        $scrape->();
+        $bot->enqnene($_) for $scrape->();
     });
 
 Restricting scraping URLs by host.
@@ -76,7 +75,7 @@ Restricting scraping URLs by host.
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
         return unless if ($job->url->host eq 'example.com');
-        $scrape->();
+        $bot->enqnene($_) for $scrape->();
     });
 
 Restrict following URLs by depth.
@@ -84,11 +83,10 @@ Restrict following URLs by depth.
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
         
-        $scrape->(sub {
-            my ($bot, $enqueue, $job, $context) = @_;
+        for my $job ($scrape->()) {
             return unless ($job->depth < 5)
-            $enqueue->();
-        });
+            $bot->enqnene($job);
+        }
     });
 
 Restrict following URLs by host.
@@ -96,10 +94,9 @@ Restrict following URLs by host.
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
         
-        $scrape->(sub {
-            my ($bot, $enqueue, $job, $context) = @_;
-            $enqueue->() if $job->url->host eq 'example.com';
-        });
+        for my $job ($scrape->()) {
+            $bot->enqnene($job) if $job->url->host eq 'example.com';
+        }
     });
 
 Restrict following URLs by referrer's host.
@@ -107,10 +104,9 @@ Restrict following URLs by referrer's host.
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
         
-        $scrape->(sub {
-            my ($bot, $enqueue, $job, $context) = @_;
-            $enqueue->() if $job->referrer->url->host eq 'example.com';
-        });
+        for my $job ($scrape->()) {
+            $bot->enqnene($job) if $job->referrer->url->host eq 'example.com';
+        }
     });
 
 Excepting following URLs by path.
@@ -118,18 +114,16 @@ Excepting following URLs by path.
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
         
-        $scrape->(sub {
-            my ($bot, $enqueue, $job, $context) = @_;
-            $enqueue->() unless ($job->url->path =~ qr{^/foo/});
-        });
+        for my $job ($scrape->()) {
+            $bot->enqnene($job) unless ($job->url->path =~ qr{^/foo/});
+        }
     });
 
 Crawl only preset URLs.
 
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
-        
-        $scrape->(sub {});
+        # DO SOMETHING
     });
 	
 	$bot->enqueue(

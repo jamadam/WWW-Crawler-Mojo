@@ -49,17 +49,14 @@ $bot->on(res => sub {
     
     return unless grep {$_ eq $job->url->host} @hosts;
     
-    $scrape->(sub {
-        my ($bot, $enqueue, $job2, $context) = @_;
-        
-        if (security_warning($job2, $context)) {
+    for my $job2 ($scrape->()) {
+        if (security_warning($job2, $job2->context)) {
             $count{'WARNING'}++;
             my $msg = 'WARNING : Cross-scheme resource found';
             report_stdout($msg, $job2->url, $job->url);
         }
-        
-        $enqueue->() ;
-    });
+        $bot->enqueue($job2);
+    }
 });
 
 $bot->shuffle(5);
