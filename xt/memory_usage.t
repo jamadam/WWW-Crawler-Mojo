@@ -52,7 +52,7 @@ my $last_job;
 $bot->on('res' => sub {
     my ($bot, $scrape, $job, $res) = @_;
     $job->url($job->url->to_string);
-    $enqueue->($_) for $scrape->();
+    $bot->enqueue($_) for $scrape->();
     $last_job = $job;
 });
 $bot->init;
