@@ -35,7 +35,7 @@ This class represents a FIFO queue.
 
 =head2 dequeue
 
-Shift the oldest job and returns it. 
+Shifts the oldest job and returns it. 
 
     my $job = $queue->deuque;
 
@@ -68,7 +68,7 @@ Pushes a job regardless of the job has been enqueued before or not.
 
 =head2 shuffle
 
-Shuffle the queue array.
+Shuffles the queue array.
 
     $queue->shuffle;
 

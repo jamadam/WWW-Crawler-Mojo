@@ -357,19 +357,19 @@ implements the following new ones.
 
 =head2 crawl
 
-Start crawling loop.
+Starts crawling loop.
 
     $bot->crawl;
 
 =head2 init
 
-Initialize crawler settings.
+Initializes crawler settings.
 
     $bot->init;
 
 =head2 process_job
 
-Process a job.
+Processes a job.
 
     $bot->process_job;
 
@@ -391,7 +391,7 @@ you would collect URLs within.
 
 =head2 enqueue
 
-Append one or more URLs or L<WWW::Crawler::Mojo::Job> objects.
+Appends one or more URLs or L<WWW::Crawler::Mojo::Job> objects.
 
     $bot->enqueue('http://example.com/index1.html');
 
@@ -409,7 +409,7 @@ OR
 
 =head2 requeue
 
-Append one or more URLs or jobs for re-try. This accepts same arguments as
+Appends one or more URLs or jobs for re-try. This accepts same arguments as
 enqueue method.
 
     $self->on(error => sub {

@@ -118,7 +118,7 @@ A number of current connections per host.
 
 =head2 keep_credentials
 
-Set true to activate the feature. Defaults to 1.
+Sets true to activate the feature. Defaults to 1.
 
     $ua->keep_credentials(1);
 
@@ -128,7 +128,7 @@ WWW::Crawler::Mojo::UserAgent inherits all methods from L<Mojo::UserAgent>.
 
 =head2 active_host
 
-Maintenance the numbers of active connections.
+Maintenances the numbers of active connections.
 
     $ua->active_host($url, 1);
     $ua->active_host($url, -1);

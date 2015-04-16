@@ -82,21 +82,21 @@ This class represents a single crawler job.
 
 =head2 context
 
-Whether L<Mojo::DOM> or L<Mojo::URL> instance that the job is referrered by.
+Either L<Mojo::DOM> or L<Mojo::URL> instance that the job is referrered by.
 
     $job->context($dom);
     say $job->context;
 
 =head2 closed
 
-A flag indecates weither the job is closed or not.
+A flag indecates whether the job is closed or not.
 
     $job->closed(1);
     say $job->closed;
 
 =head2 depth
 
-The depth of job in referrer series.
+The depth of the job in referrer series.
 
     my $job1 = WWW::Crawler::Mojo::Job->new;
     my $job2 = $job1->child;
@@ -158,13 +158,13 @@ Clones the job.
 
 =head2 close
 
-Close the job and cut the referrer series.
+Closes the job and cuts the referrer series.
 
     $job->close;
 
 =head2 child
 
-Instantiate a child job by parent job. The parent URL is set to child referrer.
+Instantiates a child job by parent job. The parent URL is set to child referrer.
 
     my $job1 = WWW::Crawler::Mojo::Job->new(url => 'http://example.com/1');
     my $job2 = $job1->child(url => 'http://example.com/2');
@@ -172,7 +172,7 @@ Instantiate a child job by parent job. The parent URL is set to child referrer.
 
 =head2 digest
 
-Generate digest string with C<url>, C<method>, C<tx_params> attributes.
+Generates digest string with C<url>, C<method>, C<tx_params> attributes.
 
     say $job->digest;
 
@@ -196,7 +196,7 @@ of C<redirect_histroy> attribute, otherwise returns C<url> attribute.
 
 =head2 upgrade
 
-Instanciate a job with string or a L<Mojo::URL> instance.
+Instanciates a job with string or a L<Mojo::URL> instance.
 
 =head1 AUTHOR
 
