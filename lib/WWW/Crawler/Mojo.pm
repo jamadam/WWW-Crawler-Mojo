@@ -36,7 +36,7 @@ sub crawl {
 sub init {
     my ($self) = @_;
     
-    $self->on('empty', sub { say "Queue is drained out."; Mojo::IOLoop->reset })
+    $self->on('empty', sub { say "Queue is drained out."; $self->stop })
                                         unless $self->has_subscribers('empty');
     $self->on('error', sub { say "An error occured during crawling $_[0]: $_[1]" })
                                         unless $self->has_subscribers('error');
@@ -45,7 +45,9 @@ sub init {
     $self->ua->transactor->name($self->ua_name);
     $self->ua->max_redirects(5);
     
-    Mojo::IOLoop->recurring($self->clock_speed => sub {
+    $self->{_loop_ids} = [];
+    
+    my $id = Mojo::IOLoop->recurring($self->clock_speed => sub {
         my $queue = $self->queue;
         
         if (!$queue->length) {
@@ -59,10 +61,14 @@ sub init {
         $self->process_job($queue->dequeue);
     });
     
+    push($self->{_loop_ids}, $id);
+    
     if ($self->shuffle) {
-        Mojo::IOLoop->recurring($self->shuffle => sub {
+        my $id = Mojo::IOLoop->recurring($self->shuffle => sub {
             $self->queue->shuffle;
         });
+        
+        push($self->{_loop_ids}, $id);
     }
 }
 
@@ -139,6 +145,11 @@ sub scrape {
     }
     
     return @ret;
+}
+
+sub stop {
+    Mojo::IOLoop->remove($_) for (@{shift->{_loop_ids}});
+    Mojo::IOLoop->stop;
 }
 
 sub _make_child {
@@ -388,6 +399,12 @@ you would collect URLs within.
     $bot->scrape($res, $job, );
     $bot->scrape($res, $job, $selector);
     $bot->scrape($res, $job, [$selector1, $selector2]);
+
+=head2 stop
+
+Stop crawling.
+
+    $bot->stop;
 
 =head2 enqueue
 

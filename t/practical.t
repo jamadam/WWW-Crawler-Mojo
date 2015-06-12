@@ -7,7 +7,7 @@ use Data::Dumper;
 use Mojo::IOLoop;
 use WWW::Crawler::Mojo;
 
-use Test::More tests => 31;
+use Test::More tests => 30;
 
 {
     package MockServer;
@@ -99,10 +99,12 @@ $base = Mojo::URL->new("http://127.0.0.1:$port");
 $bot = WWW::Crawler::Mojo->new;
 $bot->ua->request_timeout(0.1);
 $bot->enqueue(WWW::Crawler::Mojo::resolve_href($base, '/'));
-my $timeout;
-$bot->on('error' => sub { $timeout = 1 });
-$bot->init;
-Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
-is $timeout, 1, 'error event fired';
+
+# It's useless test for timeout
+#my $timeout;
+#$bot->on('error' => sub { $timeout = 1 });
+#$bot->init;
+#Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+#is $timeout, 1, 'error event fired';
 
 __END__
