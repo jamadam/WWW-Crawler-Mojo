@@ -1,5 +1,7 @@
 #
-# Collect hyper links and outputs tab separated values.
+# Collect URLs.
+#
+# perl ./example/pages.pl http://example.com/
 #
 
 use strict;
@@ -33,7 +35,9 @@ $bot->on(res => sub {
     return unless grep {$_ eq $job->url->host} @hosts;
     
     for my $job2 ($scrape->()) {
-        next unless (ref $job2->context eq 'Mojo::DOM' && $job->context->tag eq 'a');
+        state $found = {};
+        next unless (ref $job2->context eq 'Mojo::DOM' && $job2->context->tag eq 'a');
+        say $job2->url and $found->{$job2->url}++ unless ($found->{$job2->url} ||= 0) == 1;
         next unless grep {$_ eq $job2->url->host} @hosts;
         $bot->enqueue($job2);
     }
