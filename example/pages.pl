@@ -23,7 +23,7 @@ $bot->on(start => sub {
 
 $bot->on(error => sub {
     my ($bot, $msg, $job) = @_;
-    $bot->requeue->($job);
+    $bot->requeue($job);
 });
 
 $bot->on(res => sub {
