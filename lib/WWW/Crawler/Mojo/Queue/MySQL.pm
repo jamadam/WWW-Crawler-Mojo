@@ -7,26 +7,32 @@ use Mojo::mysql;
 use Storable qw(freeze thaw );
 
 has table_name => 'jobs';
-has jobs => '';
+has 'jobs';
 has blob => 0;
 
 sub new {
-    my ($self, $connection, $table) = @_;
+    my ($class, $conn, %opts) = @_;
+    my $self = $class->SUPER::new(jobs => Mojo::mysql->new($conn)->db, %opts);
+    $self->init;
+    return $self;
+}
 
-    die "USAGE: WWW::Crawler::Mojo::Queue::MySQL->new( 'mysql://user:pass\@server/db', 'jobs_table' ) " unless $connection;
+sub from_dbi_dsn {
+    my ($class, $dsn, %opts) = @_;
+    my $self = $class->SUPER::new(jobs => Mojo::mysql->new->dsn($dsn)->db, %opts);
+    $self->init;
+    return $self;
+}
 
-    my $object = shift->SUPER::new( jobs => Mojo::mysql->new( $connection )->db );
-    
-    $object->table_name($table) if $table;
+sub init {
+    my $self = shift;
+    my $table = $self->table_name;
 
-    $table = $object->table_name;
-
-    unless ($object->jobs->query("show tables LIKE '$table'" )->rows) {
-
-        $object->jobs->query( "create table $table (id integer auto_increment primary key, digest varchar(255) , data blob, completed boolean , unique key digested(digest, completed))");
+    unless ($self->jobs->query("show tables LIKE '$table'" )->rows) {
+        $self->jobs->query( "create table $table (id integer auto_increment primary key, digest varchar(255) , data blob, completed boolean , unique key digested(digest, completed))");
     }
     
-    return $object;
+    return $self;
 }
 
 sub empty {
