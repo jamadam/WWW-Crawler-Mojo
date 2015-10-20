@@ -9,7 +9,7 @@ use Test::More;
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Queue::MySQL;
 use WWW::Crawler::Mojo::Job;
- 
+
 my $queue = WWW::Crawler::Mojo::Queue::MySQL->new('mysql://user:pass@server/db');
 $queue->empty;
 
@@ -28,7 +28,7 @@ $queue->enqueue($job2);
 is ref $queue->next(1), 'WWW::Crawler::Mojo::Job';
 is $queue->next(1)->url, 'http://example.com/2';
 is $queue->length, 2, 'right number 2';
- 
+
 $job1 = $queue->dequeue;
 
 is $job1->url , 'http://example.com/', "1st job being processed";
