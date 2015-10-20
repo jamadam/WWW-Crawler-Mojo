@@ -31,7 +31,9 @@ sub new {
 }
 sub empty {
 
-	shift->jobs->query( 'delete from jobs');
+	my $self = shift;
+	my $table = $self->table_name;
+	$self->jobs->query( "delete from $table");
 }
 
 has redundancy => sub {
@@ -59,9 +61,13 @@ sub dequeue {
 	my $self = shift;
 	my $table = $self->table_name;
 
-	my $last = $self->jobs->query("select id, data from $table where completed = 0 order by id limit 1" )->hash;
-	$self->jobs->query("update $table set completed = 1 where id = ?", $last->{id}) if $last->{id};
-	
+	my $last;
+	eval {
+		my $tx = $self->jobs->begin;
+		$last = $self->jobs->query("select id, data from $table where completed = 0 order by id limit 1" )->hash;
+		$self->jobs->query("update $table set completed = 1 where id = ?", $last->{id}) if $last->{id};
+		$tx->commit;
+	};
     return ($last->{id}) ? $self->deserialize($last->{data}) :  "";
 }
  
@@ -89,8 +95,6 @@ sub next {
  
 sub requeue {
     my ($self, $job ) = @_;
-	my $table = $self->table_name;
-	$self->jobs->query("delete from $table where completed = 1 and digest = ?", $job->digest);
     $self->_enqueue($job, 1);
 }
  
@@ -100,7 +104,12 @@ sub _enqueue {
     my ($self, $job, $requeue) = @_;
 	my $table = $self->table_name;
     return if (!$requeue && $self->redundancy->($job));
-	$self->jobs->query("insert into $table (digest, data, completed) values(?,?,?)", $job->digest, $self->serialize($job), 0 );
+	eval {
+		my $tx = $self->jobs->begin;
+		$self->jobs->query("delete from $table where completed = 1 and digest = ?", $job->digest) if $requeue;
+		$self->jobs->query("insert into $table (digest, data, completed) values(?,?,?)", $job->digest, $self->serialize($job), 0 );
+		$tx->commit;
+	};
     return $self;
 }
  
