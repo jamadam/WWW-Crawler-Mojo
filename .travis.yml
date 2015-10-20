@@ -4,7 +4,7 @@ perl:
   - "5.18"
   - "5.16"
 install:
-  - "cpanm -n Mojo::mysql"
+  - "cpanm -n Mojo::mysql Test::mysqld"
   - "cpanm -n --installdeps ."
 notifications:
   email: sugama@jamadam.com
