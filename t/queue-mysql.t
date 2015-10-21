@@ -13,7 +13,7 @@ use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Queue::MySQL;
 use WWW::Crawler::Mojo::Job;
 
-my $queue = WWW::Crawler::Mojo::Queue::MySQL->new($ENV{TEST_ONLINE});
+my $queue = WWW::Crawler::Mojo::Queue::MySQL->new($ENV{TEST_ONLINE}, table_name =>"testing_jobs" );
 $queue->empty;
 
 my $job1 = WWW::Crawler::Mojo::Job->new;
