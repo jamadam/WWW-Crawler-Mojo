@@ -6,14 +6,14 @@ use File::Spec::Functions qw{catdir splitdir rel2abs canonpath};
 use lib catdir(dirname(__FILE__), '../lib');
 use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
-use Test::mysqld;
+
+plan skip_all => 'set TEST_ONLINE to enable this test' unless $ENV{TEST_ONLINE};
+
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Queue::MySQL;
 use WWW::Crawler::Mojo::Job;
-  
-my $mysqld = Test::mysqld->new(my_cnf => {'skip-networking' => ''});
 
-my $queue = WWW::Crawler::Mojo::Queue::MySQL->from_dbi_dsn($mysqld->dsn);
+my $queue = WWW::Crawler::Mojo::Queue::MySQL->new($ENV{TEST_ONLINE});
 $queue->empty;
 
 my $job1 = WWW::Crawler::Mojo::Job->new;
@@ -54,5 +54,5 @@ $job1 = $queue->dequeue;
 is $job1->url , 'http://example.com/', "1st job being processed again";
 $queue->requeue($job1);
 is $queue->length, 2, 'still requeue will increment queue by 1';
-done_testing;
 
+done_testing;

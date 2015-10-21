@@ -13,19 +13,6 @@ has blob => 0;
 sub new {
     my ($class, $conn, %opts) = @_;
     my $self = $class->SUPER::new(jobs => Mojo::mysql->new($conn)->db, %opts);
-    $self->init;
-    return $self;
-}
-
-sub from_dbi_dsn {
-    my ($class, $dsn, %opts) = @_;
-    my $self = $class->SUPER::new(jobs => Mojo::mysql->new->dsn($dsn)->db, %opts);
-    $self->init;
-    return $self;
-}
-
-sub init {
-    my $self = shift;
     my $table = $self->table_name;
 
     unless ($self->jobs->query("show tables LIKE '$table'" )->rows) {
