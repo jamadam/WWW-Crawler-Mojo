@@ -16,50 +16,50 @@ has 'tx_params';
 has 'url';
 
 sub upgrade {
-    my ($class, $job) = @_;
-    
-    if (! ref $job || ref $job ne __PACKAGE__) {
-        my $url = !ref $job ? Mojo::URL->new($job) : $job;
-        $job = $class->new(url => $url);
-    }
-    
-    return $job;
+  my ($class, $job) = @_;
+
+  if (!ref $job || ref $job ne __PACKAGE__) {
+    my $url = !ref $job ? Mojo::URL->new($job) : $job;
+    $job = $class->new(url => $url);
+  }
+
+  return $job;
 }
 
 sub clone {
-    my $self = shift;
-    return __PACKAGE__->new(%$self);
+  my $self = shift;
+  return __PACKAGE__->new(%$self);
 }
 
 sub close {
-    my $self = shift;
-    $self->{closed} = 1;
-    $self->{referrer} = undef;
+  my $self = shift;
+  $self->{closed}   = 1;
+  $self->{referrer} = undef;
 }
 
 sub child {
-    my $self = shift;
-    return __PACKAGE__->new(@_, referrer => $self, depth => $self->depth + 1);
+  my $self = shift;
+  return __PACKAGE__->new(@_, referrer => $self, depth => $self->depth + 1);
 }
 
 sub digest {
-    my $self = shift;
-    my $md5_seed = $self->url->to_string. ($self->method || '');
-    $md5_seed .= $self->tx_params->to_string if ($self->tx_params);
-    return md5_sum($md5_seed);
+  my $self = shift;
+  my $md5_seed = $self->url->to_string . ($self->method || '');
+  $md5_seed .= $self->tx_params->to_string if ($self->tx_params);
+  return md5_sum($md5_seed);
 }
 
 sub redirect {
-    my ($self, $last, @history) = @_;
-    $self->url($last);
-    $self->redirect_history(\@history);
+  my ($self, $last, @history) = @_;
+  $self->url($last);
+  $self->redirect_history(\@history);
 }
 
 sub original_url {
-    my $self = shift;
-    my @histry = @{$self->redirect_history};
-    return $self->url unless (@histry);
-    return $histry[$#histry];
+  my $self   = shift;
+  my @histry = @{$self->redirect_history};
+  return $self->url unless (@histry);
+  return $histry[$#histry];
 }
 
 1;

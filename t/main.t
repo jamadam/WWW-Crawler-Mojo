@@ -13,7 +13,7 @@ use Mojo::Message::Response;
 use Test::More tests => 33;
 
 {
-    my $html = <<EOF;
+  my $html = <<EOF;
 <html>
 <head>
     <link rel="stylesheet" type="text/css" href="css1.css" />
@@ -36,81 +36,96 @@ use Test::More tests => 33;
 </body>
 </html>
 EOF
-    
-    my $res = Mojo::Message::Response->new;
-    $res->code(200);
-    $res->headers->content_length(length($html));
-    $res->body($html);
-    $res->headers->content_type('text/html');
-    
-    my $bot = WWW::Crawler::Mojo->new;
-    $bot->init;
-    for ($bot->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'))) {
-        $bot->enqueue($_);
-    }
-    
-    my $job;
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, 'index1.html', 'right url';
-    is $job->url, 'http://example.com/index1.html', 'right url';
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, 'index2.html', 'right url';
-    is $job->url, 'http://example.com/index2.html', 'right url';
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, 'index3.html', 'right url';
-    is $job->url, 'http://example.com/index3.html', 'right url';
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, 'css1.css', 'right url';
-    is $job->url, 'http://example.com/css1.css', 'right url';
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, 'css2.css', 'right url';
-    is $job->url, 'http://example.com/css2.css', 'right url';
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, 'js1.js', 'right url';
-    is $job->url, 'http://example.com/js1.js', 'right url';
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, 'js2.js', 'right url';
-    is $job->url, 'http://example.com/js2.js', 'right url';
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, '//example.com/js3.js', 'right url';
-    is $job->url, 'http://example.com/js3.js', 'right url';
-    $job = $bot->queue->dequeue;
-    is $job, undef, 'no more urls';
-    
-    my $bot2 = WWW::Crawler::Mojo->new;
-    $bot2->init;
-    for ($bot2->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/a'))) {
-        $bot2->enqueue($_);
-    }
-    
-    $job = $bot2->queue->dequeue;
-    $job = $bot2->queue->dequeue;
-    $job = $bot2->queue->dequeue;
-    $job = $bot2->queue->dequeue;
-    is $job->literal_uri, 'css1.css', 'right url';
-    is $job->url, 'http://example.com/a/css1.css', 'right url';
-    
-    my $bot3 = WWW::Crawler::Mojo->new;
-    $bot3->init;
-    for ($bot3->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'https://example.com/'))) {
-        $bot3->enqueue($_);
-    }
-    
-    $job = $bot3->queue->dequeue;
-    $job = $bot3->queue->dequeue;
-    $job = $bot3->queue->dequeue;
-    $job = $bot3->queue->dequeue;
-    is $job->literal_uri, 'css1.css', 'right url';
-    is $job->url, 'https://example.com/css1.css', 'right url';
-    $job = $bot3->queue->dequeue;
-    $job = $bot3->queue->dequeue;
-    $job = $bot3->queue->dequeue;
-    $job = $bot3->queue->dequeue;
-    is $job->literal_uri, '//example.com/js3.js', 'right url';
-    is $job->url, 'https://example.com/js3.js', 'right url';
+
+  my $res = Mojo::Message::Response->new;
+  $res->code(200);
+  $res->headers->content_length(length($html));
+  $res->body($html);
+  $res->headers->content_type('text/html');
+
+  my $bot = WWW::Crawler::Mojo->new;
+  $bot->init;
+  for (
+    $bot->scrape(
+      $res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/')
+    )
+    )
+  {
+    $bot->enqueue($_);
+  }
+
+  my $job;
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, 'index1.html', 'right url';
+  is $job->url, 'http://example.com/index1.html', 'right url';
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, 'index2.html', 'right url';
+  is $job->url, 'http://example.com/index2.html', 'right url';
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, 'index3.html', 'right url';
+  is $job->url, 'http://example.com/index3.html', 'right url';
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, 'css1.css', 'right url';
+  is $job->url, 'http://example.com/css1.css', 'right url';
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, 'css2.css', 'right url';
+  is $job->url, 'http://example.com/css2.css', 'right url';
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, 'js1.js', 'right url';
+  is $job->url, 'http://example.com/js1.js', 'right url';
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, 'js2.js', 'right url';
+  is $job->url, 'http://example.com/js2.js', 'right url';
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, '//example.com/js3.js',      'right url';
+  is $job->url,         'http://example.com/js3.js', 'right url';
+  $job = $bot->queue->dequeue;
+  is $job, undef, 'no more urls';
+
+  my $bot2 = WWW::Crawler::Mojo->new;
+  $bot2->init;
+  for (
+    $bot2->scrape(
+      $res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/a')
+    )
+    )
+  {
+    $bot2->enqueue($_);
+  }
+
+  $job = $bot2->queue->dequeue;
+  $job = $bot2->queue->dequeue;
+  $job = $bot2->queue->dequeue;
+  $job = $bot2->queue->dequeue;
+  is $job->literal_uri, 'css1.css', 'right url';
+  is $job->url, 'http://example.com/a/css1.css', 'right url';
+
+  my $bot3 = WWW::Crawler::Mojo->new;
+  $bot3->init;
+  for (
+    $bot3->scrape(
+      $res, WWW::Crawler::Mojo::Job->new(url => 'https://example.com/')
+    )
+    )
+  {
+    $bot3->enqueue($_);
+  }
+
+  $job = $bot3->queue->dequeue;
+  $job = $bot3->queue->dequeue;
+  $job = $bot3->queue->dequeue;
+  $job = $bot3->queue->dequeue;
+  is $job->literal_uri, 'css1.css', 'right url';
+  is $job->url, 'https://example.com/css1.css', 'right url';
+  $job = $bot3->queue->dequeue;
+  $job = $bot3->queue->dequeue;
+  $job = $bot3->queue->dequeue;
+  $job = $bot3->queue->dequeue;
+  is $job->literal_uri, '//example.com/js3.js',       'right url';
+  is $job->url,         'https://example.com/js3.js', 'right url';
 }
 {
-    my $html = <<EOF;
+  my $html = <<EOF;
 <html>
 <head>
     <base href="http://example2.com/">
@@ -120,37 +135,47 @@ EOF
 </body>
 </html>
 EOF
-    
-    my $tx = Mojo::Transaction::HTTP->new;
-    $tx->req->url(Mojo::URL->new('http://example.com/'));
-    $tx->res->code(200);
-    $tx->res->headers->content_type('text/html');
-    $tx->res->headers->content_length(length($html));
-    $tx->res->body($html);
-    
-    my $bot = WWW::Crawler::Mojo->new;
-    $bot->init;
-    for ($bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'))) {
-        $bot->enqueue($_);
-    }
-    
-    my $job;
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, 'css1.css', 'right url';
-    is $job->url, 'http://example2.com/css1.css', 'right url';
-    
-    $bot = WWW::Crawler::Mojo->new;
-    $bot->init;
-    for ($bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/'))) {
-        $bot->enqueue($_);
-    }
-    
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, 'css1.css', 'right url';
-    is $job->url, 'http://example2.com/css1.css', 'right url';
+
+  my $tx = Mojo::Transaction::HTTP->new;
+  $tx->req->url(Mojo::URL->new('http://example.com/'));
+  $tx->res->code(200);
+  $tx->res->headers->content_type('text/html');
+  $tx->res->headers->content_length(length($html));
+  $tx->res->body($html);
+
+  my $bot = WWW::Crawler::Mojo->new;
+  $bot->init;
+  for (
+    $bot->scrape(
+      $tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/')
+    )
+    )
+  {
+    $bot->enqueue($_);
+  }
+
+  my $job;
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, 'css1.css', 'right url';
+  is $job->url, 'http://example2.com/css1.css', 'right url';
+
+  $bot = WWW::Crawler::Mojo->new;
+  $bot->init;
+  for (
+    $bot->scrape(
+      $tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/')
+    )
+    )
+  {
+    $bot->enqueue($_);
+  }
+
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, 'css1.css', 'right url';
+  is $job->url, 'http://example2.com/css1.css', 'right url';
 }
 {
-    my $html = <<EOF;
+  my $html = <<EOF;
 <html>
 <head>
     <base href="/">
@@ -160,37 +185,47 @@ EOF
 </body>
 </html>
 EOF
-    
-    my $tx = Mojo::Transaction::HTTP->new;
-    $tx->req->url(Mojo::URL->new('http://example.com/'));
-    $tx->res->code(200);
-    $tx->res->headers->content_type('text/html');
-    $tx->res->headers->content_length(length($html));
-    $tx->res->body($html);
-    
-    my $bot = WWW::Crawler::Mojo->new;
-    $bot->init;
-    for ($bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'))) {
-        $bot->enqueue($_);
-    }
-    
-    my $job;
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, 'css1.css', 'right url';
-    is $job->url, 'http://example.com/css1.css', 'right url';
-    
-    $bot = WWW::Crawler::Mojo->new;
-    $bot->init;
-    for ($bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/'))) {
-        $bot->enqueue($_);
-    }
-    
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, 'css1.css', 'right url';
-    is $job->url, 'http://example.com/css1.css', 'right url';
+
+  my $tx = Mojo::Transaction::HTTP->new;
+  $tx->req->url(Mojo::URL->new('http://example.com/'));
+  $tx->res->code(200);
+  $tx->res->headers->content_type('text/html');
+  $tx->res->headers->content_length(length($html));
+  $tx->res->body($html);
+
+  my $bot = WWW::Crawler::Mojo->new;
+  $bot->init;
+  for (
+    $bot->scrape(
+      $tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/')
+    )
+    )
+  {
+    $bot->enqueue($_);
+  }
+
+  my $job;
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, 'css1.css', 'right url';
+  is $job->url, 'http://example.com/css1.css', 'right url';
+
+  $bot = WWW::Crawler::Mojo->new;
+  $bot->init;
+  for (
+    $bot->scrape(
+      $tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/a/')
+    )
+    )
+  {
+    $bot->enqueue($_);
+  }
+
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, 'css1.css', 'right url';
+  is $job->url, 'http://example.com/css1.css', 'right url';
 }
 {
-    my $html = <<EOF;
+  my $html = <<EOF;
 <html>
 <head>
     <base>
@@ -200,22 +235,27 @@ EOF
 </body>
 </html>
 EOF
-    
-    my $tx = Mojo::Transaction::HTTP->new;
-    $tx->req->url(Mojo::URL->new('http://example.com/'));
-    $tx->res->code(200);
-    $tx->res->headers->content_length(length($html));
-    $tx->res->headers->content_type('text/html');
-    $tx->res->body($html);
-    
-    my $bot = WWW::Crawler::Mojo->new;
-    $bot->init;
-    for ($bot->scrape($tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'))) {
-        $bot->enqueue($_);
-    }
-    
-    my $job;
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, 'css1.css', 'right url';
-    is $job->url, 'http://example.com/css1.css', 'right url';
+
+  my $tx = Mojo::Transaction::HTTP->new;
+  $tx->req->url(Mojo::URL->new('http://example.com/'));
+  $tx->res->code(200);
+  $tx->res->headers->content_length(length($html));
+  $tx->res->headers->content_type('text/html');
+  $tx->res->body($html);
+
+  my $bot = WWW::Crawler::Mojo->new;
+  $bot->init;
+  for (
+    $bot->scrape(
+      $tx->res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/')
+    )
+    )
+  {
+    $bot->enqueue($_);
+  }
+
+  my $job;
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, 'css1.css', 'right url';
+  is $job->url, 'http://example.com/css1.css', 'right url';
 }

@@ -7,45 +7,45 @@ use List::Util;
 
 has jobs => sub { [] };
 has redundancy => sub {
-    my %fix;
-    return sub {
-        my $d = $_[0]->digest;
-        return 1 if $fix{$d};
-        $fix{$d} = 1;
-        return;
-    };
+  my %fix;
+  return sub {
+    my $d = $_[0]->digest;
+    return 1 if $fix{$d};
+    $fix{$d} = 1;
+    return;
+  };
 };
 
 sub dequeue {
-    return shift(@{shift->jobs});
+  return shift(@{shift->jobs});
 }
 
 sub enqueue {
-    shift->_enqueue(@_);
+  shift->_enqueue(@_);
 }
 
 sub length {
-    return scalar(@{shift->jobs});
+  return scalar(@{shift->jobs});
 }
 
 sub next {
-    return shift->jobs->[shift || 0];
+  return shift->jobs->[shift || 0];
 }
 
 sub requeue {
-    shift->_enqueue(@_, 1);
+  shift->_enqueue(@_, 1);
 }
 
 sub shuffle {
-    my $self = shift;
-    @{$self->jobs} = List::Util::shuffle @{$self->jobs};
+  my $self = shift;
+  @{$self->jobs} = List::Util::shuffle @{$self->jobs};
 }
 
 sub _enqueue {
-    my ($self, $job, $requeue) = @_;
-    return if (!$requeue && $self->redundancy->($job));
-    push(@{$self->jobs}, $job);
-    return $self;
+  my ($self, $job, $requeue) = @_;
+  return if (!$requeue && $self->redundancy->($job));
+  push(@{$self->jobs}, $job);
+  return $self;
 }
 
 1;

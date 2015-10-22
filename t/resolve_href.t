@@ -178,7 +178,9 @@ $base = Mojo::URL->new('https://example.com/org');
 $tmp = resolve_href($base, '//example2.com:8080/hoge.html');
 is $tmp, 'https://example2.com:8080/hoge.html', 'right url';
 
-$tmp = resolve_href('http://www.eclipse.org/forums/index.php/f/48/', '//www.eclipse.org/forums/');
+$tmp = resolve_href('http://www.eclipse.org/forums/index.php/f/48/',
+  '//www.eclipse.org/forums/');
 is $tmp, 'http://www.eclipse.org/forums/', 'right url';
-$tmp = resolve_href('https://www.eclipse.org/forums/index.php/f/48/', '//www.eclipse.org/forums/');
+$tmp = resolve_href('https://www.eclipse.org/forums/index.php/f/48/',
+  '//www.eclipse.org/forums/');
 is $tmp, 'https://www.eclipse.org/forums/', 'right url';

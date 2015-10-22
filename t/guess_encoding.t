@@ -36,35 +36,35 @@ EOF
 utf8::encode($html2);
 
 {
-    my $res = Mojo::Message::Response->new;
-    $res->body($html);
-    $res->headers->content_type('text/html');
-    is guess_encoding($res), undef, 'right encoding';
+  my $res = Mojo::Message::Response->new;
+  $res->body($html);
+  $res->headers->content_type('text/html');
+  is guess_encoding($res), undef, 'right encoding';
 }
 
 {
-    my $res = Mojo::Message::Response->new;
-    $res->body($html2);
-    $res->headers->content_type('text/html');
-    is guess_encoding($res), 'cp932', 'right encoding';
+  my $res = Mojo::Message::Response->new;
+  $res->body($html2);
+  $res->headers->content_type('text/html');
+  is guess_encoding($res), 'cp932', 'right encoding';
 }
 
 {
-    my $res = Mojo::Message::Response->new;
-    $res->body($html);
-    $res->headers->content_type('text/html; charset=cp932');
-    is guess_encoding($res), 'cp932', 'right encoding';
+  my $res = Mojo::Message::Response->new;
+  $res->body($html);
+  $res->headers->content_type('text/html; charset=cp932');
+  is guess_encoding($res), 'cp932', 'right encoding';
 }
 
 {
-    my $res = Mojo::Message::Response->new;
-    $res->body($html);
-    $res->headers->content_type('text/html; charset=cp932; hoge');
-    is guess_encoding($res), 'cp932', 'right encoding';
+  my $res = Mojo::Message::Response->new;
+  $res->body($html);
+  $res->headers->content_type('text/html; charset=cp932; hoge');
+  is guess_encoding($res), 'cp932', 'right encoding';
 }
 
 ok encoder('utf8')->isa('Encode::utf8'), 'right class';
-ok encoder('')->isa('Encode::utf8'), 'right class';
+ok encoder('')->isa('Encode::utf8'),     'right class';
 ok encoder()->isa('Encode::utf8'), 'right class';
 ok encoder('UTF7')->isa('Encode::Unicode::UTF7'), 'right class';
-ok encoder('cp932')->isa('Encode::XS'), 'right class';
+ok encoder('cp932')->isa('Encode::XS'),           'right class';

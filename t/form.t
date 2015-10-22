@@ -16,11 +16,11 @@ use Test::More tests => 47;
 my $html_handlers = html_handlers();
 
 sub _weave_form_data {
-    $html_handlers->{form}->(@_);
+  $html_handlers->{form}->(@_);
 }
 
 {
-    my $dom = Mojo::DOM->new(<<EOF);
+  my $dom = Mojo::DOM->new(<<EOF);
 <div>
     <form action="/index1.html" method="get">
         <input type="text" name="foo" value="default">
@@ -29,14 +29,14 @@ sub _weave_form_data {
     </form>
 </div>
 EOF
-    my $ret = _weave_form_data($dom->at('form'));
-    is $ret->[0], '/index1.html';
-    is $ret->[1], 'GET';
-    is_deeply $ret->[2]->to_hash, {buttonName => 'submit1', foo => 'default'};
+  my $ret = _weave_form_data($dom->at('form'));
+  is $ret->[0], '/index1.html';
+  is $ret->[1], 'GET';
+  is_deeply $ret->[2]->to_hash, {buttonName => 'submit1', foo => 'default'};
 }
 
 {
-    my $dom = Mojo::DOM->new(<<EOF);
+  my $dom = Mojo::DOM->new(<<EOF);
 <div>
     <form action="/index1.html" method="get">
         <input type="text" name="foo" value="default">
@@ -45,14 +45,14 @@ EOF
     </form>
 </div>
 EOF
-    my $ret = _weave_form_data($dom->at('form'));
-    is $ret->[0], '/index1.html';
-    is $ret->[1], 'GET';
-    is_deeply $ret->[2]->to_hash, {buttonName => 'submit1', foo => 'default'};
+  my $ret = _weave_form_data($dom->at('form'));
+  is $ret->[0], '/index1.html';
+  is $ret->[1], 'GET';
+  is_deeply $ret->[2]->to_hash, {buttonName => 'submit1', foo => 'default'};
 }
 
 {
-    my $dom = Mojo::DOM->new(<<EOF);
+  my $dom = Mojo::DOM->new(<<EOF);
 <div>
     <form action="/index1.html" method="get">
         <input type="text" name="foo" value="default">
@@ -61,14 +61,14 @@ EOF
     </form>
 </div>
 EOF
-    my $ret = _weave_form_data($dom->at('form'));
-    is $ret->[0], '/index1.html';
-    is $ret->[1], 'GET';
-    is_deeply $ret->[2]->to_hash, {buttonName => '', foo => 'default'};
+  my $ret = _weave_form_data($dom->at('form'));
+  is $ret->[0], '/index1.html';
+  is $ret->[1], 'GET';
+  is_deeply $ret->[2]->to_hash, {buttonName => '', foo => 'default'};
 }
 
 {
-    my $dom = Mojo::DOM->new(<<EOF);
+  my $dom = Mojo::DOM->new(<<EOF);
 <div>
     <form action="/index1.html" method="get">
         <input type="text" name="foo" value="default">
@@ -76,14 +76,14 @@ EOF
     </form>
 </div>
 EOF
-    my $ret = _weave_form_data($dom->at('form'));
-    is $ret->[0], '/index1.html';
-    is $ret->[1], 'GET';
-    is $ret->[2], 'foo=default';
+  my $ret = _weave_form_data($dom->at('form'));
+  is $ret->[0], '/index1.html';
+  is $ret->[1], 'GET';
+  is $ret->[2], 'foo=default';
 }
 
 {
-    my $dom = Mojo::DOM->new(<<EOF);
+  my $dom = Mojo::DOM->new(<<EOF);
 <div>
     <form action="/index1.html" method="post">
         <input type="text" name="foo" value="default">
@@ -91,14 +91,14 @@ EOF
     </form>
 </div>
 EOF
-    my $ret = _weave_form_data($dom->at('form'));
-    is $ret->[0], '/index1.html';
-    is $ret->[1], 'POST';
-    is_deeply $ret->[2]->to_hash, {bar => 'submit', foo => 'default'};
+  my $ret = _weave_form_data($dom->at('form'));
+  is $ret->[0], '/index1.html';
+  is $ret->[1], 'POST';
+  is_deeply $ret->[2]->to_hash, {bar => 'submit', foo => 'default'};
 }
 
 {
-    my $dom = Mojo::DOM->new(<<'EOF');
+  my $dom = Mojo::DOM->new(<<'EOF');
 <html>
     <body>
         <form action="/receptor1" method="post">
@@ -247,69 +247,74 @@ EOF
     </body>
 </html>
 EOF
-    {
-        my $ret = _weave_form_data($dom->find('form')->[0]);
-        is_deeply $ret->[2]->to_hash, {
-            baz => 'bazValue', bar => 'barValue', btn => 'send',
-            foo => 'fooValue', yada => 'yadaValue'
-        };
-    }
-    {
-        my $ret = _weave_form_data($dom->find('form')->[1]);
-        is_deeply $ret->[2]->to_hash, {foo => 'fooValue'};
-    }
-    {
-        my $ret = _weave_form_data($dom->find('form')->[2]);
-        is_deeply $ret->[2]->to_hash, {};
-    }
-    {
-        my $ret = _weave_form_data($dom->find('form')->[3]);
-        is_deeply $ret->[2]->to_hash, {foo => 'fooValue3'};
-    }
-    {
-        my $ret = _weave_form_data($dom->find('form')->[4]);
-        is_deeply $ret->[2]->to_hash, {foo => ['', 'fooValue2']};
-    }
-    {
-        my $ret = _weave_form_data($dom->find('form')->[5]);
-        is_deeply $ret->[2]->to_hash, {foo => 'fooValue2'};
-    }
-    {
-        my $ret = _weave_form_data($dom->find('form')->[6]);
-        is_deeply $ret->[2]->to_hash, {};
-    }
-    {
-        my $ret = _weave_form_data($dom->find('form')->[7]);
-        is_deeply $ret->[2]->to_hash, {foo => ''};
-    }
-    {
-        my $ret = _weave_form_data($dom->find('form')->[8]);
-        is_deeply $ret->[2]->to_hash, {foo => ''};
-    }
-    {
-        my $ret = _weave_form_data($dom->find('form')->[9]);
-        is_deeply $ret->[2]->to_hash, {};
-    }
-    {
-        my $ret = _weave_form_data($dom->find('form')->[10]);
-        is_deeply $ret->[2]->to_hash, {foo => ''};
-    }
-    {
-        my $ret = _weave_form_data($dom->find('form')->[11]);
-        is_deeply $ret->[2]->to_hash, {foo => ['value1', 'value2', 'value3']};
-    }
-    {
-        my $ret = _weave_form_data($dom->find('form')->[12]);
-        is_deeply $ret->[2]->to_hash, {foo => 'やったー'};
-    }
-    {
-        my $ret = _weave_form_data($dom->find('form')->[13]);
-        is_deeply $ret->[2]->to_hash, {foo => 'foo default', bar => 'bar default', baz => 'baz default'};
-    }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[0]);
+    is_deeply $ret->[2]->to_hash,
+      {
+      baz  => 'bazValue',
+      bar  => 'barValue',
+      btn  => 'send',
+      foo  => 'fooValue',
+      yada => 'yadaValue'
+      };
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[1]);
+    is_deeply $ret->[2]->to_hash, {foo => 'fooValue'};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[2]);
+    is_deeply $ret->[2]->to_hash, {};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[3]);
+    is_deeply $ret->[2]->to_hash, {foo => 'fooValue3'};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[4]);
+    is_deeply $ret->[2]->to_hash, {foo => ['', 'fooValue2']};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[5]);
+    is_deeply $ret->[2]->to_hash, {foo => 'fooValue2'};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[6]);
+    is_deeply $ret->[2]->to_hash, {};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[7]);
+    is_deeply $ret->[2]->to_hash, {foo => ''};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[8]);
+    is_deeply $ret->[2]->to_hash, {foo => ''};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[9]);
+    is_deeply $ret->[2]->to_hash, {};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[10]);
+    is_deeply $ret->[2]->to_hash, {foo => ''};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[11]);
+    is_deeply $ret->[2]->to_hash, {foo => ['value1', 'value2', 'value3']};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[12]);
+    is_deeply $ret->[2]->to_hash, {foo => 'やったー'};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[13]);
+    is_deeply $ret->[2]->to_hash,
+      {foo => 'foo default', bar => 'bar default', baz => 'baz default'};
+  }
 }
 
 {
-    my $html = <<EOF;
+  my $html = <<EOF;
 <html>
 <body>
 <form action="/index1.html">
@@ -327,42 +332,47 @@ EOF
 </body>
 </html>
 EOF
-    
-    my $res = Mojo::Message::Response->new;
-    $res->code(200);
-    $res->headers->content_length(length($html));
-    $res->body($html);
-    $res->headers->content_type('text/html');
-    
-    my $bot = WWW::Crawler::Mojo->new;
-    $bot->init;
-    for ($bot->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'))) {
-        $bot->enqueue($_);
-    }
-    
-    my $job;
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, '/index1.html', 'right url';
-    is $job->url, 'http://example.com/index1.html?foo=default', 'right url';
-    is $job->method, 'GET', 'right method';
-    is_deeply $job->tx_params, undef, 'right params';
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, '/index2.html', 'right url';
-    is $job->url, 'http://example.com/index2.html', 'right url';
-    is $job->method, 'POST', 'right method';
-    is_deeply $job->tx_params->to_hash, {foo => 'foo'}, 'right params';
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, '/index2.html', 'right url';
-    is $job->url, 'http://example.com/index2.html', 'right url';
-    is $job->method, 'POST', 'right method';
-    is_deeply $job->tx_params->to_hash, {bar => 'bar'}, 'right params';
-    $job = $bot->queue->dequeue;
-    is $job, undef, 'no more urls';
+
+  my $res = Mojo::Message::Response->new;
+  $res->code(200);
+  $res->headers->content_length(length($html));
+  $res->body($html);
+  $res->headers->content_type('text/html');
+
+  my $bot = WWW::Crawler::Mojo->new;
+  $bot->init;
+  for (
+    $bot->scrape(
+      $res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/')
+    )
+    )
+  {
+    $bot->enqueue($_);
+  }
+
+  my $job;
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, '/index1.html', 'right url';
+  is $job->url, 'http://example.com/index1.html?foo=default', 'right url';
+  is $job->method,           'GET', 'right method';
+  is_deeply $job->tx_params, undef, 'right params';
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, '/index2.html',                   'right url';
+  is $job->url,         'http://example.com/index2.html', 'right url';
+  is $job->method,      'POST',                           'right method';
+  is_deeply $job->tx_params->to_hash, {foo => 'foo'}, 'right params';
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri, '/index2.html',                   'right url';
+  is $job->url,         'http://example.com/index2.html', 'right url';
+  is $job->method,      'POST',                           'right method';
+  is_deeply $job->tx_params->to_hash, {bar => 'bar'}, 'right params';
+  $job = $bot->queue->dequeue;
+  is $job, undef, 'no more urls';
 }
 
 
 {
-    my $html = <<EOF;
+  my $html = <<EOF;
 <html>
 <body>
 <form>
@@ -372,25 +382,30 @@ EOF
 </body>
 </html>
 EOF
-    
-    my $res = Mojo::Message::Response->new;
-    $res->code(200);
-    $res->headers->content_length(length($html));
-    $res->body($html);
-    $res->headers->content_type('text/html');
-    
-    my $bot = WWW::Crawler::Mojo->new;
-    $bot->init;
-    for ($bot->scrape($res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/'))) {
-        $bot->enqueue($_);
-    }
-    
-    my $job;
-    $job = $bot->queue->dequeue;
-    is $job->literal_uri, '', 'right url';
-    is $job->url, 'http://example.com/?foo=default', 'right url';
-    is $job->method, 'GET', 'right method';
-    is_deeply $job->tx_params, undef, 'right params';
-    $job = $bot->queue->dequeue;
-    is $job, undef, 'no more urls';
+
+  my $res = Mojo::Message::Response->new;
+  $res->code(200);
+  $res->headers->content_length(length($html));
+  $res->body($html);
+  $res->headers->content_type('text/html');
+
+  my $bot = WWW::Crawler::Mojo->new;
+  $bot->init;
+  for (
+    $bot->scrape(
+      $res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/')
+    )
+    )
+  {
+    $bot->enqueue($_);
+  }
+
+  my $job;
+  $job = $bot->queue->dequeue;
+  is $job->literal_uri,      '',                                'right url';
+  is $job->url,              'http://example.com/?foo=default', 'right url';
+  is $job->method,           'GET',                             'right method';
+  is_deeply $job->tx_params, undef,                             'right params';
+  $job = $bot->queue->dequeue;
+  is $job, undef, 'no more urls';
 }

@@ -7,13 +7,15 @@ use lib catdir(dirname(__FILE__), '../lib');
 use lib catdir(dirname(__FILE__), 'lib');
 use Test::More;
 
-plan skip_all => 'set TEST_ONLINE to enable this test' unless $ENV{TEST_ONLINE};
+plan skip_all => 'set TEST_ONLINE to enable this test'
+  unless $ENV{TEST_ONLINE};
 
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Queue::MySQL;
 use WWW::Crawler::Mojo::Job;
 
-my $queue = WWW::Crawler::Mojo::Queue::MySQL->new($ENV{TEST_ONLINE}, table_name =>"testing_jobs" );
+my $queue = WWW::Crawler::Mojo::Queue::MySQL->new($ENV{TEST_ONLINE},
+  table_name => "testing_jobs");
 $queue->empty;
 
 my $job1 = WWW::Crawler::Mojo::Job->new;
@@ -34,24 +36,24 @@ is $queue->length, 2, 'right number 2';
 
 $job1 = $queue->dequeue;
 
-is $job1->url , 'http://example.com/', "1st job being processed";
+is $job1->url, 'http://example.com/', "1st job being processed";
 is $queue->length, 1, 'queue length is 1';
 
-$queue->enqueue($job1); ## enquing back job 1
+$queue->enqueue($job1);    ## enquing back job 1
 is $queue->length, 1, ' job length should be 1';
 
 $queue->requeue($job1);
 is $queue->length, 2, 'requeue will increment queue by 1';
 
-$job2 = $queue->dequeue; ## length = 1
-is $job2->url , 'http://example.com/2', "1st job being processed";
+$job2 = $queue->dequeue;    ## length = 1
+is $job2->url, 'http://example.com/2', "1st job being processed";
 
 is $queue->length, 1, 'queue length is back to 1';
-$queue->requeue($job2); ## cant requeue
+$queue->requeue($job2);     ## cant requeue
 is $queue->length, 2, 'right number 5';
 
 $job1 = $queue->dequeue;
-is $job1->url , 'http://example.com/', "1st job being processed again";
+is $job1->url, 'http://example.com/', "1st job being processed again";
 $queue->requeue($job1);
 is $queue->length, 2, 'still requeue will increment queue by 1';
 

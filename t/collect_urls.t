@@ -52,29 +52,29 @@ my $html = <<EOF;
 </html>
 EOF
 
-@array = ();
+@array  = ();
 @array2 = ();
 @array3 = ();
 {
-    my $res = Mojo::Message::Response->new;
-    $res->code(200);
-    $res->headers->content_type('text/html');
-    $res->headers->content_length(length($html));
-    $res->body(Mojo::DOM->new($html));
-    my $job = WWW::Crawler::Mojo::Job->new(url => 'http://example.com/');
-    my $bot = WWW::Crawler::Mojo->new;
-    for ($bot->scrape($res, $job)) {
-        push(@array, $_->literal_uri);
-        push(@array, $_->context);
-    }
-    for ($bot->scrape($res, $job, '#cont1')) {
-        push(@array2, $_->literal_uri);
-        push(@array2, $_->context);
-    }
-    for ($bot->scrape($res, $job, ['#cont1', '#cont2'])) {
-        push(@array3, $_->literal_uri);
-        push(@array3, $_->context);
-    }
+  my $res = Mojo::Message::Response->new;
+  $res->code(200);
+  $res->headers->content_type('text/html');
+  $res->headers->content_length(length($html));
+  $res->body(Mojo::DOM->new($html));
+  my $job = WWW::Crawler::Mojo::Job->new(url => 'http://example.com/');
+  my $bot = WWW::Crawler::Mojo->new;
+  for ($bot->scrape($res, $job)) {
+    push(@array, $_->literal_uri);
+    push(@array, $_->context);
+  }
+  for ($bot->scrape($res, $job, '#cont1')) {
+    push(@array2, $_->literal_uri);
+    push(@array2, $_->context);
+  }
+  for ($bot->scrape($res, $job, ['#cont1', '#cont2'])) {
+    push(@array3, $_->literal_uri);
+    push(@array3, $_->context);
+  }
 }
 is shift @array, 'http://example.com/bgimg2.png', 'right url';
 is shift(@array)->tag, 'a', 'right type';
@@ -121,7 +121,7 @@ is shift(@array3)->tag, 'a', 'right type';
 is shift @array, undef, 'no more urls';
 
 {
-    my $css = <<EOF;
+  my $css = <<EOF;
 body {
     background-image:url('/image/a.png');
 }
@@ -145,15 +145,15 @@ div {
 }
 EOF
 
-    my @array = WWW::Crawler::Mojo::collect_urls_css($css);
-    is shift @array, '/image/a.png', 'right url';
-    is shift @array, '/image/b.png', 'right url';
-    is shift @array, '/image/c.png', 'right url';
-    is shift @array, '/image/d.png', 'right url';
-    is shift @array, '/image/e.png', 'right url';
-    is shift @array, "/image/?spring15'", 'right url';
-    is shift @array, "/image/f", 'right url';
-    is shift @array, undef, 'empty';
+  my @array = WWW::Crawler::Mojo::collect_urls_css($css);
+  is shift @array, '/image/a.png',      'right url';
+  is shift @array, '/image/b.png',      'right url';
+  is shift @array, '/image/c.png',      'right url';
+  is shift @array, '/image/d.png',      'right url';
+  is shift @array, '/image/e.png',      'right url';
+  is shift @array, "/image/?spring15'", 'right url';
+  is shift @array, "/image/f",          'right url';
+  is shift @array, undef,               'empty';
 }
 
 my $xhtml = <<EOF;
@@ -172,17 +172,17 @@ EOF
 
 @array = ();
 {
-    my $res = Mojo::Message::Response->new;
-    $res->code(200);
-    $res->headers->content_type('text/html');
-    $res->headers->content_length(length($xhtml));
-    $res->body(Mojo::DOM->new($xhtml));
-    my $job = WWW::Crawler::Mojo::Job->new(url => 'http://example.com/');
-    my $bot = WWW::Crawler::Mojo->new;
-    for ($bot->scrape($res, $job)) {
-        $bot->enqueue($_);
-        push(@array, $job->literal_uri);
-        push(@array, $job->context);
-    }
+  my $res = Mojo::Message::Response->new;
+  $res->code(200);
+  $res->headers->content_type('text/html');
+  $res->headers->content_length(length($xhtml));
+  $res->body(Mojo::DOM->new($xhtml));
+  my $job = WWW::Crawler::Mojo::Job->new(url => 'http://example.com/');
+  my $bot = WWW::Crawler::Mojo->new;
+  for ($bot->scrape($res, $job)) {
+    $bot->enqueue($_);
+    push(@array, $job->literal_uri);
+    push(@array, $job->context);
+  }
 }
 is(scalar @array, 0, 'right length');

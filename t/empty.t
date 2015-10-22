@@ -11,36 +11,39 @@ use WWW::Crawler::Mojo::ScraperUtil qw{resolve_href};
 use Test::More tests => 1;
 
 {
-    package MockServer;
-    use Mojo::Base 'Mojolicious';
-    
-    sub startup {
-        my $self = shift;
-        unshift @{$self->static->paths}, $self->home->rel_dir('public2');
-    }
+
+  package MockServer;
+  use Mojo::Base 'Mojolicious';
+
+  sub startup {
+    my $self = shift;
+    unshift @{$self->static->paths}, $self->home->rel_dir('public2');
+  }
 }
 
 my $daemon = Mojo::Server::Daemon->new(
-    app    => MockServer->new,
-    ioloop => Mojo::IOLoop->singleton,
-    silent => 1
+  app    => MockServer->new,
+  ioloop => Mojo::IOLoop->singleton,
+  silent => 1
 );
 
 $daemon->listen(['http://127.0.0.1'])->start;
 
 my $port = Mojo::IOLoop->acceptor($daemon->acceptors->[0])->handle->sockport;
 my $base = Mojo::URL->new("http://127.0.0.1:$port");
-my $bot = WWW::Crawler::Mojo->new;
+my $bot  = WWW::Crawler::Mojo->new;
 $bot->enqueue(resolve_href($base, '/index.html'));
 
 my %urls;
 
-$bot->on('res' => sub {
+$bot->on(
+  'res' => sub {
     my ($bot, $scrape, $job, $res) = @_;
     $scrape->();
     $bot->enqueue($_) for ($scrape->());
     $urls{$job->url} = $job;
-});
+  }
+);
 
 $bot->init;
 

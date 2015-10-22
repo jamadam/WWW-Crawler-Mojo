@@ -6,146 +6,160 @@ use Encode qw(find_encoding);
 use Exporter 'import';
 
 our @EXPORT_OK = qw(collect_urls_css html_handlers guess_encoding
-                                            encoder decoded_body resolve_href);
+  encoder decoded_body resolve_href);
 
 my $charset_re = qr{\bcharset\s*=\s*['"]?([a-zA-Z0-9_\-]+)['"]?}i;
 
 sub collect_urls_css {
-    map { s/^(['"])// && s/$1$//; $_ } (shift || '') =~ m{url\((.+?)\)}ig;
+  map { s/^(['"])// && s/$1$//; $_ } (shift || '') =~ m{url\((.+?)\)}ig;
 }
 
 sub decoded_body {
-    my $res     = shift;
-    return encoder(guess_encoding($res))->decode($res->body);
+  my $res = shift;
+  return encoder(guess_encoding($res))->decode($res->body);
 }
 
 sub encoder {
-    for (shift || 'utf-8', 'utf-8') {
-        if (my $enc = find_encoding($_)) {
-            return $enc;
-        }
+  for (shift || 'utf-8', 'utf-8') {
+    if (my $enc = find_encoding($_)) {
+      return $enc;
     }
+  }
 }
 
 sub guess_encoding {
-    my $res     = shift;
-    my $type    = $res->headers->content_type;
-    return unless ($type);
-    my $charset = ($type =~ $charset_re)[0];
-    return $charset if ($charset);
-    return _guess_encoding_html($res->body) if ($type =~ qr{text/(html|xml)});
-    return _guess_encoding_css($res->body) if ($type =~ qr{text/css});
+  my $res  = shift;
+  my $type = $res->headers->content_type;
+  return unless ($type);
+  my $charset = ($type =~ $charset_re)[0];
+  return $charset                         if ($charset);
+  return _guess_encoding_html($res->body) if ($type =~ qr{text/(html|xml)});
+  return _guess_encoding_css($res->body)  if ($type =~ qr{text/css});
 }
 
 my $handlers = {
-    'script[src]'   => sub { $_[0]->{src} },
-    'link[href]'    => sub { $_[0]->{href} },
-    'a[href]'       => sub { $_[0]->{href} },
-    'img[src]'      => sub { $_[0]->{src} },
-    'area'          => sub { $_[0]->{href}, $_[0]->{ping} },
-    'embed[src]'    => sub { $_[0]->{src} },
-    'frame[src]'    => sub { $_[0]->{src} },
-    'iframe[src]'   => sub { $_[0]->{src} },
-    'input[src]'    => sub { $_[0]->{src} },
-    'object[data]'  => sub { $_[0]->{data} },
-    'form'          => sub {
-        my $dom = shift;
-        my (%seed, $submit);
-        
-        $dom->find("[name]")->each(sub {
-            my $e = shift;
-            $seed{my $name = $e->{name}} ||= [];
-            
-            if ($e->tag eq 'select') {
-                $e->find('option[selected]')->each(sub {
-                    push(@{$seed{$name}}, shift->{value});
-                });
-            } elsif ($e->tag eq 'textarea') {
-                push(@{$seed{$name}}, $e->text);
+  'script[src]'  => sub { $_[0]->{src} },
+  'link[href]'   => sub { $_[0]->{href} },
+  'a[href]'      => sub { $_[0]->{href} },
+  'img[src]'     => sub { $_[0]->{src} },
+  'area'         => sub { $_[0]->{href}, $_[0]->{ping} },
+  'embed[src]'   => sub { $_[0]->{src} },
+  'frame[src]'   => sub { $_[0]->{src} },
+  'iframe[src]'  => sub { $_[0]->{src} },
+  'input[src]'   => sub { $_[0]->{src} },
+  'object[data]' => sub { $_[0]->{data} },
+  'form' => sub {
+    my $dom = shift;
+    my (%seed, $submit);
+
+    $dom->find("[name]")->each(
+      sub {
+        my $e = shift;
+        $seed{my $name = $e->{name}} ||= [];
+
+        if ($e->tag eq 'select') {
+          $e->find('option[selected]')->each(
+            sub {
+              push(@{$seed{$name}}, shift->{value});
             }
-            
-            return unless (my $type = $e->{type});
-            
-            if (!$submit && grep{$_ eq $type} qw{submit image}) {
-                $submit = 1;
-                push(@{$seed{$name}}, $e->{value});
-            } elsif (grep {$_ eq $type} qw{text hidden number}) {
-                push(@{$seed{$name}}, $e->{value});
-            } elsif (grep {$_ eq $type} qw{checkbox}) {
-                push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
-            } elsif (grep {$_ eq $type} qw{radio}) {
-                push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
-            }
-        });
-        
-        return [$dom->{action} || '',
-                    uc ($dom->{method} || 'GET'), Mojo::Parameters->new(%seed)];
-    },
-    'meta[content]' => sub {
-        return $1 if ($_[0] =~ qr{http\-equiv="?Refresh"?}i &&
-                                (($_[0]->{content} || '') =~ qr{URL=(.+)}i)[0]);
-        return;
-    },
-    'style' => sub {
-        collect_urls_css(shift->content);
-    },
-    '[style]' => sub {
-        collect_urls_css(shift->{style});
-    },
-    'urlset[xmlns^=http://www.sitemaps.org/schemas/sitemap/]' => sub {
-        @{$_->find('url loc')->map(sub {$_->content})->to_array};
-    }
+          );
+        }
+        elsif ($e->tag eq 'textarea') {
+          push(@{$seed{$name}}, $e->text);
+        }
+
+        return unless (my $type = $e->{type});
+
+        if (!$submit && grep { $_ eq $type } qw{submit image}) {
+          $submit = 1;
+          push(@{$seed{$name}}, $e->{value});
+        }
+        elsif (grep { $_ eq $type } qw{text hidden number}) {
+          push(@{$seed{$name}}, $e->{value});
+        }
+        elsif (grep { $_ eq $type } qw{checkbox}) {
+          push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
+        }
+        elsif (grep { $_ eq $type } qw{radio}) {
+          push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
+        }
+      }
+    );
+
+    return [
+      $dom->{action} || '',
+      uc($dom->{method} || 'GET'),
+      Mojo::Parameters->new(%seed)
+    ];
+  },
+  'meta[content]' => sub {
+    return $1
+      if ($_[0] =~ qr{http\-equiv="?Refresh"?}i
+      && (($_[0]->{content} || '') =~ qr{URL=(.+)}i)[0]);
+    return;
+  },
+  'style' => sub {
+    collect_urls_css(shift->content);
+  },
+  '[style]' => sub {
+    collect_urls_css(shift->{style});
+  },
+  'urlset[xmlns^=http://www.sitemaps.org/schemas/sitemap/]' => sub {
+    @{$_->find('url loc')->map(sub { $_->content })->to_array};
+  }
 };
 
 sub html_handlers {
-    my $contexts = ref $_[0] ? $_[0] : [$_[0]];
-    my $ret;
-    for (keys %$handlers) {
-        my $cb = $handlers->{$_};
-        for my $cont (@$contexts) {
-            my $key = ($cont ? $cont. ' ' : ''). $_;
-            $ret->{$key} = sub {
-                return if ($_[0]->xml && _wrong_dom_detection($_[0]));
-                return $cb->($_[0]);
-            }
+  my $contexts = ref $_[0] ? $_[0] : [$_[0]];
+  my $ret;
+  for (keys %$handlers) {
+    my $cb = $handlers->{$_};
+    for my $cont (@$contexts) {
+      my $key = ($cont ? $cont . ' ' : '') . $_;
+      $ret->{$key} = sub {
+        return if ($_[0]->xml && _wrong_dom_detection($_[0]));
+        return $cb->($_[0]);
         }
     }
-    return $ret;
+  }
+  return $ret;
 }
 
 sub resolve_href {
-    my ($base, $href) = @_;
-    $href =~ s{\s}{}g;
-    $href = ref $href ? $href : Mojo::URL->new($href);
-    $base = ref $base ? $base : Mojo::URL->new($base);
-    my $abs = $href->to_abs($base)->fragment(undef);
-    while ($abs->path->parts->[0] && $abs->path->parts->[0] =~ /^\./) {
-        shift @{$abs->path->parts};
-    }
-    $abs->path->trailing_slash($base->path->trailing_slash)
-                                                if (!$href->path->to_string);
-    return $abs;
+  my ($base, $href) = @_;
+  $href =~ s{\s}{}g;
+  $href = ref $href ? $href : Mojo::URL->new($href);
+  $base = ref $base ? $base : Mojo::URL->new($base);
+  my $abs = $href->to_abs($base)->fragment(undef);
+  while ($abs->path->parts->[0] && $abs->path->parts->[0] =~ /^\./) {
+    shift @{$abs->path->parts};
+  }
+  $abs->path->trailing_slash($base->path->trailing_slash)
+    if (!$href->path->to_string);
+  return $abs;
 }
 
 sub _guess_encoding_css {
-    return (shift =~ qr{^\s*\@charset ['"](.+?)['"];}is)[0];
+  return (shift =~ qr{^\s*\@charset ['"](.+?)['"];}is)[0];
 }
 
 sub _guess_encoding_html {
-    my $head = (shift =~ qr{<head>(.+)</head>}is)[0] or return;
-    my $charset;
-    Mojo::DOM->new($head)->find('meta[http\-equiv=Content-Type]')->each(sub{
-        $charset = (shift->{content} =~ $charset_re)[0];
-    });
-    return $charset;
+  my $head = (shift =~ qr{<head>(.+)</head>}is)[0] or return;
+  my $charset;
+  Mojo::DOM->new($head)->find('meta[http\-equiv=Content-Type]')->each(
+    sub {
+      $charset = (shift->{content} =~ $charset_re)[0];
+    }
+  );
+  return $charset;
 }
 
 sub _wrong_dom_detection {
-    my $dom = shift;
-    while ($dom = $dom->parent) {
-        return 1 if ($dom->tag && $dom->tag eq 'script');
-    }
-    return;
+  my $dom = shift;
+  while ($dom = $dom->parent) {
+    return 1 if ($dom->tag && $dom->tag eq 'script');
+  }
+  return;
 }
 
 use 5.010;

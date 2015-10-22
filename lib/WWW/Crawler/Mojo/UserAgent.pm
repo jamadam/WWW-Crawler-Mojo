@@ -11,61 +11,66 @@ has '_creds';
 has keep_credentials => 1;
 
 sub new {
-    my $class = shift;
-    my $self = $class->SUPER::new(@_);
-    
-    if ($self->keep_credentials) {
-        $self->_creds({});
-        $self->on(start => sub {
-            my ($self, $tx) = @_;
-            my $url = $tx->req->url;
-            my $host_key = _host_key($url) or return;
-            if ($url->userinfo) {
-                $self->{_creds}->{$host_key} = $url->userinfo;
-            } else {
-                $url->userinfo($self->{_creds}->{$host_key});
-            }
-        });
-    }
-    
-    $self->on(start => sub {
+  my $class = shift;
+  my $self  = $class->SUPER::new(@_);
+
+  if ($self->keep_credentials) {
+    $self->_creds({});
+    $self->on(
+      start => sub {
         my ($self, $tx) = @_;
         my $url = $tx->req->url;
-        $self->active_host($url, 1);
-        $tx->on(finish => sub { $self->active_host($url, -1) });
-    });
-    
-    return $self;
+        my $host_key = _host_key($url) or return;
+        if ($url->userinfo) {
+          $self->{_creds}->{$host_key} = $url->userinfo;
+        }
+        else {
+          $url->userinfo($self->{_creds}->{$host_key});
+        }
+      }
+    );
+  }
+
+  $self->on(
+    start => sub {
+      my ($self, $tx) = @_;
+      my $url = $tx->req->url;
+      $self->active_host($url, 1);
+      $tx->on(finish => sub { $self->active_host($url, -1) });
+    }
+  );
+
+  return $self;
 }
 
 sub active_host {
-    my ($self, $url, $inc) = @_;
-    my $key = _host_key($url);
-    my $hosts = $self->active_conn_per_host;
-    if ($inc) {
-        $self->{active_conn} += $inc;
-        $hosts->{$key} += $inc;
-        delete($hosts->{$key}) unless ($hosts->{$key});
-    }
-    return $hosts->{$key} || 0;
+  my ($self, $url, $inc) = @_;
+  my $key   = _host_key($url);
+  my $hosts = $self->active_conn_per_host;
+  if ($inc) {
+    $self->{active_conn} += $inc;
+    $hosts->{$key} += $inc;
+    delete($hosts->{$key}) unless ($hosts->{$key});
+  }
+  return $hosts->{$key} || 0;
 }
 
 sub credentials {
-    my ($self, %credentials) = @_;
-    while (my ($url, $cred) = each(%credentials)) {
-        $self->{_creds}->{_host_key($url)} = $cred;
-    }
+  my ($self, %credentials) = @_;
+  while (my ($url, $cred) = each(%credentials)) {
+    $self->{_creds}->{_host_key($url)} = $cred;
+  }
 }
 
 sub _host_key {
-    state $well_known_ports = {http => 80, https => 443};
-    my $url = shift;
-    $url = Mojo::URL->new($url) unless ref $url;
-    return unless $url->is_abs && (my $wkp = $well_known_ports->{$url->scheme});
-    my $key = $url->scheme. '://'. $url->ihost;
-    return $key unless (my $port = $url->port);
-    $key .= ':'. $port if $port != $wkp;
-    return $key;
+  state $well_known_ports = {http => 80, https => 443};
+  my $url = shift;
+  $url = Mojo::URL->new($url) unless ref $url;
+  return unless $url->is_abs && (my $wkp = $well_known_ports->{$url->scheme});
+  my $key = $url->scheme . '://' . $url->ihost;
+  return $key unless (my $port = $url->port);
+  $key .= ':' . $port if $port != $wkp;
+  return $key;
 }
 
 1;

@@ -7,101 +7,110 @@ use WWW::Crawler::Mojo::Job;
 use WWW::Crawler::Mojo::Queue::Memory;
 use WWW::Crawler::Mojo::UserAgent;
 use WWW::Crawler::Mojo::ScraperUtil qw{
-            collect_urls_css html_handlers resolve_href decoded_body};
+  collect_urls_css html_handlers resolve_href decoded_body};
 use Mojo::Util 'deprecated';
 use Mojo::Message::Request;
 our $VERSION = '0.14';
 
-has clock_speed => 0.25;
-has max_conn => 1;
+has clock_speed       => 0.25;
+has max_conn          => 1;
 has max_conn_per_host => 1;
-has queue => sub { WWW::Crawler::Mojo::Queue::Memory->new };
+has queue             => sub { WWW::Crawler::Mojo::Queue::Memory->new };
 has 'shuffle';
 has ua => sub { WWW::Crawler::Mojo::UserAgent->new };
 has ua_name =>
-    "www-crawler-mojo/$VERSION (+https://github.com/jamadam/www-crawler-mojo)";
+  "www-crawler-mojo/$VERSION (+https://github.com/jamadam/www-crawler-mojo)";
 
 sub crawl {
-    my ($self) = @_;
-    
-    $self->init;
-    
-    die 'No job is given' if (! $self->queue->length);
-    
-    $self->emit('start');
-    
-    Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+  my ($self) = @_;
+
+  $self->init;
+
+  die 'No job is given' if (!$self->queue->length);
+
+  $self->emit('start');
+
+  Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 }
 
 sub init {
-    my ($self) = @_;
-    
-    $self->on('empty', sub { say "Queue is drained out."; $self->stop })
-                                        unless $self->has_subscribers('empty');
-    $self->on('error', sub { say "An error occured during crawling $_[0]: $_[1]" })
-                                        unless $self->has_subscribers('error');
-    $self->on('res', sub { $_[1]->() }) unless $self->has_subscribers('res');
-    
-    $self->ua->transactor->name($self->ua_name);
-    $self->ua->max_redirects(5);
-    
-    $self->{_loop_ids} = [];
-    
-    my $id = Mojo::IOLoop->recurring($self->clock_speed => sub {
-        my $queue = $self->queue;
-        
-        if (!$queue->length) {
-            $self->emit('empty') if (!$self->ua->active_conn);
-            return;
-        }
-        if ($self->ua->active_conn >= $self->max_conn ||
-            $self->ua->active_host($queue->next->url) >= $self->max_conn_per_host) {
-            return;
-        }
-        $self->process_job($queue->dequeue);
-    });
-    
-    push($self->{_loop_ids}, $id);
-    
-    if ($self->shuffle) {
-        my $id = Mojo::IOLoop->recurring($self->shuffle => sub {
-            $self->queue->shuffle;
-        });
-        
-        push($self->{_loop_ids}, $id);
+  my ($self) = @_;
+
+  $self->on('empty', sub { say "Queue is drained out."; $self->stop })
+    unless $self->has_subscribers('empty');
+  $self->on('error',
+    sub { say "An error occured during crawling $_[0]: $_[1]" })
+    unless $self->has_subscribers('error');
+  $self->on('res', sub { $_[1]->() }) unless $self->has_subscribers('res');
+
+  $self->ua->transactor->name($self->ua_name);
+  $self->ua->max_redirects(5);
+
+  $self->{_loop_ids} = [];
+
+  my $id = Mojo::IOLoop->recurring(
+    $self->clock_speed => sub {
+      my $queue = $self->queue;
+
+      if (!$queue->length) {
+        $self->emit('empty') if (!$self->ua->active_conn);
+        return;
+      }
+      if ( $self->ua->active_conn >= $self->max_conn
+        || $self->ua->active_host($queue->next->url)
+        >= $self->max_conn_per_host)
+      {
+        return;
+      }
+      $self->process_job($queue->dequeue);
     }
+  );
+
+  push($self->{_loop_ids}, $id);
+
+  if ($self->shuffle) {
+    my $id = Mojo::IOLoop->recurring(
+      $self->shuffle => sub {
+        $self->queue->shuffle;
+      }
+    );
+
+    push($self->{_loop_ids}, $id);
+  }
 }
 
 sub process_job {
-    my ($self, $job) = @_;
-    my $url = $job->url;
-    my $ua = $self->ua;
-    my $tx = $ua->build_tx($job->method || 'get' => $url => $job->tx_params);
-    
-    $ua->start($tx, sub {
-        my ($ua, $tx) = @_;
-        
-        $job->redirect(_urls_redirect($tx));
-        
-        my $res = $tx->res;
-        
-        if (!$res->code) {
-            $self->emit('error',
-                ($res->error) ? $res->error->{message} : 'Unknown error', $job);
-            return;
-        }
-        
-        $self->emit('res',
-                sub { $self->scrape($res, $job, $_[0]) }, $job, $res);
-        
-        $job->close;
-    });
+  my ($self, $job) = @_;
+  my $url = $job->url;
+  my $ua  = $self->ua;
+  my $tx  = $ua->build_tx($job->method || 'get' => $url => $job->tx_params);
+
+  $ua->start(
+    $tx,
+    sub {
+      my ($ua, $tx) = @_;
+
+      $job->redirect(_urls_redirect($tx));
+
+      my $res = $tx->res;
+
+      if (!$res->code) {
+        $self->emit('error',
+          ($res->error) ? $res->error->{message} : 'Unknown error', $job);
+        return;
+      }
+
+      $self->emit('res', sub { $self->scrape($res, $job, $_[0]) }, $job, $res);
+
+      $job->close;
+    }
+  );
 }
 
 sub say_start {
-    my $self = shift;
-    
-    print <<"EOF";
+  my $self = shift;
+
+  print <<"EOF";
 ----------------------------------------
 Crawling is starting with @{[ $self->queue->next->url ]}
 Max Connection  : @{[ $self->max_conn ]}
@@ -111,90 +120,93 @@ EOF
 }
 
 sub scrape {
-    die 'scrape method with 4 argments has been removed'
-                                    if (scalar @_ == 5 || ref $_[3] eq 'CODE');
-    
-    my ($self, $res, $job, $contexts) = @_;
-    my @ret;
-    
-    return unless $res->headers->content_length && $res->body;
-    
-    my $base = $job->url;
-    my $type = $res->headers->content_type;
-    
-    if ($type && $type =~ qr{^(text|application)/(html|xml|xhtml)}) {
-        if ((my $base_tag = $res->dom->at('base[href]'))) {
-            $base = resolve_href($base, $base_tag->attr('href'));
-        }
-        my $dom = Mojo::DOM->new(decoded_body($res));
-        my $handlers = html_handlers($contexts);
-        for my $selector (sort keys %{$handlers}) {
-            $dom->find($selector)->each(sub {
-                my $dom = shift;
-                for ($handlers->{$selector}->($dom)) {
-                    push(@ret, $self->_make_child($_, $dom, $job, $base));
-                }
-            });
-        }
+  die 'scrape method with 4 argments has been removed'
+    if (scalar @_ == 5 || ref $_[3] eq 'CODE');
+
+  my ($self, $res, $job, $contexts) = @_;
+  my @ret;
+
+  return unless $res->headers->content_length && $res->body;
+
+  my $base = $job->url;
+  my $type = $res->headers->content_type;
+
+  if ($type && $type =~ qr{^(text|application)/(html|xml|xhtml)}) {
+    if ((my $base_tag = $res->dom->at('base[href]'))) {
+      $base = resolve_href($base, $base_tag->attr('href'));
     }
-    
-    if ($type && $type =~ qr{text/css}) {
-        for (collect_urls_css(decoded_body($res))) {
-            push(@ret, $self->_make_child($_, $job->url, $job, $base));
+    my $dom      = Mojo::DOM->new(decoded_body($res));
+    my $handlers = html_handlers($contexts);
+    for my $selector (sort keys %{$handlers}) {
+      $dom->find($selector)->each(
+        sub {
+          my $dom = shift;
+          for ($handlers->{$selector}->($dom)) {
+            push(@ret, $self->_make_child($_, $dom, $job, $base));
+          }
         }
+      );
     }
-    
-    return @ret;
+  }
+
+  if ($type && $type =~ qr{text/css}) {
+    for (collect_urls_css(decoded_body($res))) {
+      push(@ret, $self->_make_child($_, $job->url, $job, $base));
+    }
+  }
+
+  return @ret;
 }
 
 sub stop {
-    Mojo::IOLoop->remove($_) for (@{shift->{_loop_ids}});
-    Mojo::IOLoop->stop;
+  Mojo::IOLoop->remove($_) for (@{shift->{_loop_ids}});
+  Mojo::IOLoop->stop;
 }
 
 sub _make_child {
-    my ($self, $url, $context, $job, $base) = @_;
-    my $method, my $params;
-    
-    return unless $url;
-    ($url, $method, $params) = @$url if (ref $url);
-    
-    my $resolved = resolve_href($base, $url);
-    
-    return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});
-    
-    my $child =
-        $job->child(url => $resolved, literal_uri => $url, context => $context);
-    
-    $child->method($method) if $method;
-    
-    if ($params) {
-        if ($method eq 'GET') {
-            $child->url->query->append($params);
-        } else {
-            $child->tx_params($params);
-        }
+  my ($self, $url, $context, $job, $base) = @_;
+  my $method, my $params;
+
+  return unless $url;
+  ($url, $method, $params) = @$url if (ref $url);
+
+  my $resolved = resolve_href($base, $url);
+
+  return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});
+
+  my $child
+    = $job->child(url => $resolved, literal_uri => $url, context => $context);
+
+  $child->method($method) if $method;
+
+  if ($params) {
+    if ($method eq 'GET') {
+      $child->url->query->append($params);
     }
-    
-    return $child;
+    else {
+      $child->tx_params($params);
+    }
+  }
+
+  return $child;
 }
 
 sub enqueue {
-    my ($self, @jobs) = @_;
-    $self->queue->enqueue(WWW::Crawler::Mojo::Job->upgrade($_)) for @jobs;
+  my ($self, @jobs) = @_;
+  $self->queue->enqueue(WWW::Crawler::Mojo::Job->upgrade($_)) for @jobs;
 }
 
 sub requeue {
-    my ($self, @jobs) = @_;
-    $self->queue->requeue(WWW::Crawler::Mojo::Job->upgrade($_)) for @jobs;
+  my ($self, @jobs) = @_;
+  $self->queue->requeue(WWW::Crawler::Mojo::Job->upgrade($_)) for @jobs;
 }
 
 sub _urls_redirect {
-    my $tx = shift;
-    my @urls;
-    @urls = _urls_redirect($tx->previous) if ($tx->previous);
-    unshift(@urls, $tx->req->url->userinfo(undef));
-    return @urls;
+  my $tx = shift;
+  my @urls;
+  @urls = _urls_redirect($tx->previous) if ($tx->previous);
+  unshift(@urls, $tx->req->url->userinfo(undef));
+  return @urls;
 }
 
 1;
