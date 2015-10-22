@@ -125,3 +125,15 @@ sub _enqueue {
 }
 
 1;
+
+=head1 NAME
+
+WWW::Crawler::Mojo::Queue::Memory - Crawler queue with Mysql [EXPERIMENTAL]
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+Crawler queue with MySQL.
+
+=cut
