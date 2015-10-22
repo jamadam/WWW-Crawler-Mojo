@@ -1,3 +1,6 @@
+# find lib/ -name '*.pm' -print -exec perltidy -pro=.perltidyrc -nst -b -bext='/' {} \;
+# find t/ -name '*.t' -print -exec perltidy -pro=.perltidyrc -nst -b -bext='/' {} \;
+
 -pbp     # Start with Perl Best Practices
 -w       # Show all warnings
 -iob     # Ignore old breakpoints
