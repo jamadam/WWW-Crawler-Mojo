@@ -66,7 +66,7 @@ sub init {
     }
   );
 
-  push($self->{_loop_ids}, $id);
+  push(@{$self->{_loop_ids}}, $id);
 
   if ($self->shuffle) {
     my $id = Mojo::IOLoop->recurring(
@@ -75,7 +75,7 @@ sub init {
       }
     );
 
-    push($self->{_loop_ids}, $id);
+    push(@{$self->{_loop_ids}}, $id);
   }
 }
 
@@ -159,7 +159,10 @@ sub scrape {
 }
 
 sub stop {
-  Mojo::IOLoop->remove($_) for (@{shift->{_loop_ids}});
+  my $self = shift;
+  while (my $id = shift @{$self->{_loop_ids}}) {
+    Mojo::IOLoop->remove($id);
+  }
   Mojo::IOLoop->stop;
 }
 
