@@ -341,14 +341,7 @@ EOF
 
   my $bot = WWW::Crawler::Mojo->new;
   $bot->init;
-  for (
-    $bot->scrape(
-      $res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/')
-    )
-    )
-  {
-    $bot->enqueue($_);
-  }
+  $bot->enqueue($_) for ($bot->scrape($res, new_job('http://example.com/')));
 
   my $job;
   $job = $bot->queue->dequeue;
@@ -391,14 +384,7 @@ EOF
 
   my $bot = WWW::Crawler::Mojo->new;
   $bot->init;
-  for (
-    $bot->scrape(
-      $res, WWW::Crawler::Mojo::Job->new(url => 'http://example.com/')
-    )
-    )
-  {
-    $bot->enqueue($_);
-  }
+  $bot->enqueue($_) for ($bot->scrape($res, new_job('http://example.com/')));
 
   my $job;
   $job = $bot->queue->dequeue;
@@ -408,4 +394,8 @@ EOF
   is_deeply $job->tx_params, undef,                             'right params';
   $job = $bot->queue->dequeue;
   is $job, undef, 'no more urls';
+}
+
+sub new_job {
+  return WWW::Crawler::Mojo::Job->new(url => shift);
 }
