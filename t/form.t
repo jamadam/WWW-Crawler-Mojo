@@ -11,7 +11,7 @@ use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
 use WWW::Crawler::Mojo::ScraperUtil qw{html_handlers};
 use Mojo::Message::Response;
-use Test::More tests => 47;
+use Test::More tests => 49;
 
 my $html_handlers = html_handlers();
 
@@ -217,7 +217,7 @@ EOF
                     Select with same named hidden field.
                 </legend>
                 <input type="hidden" name="foo" value="value1">
-                <select name="foo">
+                <select name="foo" multiple>
                     <option value="value2" selected>a</option>
                     <option value="value3" selected>a</option>
                     <option value="value4">a</option>
@@ -241,6 +241,32 @@ EOF
                 <textarea name="foo">foo default</textarea>
                 <textarea name="bar" disabled>bar default</textarea>
                 <textarea name="baz" required>baz default</textarea>
+                <input type="submit" value="send">
+            </fieldset>
+        </form>
+        <form action="/receptor1" method="post">
+            <fieldset>
+                <legend>
+                    Select with same named hidden field.
+                </legend>
+                <input type="hidden" name="foo" value="value1">
+                <select name="foo">
+                    <option value="value2" selected>a</option>
+                    <option value="value3" selected>a</option>
+                </select>
+                <input type="submit" value="send">
+            </fieldset>
+        </form>
+        <form action="/receptor1" method="post">
+            <fieldset>
+                <legend>
+                    Select with same named hidden field.
+                </legend>
+                <input type="hidden" name="foo" value="value1">
+                <select name="foo">
+                    <option value="value2">a</option>
+                    <option value="value3" selected>a</option>
+                </select>
                 <input type="submit" value="send">
             </fieldset>
         </form>
@@ -280,7 +306,7 @@ EOF
   }
   {
     my $ret = _weave_form_data($dom->find('form')->[6]);
-    is_deeply $ret->[2]->to_hash, {};
+    is_deeply $ret->[2]->to_hash, {foo => ''};
   }
   {
     my $ret = _weave_form_data($dom->find('form')->[7]);
@@ -310,6 +336,14 @@ EOF
     my $ret = _weave_form_data($dom->find('form')->[13]);
     is_deeply $ret->[2]->to_hash,
       {foo => 'foo default', bar => 'bar default', baz => 'baz default'};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[14]);
+    is_deeply $ret->[2]->to_hash, {foo => ['value1', 'value2']};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[15]);
+    is_deeply $ret->[2]->to_hash, {foo => ['value1', 'value3']};
   }
 }
 

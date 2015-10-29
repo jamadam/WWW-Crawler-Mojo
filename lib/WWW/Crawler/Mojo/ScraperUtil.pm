@@ -58,11 +58,26 @@ my $handlers = {
         $seed{my $name = $e->{name}} ||= [];
 
         if ($e->tag eq 'select') {
-          $e->find('option[selected]')->each(
-            sub {
-              push(@{$seed{$name}}, shift->{value});
-            }
-          );
+          my $found = 0;
+          if (exists $e->{multiple}) {
+            $e->find('option[selected]')->each(
+              sub {
+                push(@{$seed{$name}}, shift->{value});
+                $found++;
+              }
+            );
+          }
+          elsif (my $opts = $e->find('option[selected]')) {
+            push(@{$seed{$name}}, $opts->[0]->{value});
+            $found++;
+          }
+          if (!$found) {
+            $e->find('option:nth-child(0)')->each(
+              sub {
+                push(@{$seed{$name}}, shift->{value});
+              }
+            );
+          }
         }
         elsif ($e->tag eq 'textarea') {
           push(@{$seed{$name}}, $e->text);
