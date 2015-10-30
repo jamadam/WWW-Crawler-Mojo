@@ -1,6 +1,8 @@
 Revision history for WWW-Crawler-Mojo
 
-0.14 2015/10/22
+0.14 2015/10/30
+
+0.14 2015/10/30
   - Added experimental MySQL support for queue (harshals).
   - Improved documentations.
   - Added some example codes.
