@@ -67,12 +67,12 @@ my $handlers = {
               }
             );
           }
-          elsif (my $opts = $e->find('option[selected]')) {
-            push(@{$seed{$name}}, $opts->[0]->{value});
+          elsif (my $opts = $e->at('option[selected]')) {
+            push(@{$seed{$name}}, $opts->{value});
             $found++;
           }
           if (!$found) {
-            $e->find('option:nth-child(0)')->each(
+            $e->find('option:nth-child(1)')->each(
               sub {
                 push(@{$seed{$name}}, shift->{value});
               }

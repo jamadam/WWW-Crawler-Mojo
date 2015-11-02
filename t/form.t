@@ -11,7 +11,7 @@ use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
 use WWW::Crawler::Mojo::ScraperUtil qw{html_handlers};
 use Mojo::Message::Response;
-use Test::More tests => 49;
+use Test::More tests => 50;
 
 my $html_handlers = html_handlers();
 
@@ -270,6 +270,14 @@ EOF
                 <input type="submit" value="send">
             </fieldset>
         </form>
+        <form action="/receptor1" method="post">
+            <input type="hidden" name="foo" value="value1">
+            <select name="foo">
+                <option value="value2">a</option>
+                <option value="value3">a</option>
+            </select>
+            <input type="submit" value="send">
+        </form>
     </body>
 </html>
 EOF
@@ -344,6 +352,10 @@ EOF
   {
     my $ret = _weave_form_data($dom->find('form')->[15]);
     is_deeply $ret->[2]->to_hash, {foo => ['value1', 'value3']};
+  }
+  {
+    my $ret = _weave_form_data($dom->find('form')->[16]);
+    is_deeply $ret->[2]->to_hash, {foo => ['value1', 'value2']};
   }
 }
 
