@@ -102,173 +102,98 @@ EOF
 <html>
     <body>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    Some hidden fields and multiple buttons.
-                </legend>
-                <input type="text" name="foo" value="fooValue">
-                <input type="text" name="bar" value="barValue">
-                <input type="hidden" name="baz" value="bazValue">
-                <input type="hidden" name="yada" value="yadaValue" disabled="disabled">
-                <input type="submit" name='btn' value="send">
-                <input type="submit" name='btn' value="send2">
-                <input type="submit" name='btn3' value="send3">
-            </fieldset>
+            <input type="text" name="foo" value="fooValue">
+            <input type="text" name="bar" value="barValue">
+            <input type="hidden" name="baz" value="bazValue">
+            <input type="hidden" name="yada" value="yadaValue" disabled="disabled">
+            <input type="submit" name='btn' value="send">
+            <input type="submit" name='btn' value="send2">
+            <input type="submit" name='btn3' value="send3">
         </form>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    Simple form.
-                </legend>
-                <input type="text" name="foo" value="fooValue">
-                <input type="submit" value="send">
-            </fieldset>
+            <input type="text" name="foo" value="fooValue">
+            <input type="submit" value="send">
         </form>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    Checked radio not exists
-                </legend>
-                <input type="radio" name="foo" value="fooValue2"> fooValue2
-                <input type="radio" name="foo" value="fooValue3"> fooValue3
-                <input type="submit" value="send">
-            </field>
+            <input type="radio" name="foo" value="fooValue2"> fooValue2
+            <input type="radio" name="foo" value="fooValue3"> fooValue3
+            <input type="submit" value="send">
         </form>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    Checked radio exists
-                </legend>
-                <input type="radio" name="foo" value="fooValue2"> fooValue2
-                <input type="radio" name="foo" value="fooValue3" checked="checked"> fooValue3
-                <input type="submit" value="send">
-            </field>
+            <input type="radio" name="foo" value="fooValue2"> fooValue2
+            <input type="radio" name="foo" value="fooValue3" checked="checked"> fooValue3
+            <input type="submit" value="send">
         </form>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    Radio button with same named hidden for setting default value.
-                </legend>
-                <input type="hidden" name="foo" value="">
-                <input type="radio" name="foo" value="fooValue1"> fooValue1
-                <input type="radio" name="foo" value="fooValue2" checked="checked"> fooValue2
-                <input type="submit" value="send">
-            </fieldset>
+            <input type="hidden" name="foo" value="">
+            <input type="radio" name="foo" value="fooValue1"> fooValue1
+            <input type="radio" name="foo" value="fooValue2" checked="checked"> fooValue2
+            <input type="submit" value="send">
         </form>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    Default checked radio set.
-                </legend>
-                <input type="radio" name="foo" value="fooValue1"> fooValue1
-                <input type="radio" name="foo" value="fooValue2" checked> fooValue2
-                <input type="radio" name="foo" value="fooValue3"> fooValue3
-                <input type="submit" value="send">
-            </fieldset>
+            <input type="radio" name="foo" value="fooValue1"> fooValue1
+            <input type="radio" name="foo" value="fooValue2" checked> fooValue2
+            <input type="radio" name="foo" value="fooValue3"> fooValue3
+            <input type="submit" value="send">
         </form>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    select.
-                </legend>
-                <select name="foo">
-                    <option value="">a</option>
-                    <option value="fooValue1">a</option>
-                    <option value="fooValue2">b</option>
-                    <option value="a&quot;b">b</option>
-                    <option value="a/b">b</option>
-                </select>
-                <input type="submit" value="send">
-            </fieldset>
+            <select name="foo">
+                <option value="">a</option>
+                <option value="fooValue1">a</option>
+                <option value="fooValue2">b</option>
+                <option value="a&quot;b">b</option>
+                <option value="a/b">b</option>
+            </select>
+            <input type="submit" value="send">
         </form>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    Pattern html5 attribute.
-                </legend>
-                <input type="text" name="foo" value="" pattern="\d\d\d">
-                <input type="submit" value="send">
-            </fieldset>
+            <input type="text" name="foo" value="" pattern="\d\d\d">
+            <input type="submit" value="send">
         </form>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    Set type to number.
-                </legend>
-                <input type="number" name="foo" value="" min="5" max="10">
-                <input type="submit" value="send">
-            </fieldset>
+            <input type="number" name="foo" value="" min="5" max="10">
+            <input type="submit" value="send">
         </form>
         <form action="/receptor3" method="post">
         </form>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    File.
-                </legend>
-                <input type="text" name="foo" value="">
-                <input type="file" name="bar">
-                <input type="submit" value="send">
-            </fieldset>
+            <input type="text" name="foo" value="">
+            <input type="file" name="bar">
+            <input type="submit" value="send">
         </form>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    Select with same named hidden field.
-                </legend>
-                <input type="hidden" name="foo" value="value1">
-                <select name="foo" multiple>
-                    <option value="value2" selected>a</option>
-                    <option value="value3" selected>a</option>
-                    <option value="value4">a</option>
-                </select>
-                <input type="submit" value="send">
-            </fieldset>
+            <input type="hidden" name="foo" value="value1">
+            <select name="foo" multiple>
+                <option value="value2" selected>a</option>
+                <option value="value3" selected>a</option>
+                <option value="value4">a</option>
+            </select>
+            <input type="submit" value="send">
         </form>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    Special chars.
-                </legend>
-                <input type="hidden" name="foo" value="やったー">
-            </fieldset>
+            <input type="hidden" name="foo" value="やったー">
         </form>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    Textareas.
-                </legend>
-                <textarea name="foo">foo default</textarea>
-                <textarea name="bar" disabled>bar default</textarea>
-                <textarea name="baz" required>baz default</textarea>
-                <input type="submit" value="send">
-            </fieldset>
+            <textarea name="foo">foo default</textarea>
+            <textarea name="bar" disabled>bar default</textarea>
+            <textarea name="baz" required>baz default</textarea>
+            <input type="submit" value="send">
         </form>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    Select with same named hidden field.
-                </legend>
-                <input type="hidden" name="foo" value="value1">
-                <select name="foo">
-                    <option value="value2" selected>a</option>
-                    <option value="value3" selected>a</option>
-                </select>
-                <input type="submit" value="send">
-            </fieldset>
+            <input type="hidden" name="foo" value="value1">
+            <select name="foo">
+                <option value="value2" selected>a</option>
+                <option value="value3" selected>a</option>
+            </select>
+            <input type="submit" value="send">
         </form>
         <form action="/receptor1" method="post">
-            <fieldset>
-                <legend>
-                    Select with same named hidden field.
-                </legend>
-                <input type="hidden" name="foo" value="value1">
-                <select name="foo">
-                    <option value="value2">a</option>
-                    <option value="value3" selected>a</option>
-                </select>
-                <input type="submit" value="send">
-            </fieldset>
+            <input type="hidden" name="foo" value="value1">
+            <select name="foo">
+                <option value="value2">a</option>
+                <option value="value3" selected>a</option>
+            </select>
+            <input type="submit" value="send">
         </form>
         <form action="/receptor1" method="post">
             <input type="hidden" name="foo" value="value1">
