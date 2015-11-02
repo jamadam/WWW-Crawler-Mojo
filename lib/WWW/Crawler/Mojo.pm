@@ -81,12 +81,9 @@ sub init {
 
 sub process_job {
   my ($self, $job) = @_;
-  my $url = $job->url;
-  my $ua  = $self->ua;
-  my $tx  = $ua->build_tx($job->method || 'get' => $url => $job->tx_params);
 
-  $ua->start(
-    $tx,
+  $self->ua->start(
+    $self->ua->build_tx($job->method || 'get' => $job->url => $job->tx_params),
     sub {
       my ($ua, $tx) = @_;
 
@@ -168,10 +165,9 @@ sub stop {
 
 sub _make_child {
   my ($self, $url, $context, $job, $base) = @_;
-  my $method, my $params;
 
   return unless $url;
-  ($url, $method, $params) = @$url if (ref $url);
+  ($url, my $method, my $params) = @$url if (ref $url);
 
   my $resolved = resolve_href($base, $url);
 
