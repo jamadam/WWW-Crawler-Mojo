@@ -11,8 +11,10 @@ plan skip_all => 'set TEST_ONLINE to enable this test'
   unless $ENV{TEST_ONLINE};
 
 use WWW::Crawler::Mojo;
-use WWW::Crawler::Mojo::Queue::MySQL;
 use WWW::Crawler::Mojo::Job;
+
+require WWW::Crawler::Mojo::Queue::MySQL;
+import WWW::Crawler::Mojo::Queue::MySQL;
 
 my $queue = WWW::Crawler::Mojo::Queue::MySQL->new($ENV{TEST_ONLINE},
   table_name => "testing_jobs");
