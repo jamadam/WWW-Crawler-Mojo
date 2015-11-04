@@ -1,5 +1,7 @@
 Revision history for WWW-Crawler-Mojo
 
+0.16 2015/11/04
+
 0.15 2015/11/04
   - Fixed a bug where Mysql queue has not skipped correctly.
   - Fixed a bug where form submition emulation has failed on certain condition.
