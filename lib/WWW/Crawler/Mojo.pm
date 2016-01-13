@@ -1,14 +1,12 @@
 package WWW::Crawler::Mojo;
 use strict;
 use warnings;
-use 5.010;
 use Mojo::Base 'Mojo::EventEmitter';
 use WWW::Crawler::Mojo::Job;
 use WWW::Crawler::Mojo::Queue::Memory;
 use WWW::Crawler::Mojo::UserAgent;
 use WWW::Crawler::Mojo::ScraperUtil qw{
   collect_urls_css html_handlers resolve_href decoded_body};
-use Mojo::Util 'deprecated';
 use Mojo::Message::Request;
 our $VERSION = '0.16';
 

@@ -25,8 +25,8 @@ WWW::Crawler::Mojo is a web crawling framework written in Perl on top of mojo to
 
 ## Requirements
 
-* Perl 5.14
-* Mojolicious 6.0
+* Perl 5.16 or higher
+* Mojolicious 6.0 or higher
 
 ## Installation
 
