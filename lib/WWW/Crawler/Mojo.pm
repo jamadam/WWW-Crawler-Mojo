@@ -10,7 +10,7 @@ use WWW::Crawler::Mojo::ScraperUtil qw{
   collect_urls_css html_handlers resolve_href decoded_body};
 use Mojo::Util 'deprecated';
 use Mojo::Message::Request;
-our $VERSION = '0.16';
+our $VERSION = '0.15';
 
 has clock_speed       => 0.25;
 has max_conn          => 1;
@@ -81,27 +81,29 @@ sub init {
 
 sub process_job {
   my ($self, $job) = @_;
+  
+  my $tx = $self->ua->build_tx($job->method || 'get' => $job->url => $job->tx_params);
+  
+  $self->emit('req', $job, $tx->req);
+  
+  $self->ua->start($tx => sub {
+    my ($ua, $tx) = @_;
 
-  $self->ua->start(
-    $self->ua->build_tx($job->method || 'get' => $job->url => $job->tx_params),
-    sub {
-      my ($ua, $tx) = @_;
+    $job->redirect(_urls_redirect($tx));
 
-      $job->redirect(_urls_redirect($tx));
+    my $res = $tx->res;
 
-      my $res = $tx->res;
-
-      if (!$res->code) {
-        $self->emit('error',
-          ($res->error) ? $res->error->{message} : 'Unknown error', $job);
-        return;
-      }
-
-      $self->emit('res', sub { $self->scrape($res, $job, $_[0]) }, $job, $res);
-
-      $job->close;
+    if (!$res->code) {
+      $self->emit('error',
+        ($res->error) ? $res->error->{message} : 'Unknown error', $job);
+      
+      return;
     }
-  );
+
+    $self->emit('res', sub { $self->scrape($res, $job, $_[0]) }, $job, $res);
+
+    $job->close;
+  });
 }
 
 sub say_start {
