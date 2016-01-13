@@ -304,6 +304,17 @@ Name of crawler for User-Agent header.
 L<WWW::Crawler::Mojo> inherits all events from L<Mojo::EventEmitter> and
 implements the following new ones.
 
+=head2 req
+
+Emitted right before crawler perform request to servers. The callback takes 3
+arguments.
+
+    $bot->on(req => sub {
+        my ($bot, $job, $req) = @_;
+
+        # DO NOTHING
+    });
+
 =head2 res
 
 Emitted when crawler got response from server. The callback takes 4 arguments.
