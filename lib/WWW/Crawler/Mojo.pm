@@ -10,7 +10,7 @@ use WWW::Crawler::Mojo::ScraperUtil qw{
   collect_urls_css html_handlers resolve_href decoded_body};
 use Mojo::Util 'deprecated';
 use Mojo::Message::Request;
-our $VERSION = '0.15';
+our $VERSION = '0.16';
 
 has clock_speed       => 0.25;
 has max_conn          => 1;
