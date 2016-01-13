@@ -81,29 +81,32 @@ sub init {
 
 sub process_job {
   my ($self, $job) = @_;
-  
-  my $tx = $self->ua->build_tx($job->method || 'get' => $job->url => $job->tx_params);
-  
+
+  my $tx = $self->ua->build_tx($job->method
+      || 'get' => $job->url => $job->tx_params);
+
   $self->emit('req', $job, $tx->req);
-  
-  $self->ua->start($tx => sub {
-    my ($ua, $tx) = @_;
 
-    $job->redirect(_urls_redirect($tx));
+  $self->ua->start(
+    $tx => sub {
+      my ($ua, $tx) = @_;
 
-    my $res = $tx->res;
+      $job->redirect(_urls_redirect($tx));
 
-    if (!$res->code) {
-      $self->emit('error',
-        ($res->error) ? $res->error->{message} : 'Unknown error', $job);
-      
-      return;
+      my $res = $tx->res;
+
+      if (!$res->code) {
+        $self->emit('error',
+          ($res->error) ? $res->error->{message} : 'Unknown error', $job);
+
+        return;
+      }
+
+      $self->emit('res', sub { $self->scrape($res, $job, $_[0]) }, $job, $res);
+
+      $job->close;
     }
-
-    $self->emit('res', sub { $self->scrape($res, $job, $_[0]) }, $job, $res);
-
-    $job->close;
-  });
+  );
 }
 
 sub say_start {
