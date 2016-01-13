@@ -26,7 +26,7 @@ sub crawl {
 
   $self->init;
 
-  die 'No job is given' if (!$self->queue->length);
+  die 'No job is given' unless ($self->queue->length);
 
   $self->emit('start');
 
@@ -53,15 +53,13 @@ sub init {
       my $queue = $self->queue;
 
       if (!$queue->length) {
-        $self->emit('empty') if (!$self->ua->active_conn);
+        $self->emit('empty') unless ($self->ua->active_conn);
         return;
       }
-      if ( $self->ua->active_conn >= $self->max_conn
-        || $self->ua->active_host($queue->next->url)
-        >= $self->max_conn_per_host)
-      {
-        return;
-      }
+      return if $self->ua->active_conn >= $self->max_conn;
+      return
+        if $self->ua->active_host($queue->next->url)
+        >= $self->max_conn_per_host;
       $self->process_job($queue->dequeue);
     }
   );
@@ -95,10 +93,9 @@ sub process_job {
 
       my $res = $tx->res;
 
-      if (!$res->code) {
-        $self->emit('error',
-          ($res->error) ? $res->error->{message} : 'Unknown error', $job);
-
+      unless ($res->code) {
+        my $msg = $res->error ? $res->error->{message} : 'Unknown error';
+        $self->emit('error', $msg, $job);
         return;
       }
 
@@ -122,9 +119,6 @@ EOF
 }
 
 sub scrape {
-  die 'scrape method with 4 argments has been removed'
-    if (scalar @_ == 5 || ref $_[3] eq 'CODE');
-
   my ($self, $res, $job, $contexts) = @_;
   my @ret;
 
