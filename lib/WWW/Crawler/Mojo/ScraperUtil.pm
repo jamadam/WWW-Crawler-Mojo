@@ -142,6 +142,7 @@ sub html_handlers {
 
 sub resolve_href {
   my ($base, $href) = @_;
+  $href //= '';
   $href =~ s{\s}{}g;
   $href = ref $href ? $href : Mojo::URL->new($href);
   $base = ref $base ? $base : Mojo::URL->new($base);
