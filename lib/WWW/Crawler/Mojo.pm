@@ -79,7 +79,7 @@ sub process_job {
   my ($self, $job) = @_;
 
   my $tx = $self->ua->build_tx($job->method
-      || 'get' => $job->url => $job->tx_params);
+      || 'get' => $job->url => $job->tx_params // {});
 
   $self->emit('req', $job, $tx->req);
 
