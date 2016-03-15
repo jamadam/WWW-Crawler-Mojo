@@ -78,8 +78,9 @@ sub init {
 sub process_job {
   my ($self, $job) = @_;
 
-  my $tx = $self->ua->build_tx($job->method
-      || 'get' => $job->url => $job->tx_params // {});
+  my @args = ($job->method || 'get', $job->url);
+  push(@args, form => $job->tx_params->to_hash) if $job->tx_params;
+  my $tx = $self->ua->build_tx(@args);
 
   $self->emit('req', $job, $tx->req);
 
