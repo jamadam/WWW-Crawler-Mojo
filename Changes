@@ -1,6 +1,7 @@
 Revision history for WWW-Crawler-Mojo
 
 0.17 2016/01/14
+  - Fixed form submition emulation to work
 
 0.16 2016/01/14
   - Added req event for such as request modification (gfdev).
