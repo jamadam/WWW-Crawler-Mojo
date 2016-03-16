@@ -1,6 +1,7 @@
 Revision history for WWW-Crawler-Mojo
 
-0.18 2017/03/15
+0.18 2017/03/16
+  - Added cap attribute for queue to limit the length
 
 0.17 2017/03/15
   - Fixed form submition emulation to work
