@@ -5,6 +5,7 @@ use utf8;
 use Mojo::Base 'WWW::Crawler::Mojo::Queue';
 use List::Util;
 
+has 'cap';
 has jobs => sub { [] };
 has redundancy => sub {
   my %fix;
@@ -44,6 +45,7 @@ sub shuffle {
 sub _enqueue {
   my ($self, $job, $requeue) = @_;
   return if (!$requeue && $self->redundancy->($job));
+  $self->dequeue if ($self->cap && $self->cap < $self->length);
   push(@{$self->jobs}, $job);
   return $self;
 }
@@ -65,6 +67,15 @@ Crawler queue with memory.
 This class inherits all methods from L<WWW::Crawler::Mojo::Queue> and implements
 following new ones.
 
+=head2 cap
+
+Capacity of queue, indecating how many jobs can be kept in queue at a time.
+If you enqueue over capacity, the oldest job will be automatically disposed.
+
+=head2 jobs
+
+jobs.
+
 =head2 redundancy
 
 An subroutine reference called on enqueue process for avoiding redundant
@@ -83,10 +94,6 @@ control the memory usage.
         $your_storage{$d} = 1;
         return;
     });
-
-=head2 jobs
-
-jobs.
 
 =head1 METHODS
 
