@@ -67,7 +67,7 @@ Restricting scraping URLs by status code.
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
         return unless ($res->code == 200);
-        $bot->enqnene($_) for $scrape->();
+        $bot->enqueue($_) for $scrape->();
     });
 
 Restricting scraping URLs by host.
@@ -75,7 +75,7 @@ Restricting scraping URLs by host.
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
         return unless if ($job->url->host eq 'example.com');
-        $bot->enqnene($_) for $scrape->();
+        $bot->enqueue($_) for $scrape->();
     });
 
 Restrict following URLs by depth.
@@ -85,7 +85,7 @@ Restrict following URLs by depth.
         
         for my $job ($scrape->()) {
             next unless ($job->depth < 5)
-            $bot->enqnene($job);
+            $bot->enqueue($job);
         }
     });
 
@@ -95,7 +95,7 @@ Restrict following URLs by host.
         my ($bot, $scrape, $job, $res) = @_;
         
         for my $job ($scrape->()) {
-            $bot->enqnene($job) if $job->url->host eq 'example.com';
+            $bot->enqueue($job) if $job->url->host eq 'example.com';
         }
     });
 
@@ -105,7 +105,7 @@ Restrict following URLs by referrer's host.
         my ($bot, $scrape, $job, $res) = @_;
         
         for my $job ($scrape->()) {
-            $bot->enqnene($job) if $job->referrer->url->host eq 'example.com';
+            $bot->enqueue($job) if $job->referrer->url->host eq 'example.com';
         }
     });
 
@@ -115,7 +115,7 @@ Excepting following URLs by path.
         my ($bot, $scrape, $job, $res) = @_;
         
         for my $job ($scrape->()) {
-            $bot->enqnene($job) unless ($job->url->path =~ qr{^/foo/});
+            $bot->enqueue($job) unless ($job->url->path =~ qr{^/foo/});
         }
     });
 
