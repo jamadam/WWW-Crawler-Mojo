@@ -9,8 +9,10 @@ use WWW::Crawler::Mojo;
 
 use Test::More tests => 30;
 
-{
+use File::Basename 'dirname';
+local $ENV{MOJO_HOME} = dirname(__FILE__);
 
+{
   package MockServer;
   use Mojo::Base 'Mojolicious';
 

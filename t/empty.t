@@ -10,8 +10,10 @@ use WWW::Crawler::Mojo::ScraperUtil qw{resolve_href};
 
 use Test::More tests => 1;
 
-{
+use File::Basename 'dirname';
+local $ENV{MOJO_HOME} = dirname(__FILE__);
 
+{
   package MockServer;
   use Mojo::Base 'Mojolicious';
 
