@@ -1,11 +1,12 @@
 Revision history for WWW-Crawler-Mojo
 
-0.19 2017/03/16
+0.19 2016/05/23
+  - Updated tests in favor of Mojo::Home recent changes
 
-0.18 2017/03/16
+0.18 2016/03/16
   - Added cap attribute for queue to limit the length
 
-0.17 2017/03/15
+0.17 2016/03/15
   - Fixed form submition emulation to work
 
 0.16 2016/01/14
