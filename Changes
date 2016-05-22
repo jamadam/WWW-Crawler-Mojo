@@ -1,5 +1,7 @@
 Revision history for WWW-Crawler-Mojo
 
+0.20 2016/05/23
+
 0.19 2016/05/23
   - Updated tests in favor of Mojo::Home recent changes
 
