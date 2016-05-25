@@ -14,7 +14,8 @@ has redundancy => sub {
     my $d = $job->digest;
     if ($clear) {
       undef($fix{$d});
-    } else {
+    }
+    else {
       return 1 if $fix{$d};
       $fix{$d} = 1;
     }
@@ -51,7 +52,7 @@ sub _enqueue {
   my ($self, $job, $requeue) = @_;
   return if (!$requeue && $self->redundancy->($job));
   $self->redundancy->($self->dequeue, 1)
-                              if ($self->cap && $self->cap < $self->length);
+    if ($self->cap && $self->cap < $self->length);
   push(@{$self->jobs}, $job);
   return $self;
 }
