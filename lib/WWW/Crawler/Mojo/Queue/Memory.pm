@@ -10,9 +10,14 @@ has jobs => sub { [] };
 has redundancy => sub {
   my %fix;
   return sub {
-    my $d = $_[0]->digest;
-    return 1 if $fix{$d};
-    $fix{$d} = 1;
+    my ($job, $clear) = @_;
+    my $d = $job->digest;
+    if ($clear) {
+      undef($fix{$d});
+    } else {
+      return 1 if $fix{$d};
+      $fix{$d} = 1;
+    }
     return;
   };
 };
@@ -45,7 +50,8 @@ sub shuffle {
 sub _enqueue {
   my ($self, $job, $requeue) = @_;
   return if (!$requeue && $self->redundancy->($job));
-  $self->dequeue if ($self->cap && $self->cap < $self->length);
+  $self->redundancy->($self->dequeue, 1)
+                              if ($self->cap && $self->cap < $self->length);
   push(@{$self->jobs}, $job);
   return $self;
 }
