@@ -9,6 +9,7 @@ use Storable qw(freeze thaw );
 has table_name => 'jobs';
 has 'jobs';
 has blob => 0;
+has redundancy_storage => sub { {} };
 
 sub new {
   my ($class, $conn, %opts) = @_;
@@ -29,17 +30,6 @@ sub empty {
   my $table = $self->table_name;
   $self->jobs->query("delete from $table");
 }
-
-has redundancy => sub {
-  my %fix;
-
-  return sub {
-    my $d = $_[0]->digest;
-    return 1 if $fix{$d};
-    $fix{$d} = 1;
-    return;
-  };
-};
 
 sub serialize {
   return (shift->blob) ? freeze(shift) : shift->url->to_string;
@@ -110,7 +100,9 @@ sub shuffle { }
 sub _enqueue {
   my ($self, $job, $requeue) = @_;
   my $table = $self->table_name;
-  return if (!$requeue && $self->redundancy->($job));
+  my $digest = $job->digest;
+  my $redund = $self->redundancy_storage;
+  return if (!$requeue && $redund->{$digest});
   eval {
     my $tx = $self->jobs->begin;
     $self->jobs->query("delete from $table where completed = 1 and digest = ?",
@@ -120,6 +112,7 @@ sub _enqueue {
       "insert into $table (digest, data, completed) values(?,?,?)",
       $job->digest, $self->serialize($job), 0);
     $tx->commit;
+    $redund->{$digest} = 1;
   };
   return $self;
 }

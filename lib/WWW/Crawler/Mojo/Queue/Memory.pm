@@ -7,21 +7,7 @@ use List::Util;
 
 has 'cap';
 has jobs => sub { [] };
-has redundancy => sub {
-  my %fix;
-  return sub {
-    my ($job, $clear) = @_;
-    my $d = $job->digest;
-    if ($clear) {
-      undef($fix{$d});
-    }
-    else {
-      return 1 if $fix{$d};
-      $fix{$d} = 1;
-    }
-    return;
-  };
-};
+has redundancy_storage => sub { {} };
 
 sub dequeue {
   return shift(@{shift->jobs});
@@ -50,10 +36,13 @@ sub shuffle {
 
 sub _enqueue {
   my ($self, $job, $requeue) = @_;
-  return if (!$requeue && $self->redundancy->($job));
-  $self->redundancy->($self->dequeue, 1)
+  my $digest = $job->digest;
+  my $redund = $self->redundancy_storage;
+  return if (!$requeue && $redund->{$digest});
+  delete($redund->{$self->dequeue->digest})
     if ($self->cap && $self->cap < $self->length);
   push(@{$self->jobs}, $job);
+  $redund->{$digest} = 1;
   return $self;
 }
 
@@ -83,24 +72,16 @@ If you enqueue over capacity, the oldest job will be automatically disposed.
 
 jobs.
 
-=head2 redundancy
+=head2 redundancy_storage
 
-An subroutine reference called on enqueue process for avoiding redundant
-requests. It marks the job 'done' and returns 0, and next time returns 1.
+A hash ref in which the class keeps DONE flags for each jobs
+in order to avoid to perform resembling jobs multiple times.
 
-    if (!$queue->redundancy->($job)) {
-        $queue->enqueue($job);
-    }
-
-Defaults to a code that uses "no cleanup" storage. By replacing this you can
-control the memory usage.
-
-    $queue->redundancy(sub {
-        my $d = $_[0]->digest;
-        return 1 if $your_storage{$d};
-        $your_storage{$d} = 1;
-        return;
-    });
+    # Mark a job as DONE
+    $queue->redundancy_storage->{$job->digest} = 1;
+    
+    # Delete the mark
+    delete($queue->redundancy_storage->{$job->digest});
 
 =head1 METHODS
 
