@@ -99,7 +99,7 @@ sub shuffle { }
 
 sub _enqueue {
   my ($self, $job, $requeue) = @_;
-  my $table = $self->table_name;
+  my $table  = $self->table_name;
   my $digest = $job->digest;
   my $redund = $self->redundancy_storage;
   return if (!$requeue && $redund->{$digest});

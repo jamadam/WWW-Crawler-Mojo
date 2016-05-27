@@ -6,7 +6,7 @@ use Mojo::Base 'WWW::Crawler::Mojo::Queue';
 use List::Util;
 
 has 'cap';
-has jobs => sub { [] };
+has jobs               => sub { [] };
 has redundancy_storage => sub { {} };
 
 sub dequeue {
