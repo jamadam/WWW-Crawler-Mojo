@@ -11,12 +11,57 @@ use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
 use WWW::Crawler::Mojo::ScraperUtil qw{html_handlers};
 use Mojo::Message::Response;
-use Test::More tests => 50;
+use Test::More tests => 59;
 
 my $html_handlers = html_handlers();
 
 sub _weave_form_data {
   $html_handlers->{form}->(@_);
+}
+
+{
+  my $dom = Mojo::DOM->new(<<EOF);
+<div>
+    <form action="/index1.html" method="get">
+        <input type="submit" value="submit1">
+        <input type="submit" name='buttonName' value="submit2">
+    </form>
+</div>
+EOF
+  my $ret = _weave_form_data($dom->at('form'));
+  is $ret->[0], '/index1.html';
+  is $ret->[1], 'GET';
+  is_deeply $ret->[2]->to_hash, {};
+}
+
+{
+  my $dom = Mojo::DOM->new(<<EOF);
+<div>
+    <form action="/index1.html" method="get">
+        <input type="submit" name='buttonName'>
+        <input type="submit" name='buttonName' value="submit2">
+    </form>
+</div>
+EOF
+  my $ret = _weave_form_data($dom->at('form'));
+  is $ret->[0], '/index1.html';
+  is $ret->[1], 'GET';
+  is_deeply $ret->[2]->to_hash, {buttonName => ''};
+}
+
+{
+  my $dom = Mojo::DOM->new(<<EOF);
+<div>
+    <form action="/index1.html" method="get">
+        <input type="image">
+        <input type="submit" name='buttonName' value="submit2">
+    </form>
+</div>
+EOF
+  my $ret = _weave_form_data($dom->at('form'));
+  is $ret->[0], '/index1.html';
+  is $ret->[1], 'GET';
+  is_deeply $ret->[2]->to_hash, {};
 }
 
 {

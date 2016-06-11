@@ -52,10 +52,10 @@ my $handlers = {
     my $dom = shift;
     my (%seed, $submit);
 
-    $dom->find("[name]")->each(
+    $dom->find("[name],[type='submit'],[type='image']")->each(
       sub {
         my $e = shift;
-        $seed{my $name = $e->{name}} ||= [];
+        $seed{my $name = $e->{name}} ||= [] if $e->{name};
 
         if ($e->tag eq 'select') {
           my $found = 0;
@@ -87,7 +87,7 @@ my $handlers = {
 
         if (!$submit && grep { $_ eq $type } qw{submit image}) {
           $submit = 1;
-          push(@{$seed{$name}}, $e->{value});
+          push(@{$seed{$name}}, $e->{value}) if $name;
         }
         elsif (grep { $_ eq $type } qw{text hidden number}) {
           push(@{$seed{$name}}, $e->{value});
