@@ -57,7 +57,7 @@ my $handlers = {
         my $e = shift;
         $seed{my $name = $e->{name}} ||= [] if $e->{name};
 
-        if ($e->tag eq 'select') {
+        if ($e->tag eq 'select' && $name) {
           my $found = 0;
           if (exists $e->{multiple}) {
             $e->find('option[selected]')->each(
@@ -89,14 +89,16 @@ my $handlers = {
           $submit = 1;
           push(@{$seed{$name}}, $e->{value}) if $name;
         }
-        elsif (grep { $_ eq $type } qw{text hidden number}) {
-          push(@{$seed{$name}}, $e->{value});
-        }
-        elsif (grep { $_ eq $type } qw{checkbox}) {
-          push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
-        }
-        elsif (grep { $_ eq $type } qw{radio}) {
-          push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
+        if ($name) {
+          if (grep { $_ eq $type } qw{text hidden number}) {
+            push(@{$seed{$name}}, $e->{value});
+          }
+          elsif (grep { $_ eq $type } qw{checkbox}) {
+            push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
+          }
+          elsif (grep { $_ eq $type } qw{radio}) {
+            push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
+          }
         }
       }
     );

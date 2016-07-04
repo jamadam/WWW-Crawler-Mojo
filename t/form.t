@@ -23,8 +23,11 @@ sub _weave_form_data {
   my $dom = Mojo::DOM->new(<<EOF);
 <div>
     <form action="/index1.html" method="get">
-        <input type="submit" value="submit1">
-        <input type="submit" name='buttonName' value="submit2">
+      <select name=""><option>a</option></select>
+      <select name="" multiple><option>a</option></select>
+      <input type="text" name="">
+      <input type="submit" value="submit1">
+      <input type="submit" name='buttonName' value="submit2">
     </form>
 </div>
 EOF
