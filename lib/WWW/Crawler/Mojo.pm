@@ -137,7 +137,7 @@ sub scrape {
         sub {
           my $dom = shift;
           for ($handlers->{$selector}->($dom)) {
-            push(@ret, $self->_make_child($_, $dom, $job, $base));
+            push(@ret, $self->_make_child($_, $dom, $job, $base)) if $_;
           }
         }
       );

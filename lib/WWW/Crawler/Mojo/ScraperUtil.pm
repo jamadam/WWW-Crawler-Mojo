@@ -144,16 +144,12 @@ sub html_handlers {
 
 sub resolve_href {
   my ($base, $href) = @_;
-  $href //= '';
   $href =~ s{\s}{}g;
   $href = ref $href ? $href : Mojo::URL->new($href);
   $base = ref $base ? $base : Mojo::URL->new($base);
-  my $abs = $href->to_abs($base)->fragment(undef);
-  while ($abs->path->parts->[0] && $abs->path->parts->[0] =~ /^\./) {
-    shift @{$abs->path->parts};
-  }
-  $abs->path->trailing_slash($base->path->trailing_slash)
-    if (!$href->path->to_string);
+  my $abs = $href->fragment(undef)->to_abs($base);
+  my $path_parts = $abs->path->parts;
+  shift @{$path_parts} while (@$path_parts && $path_parts->[0] eq '..');
   return $abs;
 }
 
