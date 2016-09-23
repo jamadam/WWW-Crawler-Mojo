@@ -147,7 +147,7 @@ sub resolve_href {
   $href =~ s{\s}{}g;
   $href = ref $href ? $href : Mojo::URL->new($href);
   $base = ref $base ? $base : Mojo::URL->new($base);
-  my $abs = $href->fragment(undef)->to_abs($base);
+  my $abs        = $href->fragment(undef)->to_abs($base);
   my $path_parts = $abs->path->parts;
   shift @{$path_parts} while (@$path_parts && $path_parts->[0] eq '..');
   return $abs;
