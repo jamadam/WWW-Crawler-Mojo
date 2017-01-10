@@ -20,7 +20,7 @@ local $ENV{MOJO_HOME} = dirname(__FILE__);
 
   sub startup {
     my $self = shift;
-    unshift @{$self->static->paths}, $self->home->rel_dir('public2');
+    unshift @{$self->static->paths}, $self->home->rel_file('public2');
   }
 }
 
