@@ -9,11 +9,11 @@ use Test::More;
 use Mojo::DOM;
 use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Job;
-use WWW::Crawler::Mojo::ScraperUtil qw{html_handlers};
+use WWW::Crawler::Mojo::ScraperUtil;
 use Mojo::Message::Response;
 use Test::More tests => 59;
 
-my $html_handlers = html_handlers();
+my $html_handlers = WWW::Crawler::Mojo::ScraperUtil::html_handler_presets();
 
 sub _weave_form_data {
   $html_handlers->{form}->(@_);

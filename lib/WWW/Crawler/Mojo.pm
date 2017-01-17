@@ -6,11 +6,12 @@ use WWW::Crawler::Mojo::Job;
 use WWW::Crawler::Mojo::Queue::Memory;
 use WWW::Crawler::Mojo::UserAgent;
 use WWW::Crawler::Mojo::ScraperUtil qw{
-  collect_urls_css html_handlers resolve_href decoded_body};
+  collect_urls_css html_handler_presets reduce_html_handlers resolve_href decoded_body};
 use Mojo::Message::Request;
 our $VERSION = '0.20';
 
 has clock_speed       => 0.25;
+has html_handlers     => sub { html_handler_presets() };
 has max_conn          => 1;
 has max_conn_per_host => 1;
 has queue             => sub { WWW::Crawler::Mojo::Queue::Memory->new };
@@ -130,8 +131,8 @@ sub scrape {
     if ((my $base_tag = $res->dom->at('base[href]'))) {
       $base = resolve_href($base, $base_tag->attr('href'));
     }
-    my $dom      = Mojo::DOM->new(decoded_body($res));
-    my $handlers = html_handlers($contexts);
+    my $dom = Mojo::DOM->new(decoded_body($res));
+    my $handlers = reduce_html_handlers($self->html_handlers, $contexts);
     for my $selector (sort keys %{$handlers}) {
       $dom->find($selector)->each(
         sub {
@@ -248,6 +249,16 @@ A number of main event loop interval in milliseconds. Defaults to 0.25.
 
     $bot->clock_speed(2);
     my $clock = $bot->clock_speed; # 2
+
+=head2 html_handlers
+
+Sets HTML handlers of scrapper. Defaults to
+WWW::Crawler::Mojo::ScraperUtil::html_handler_presets.
+
+  $bot->html_handlers( {
+    'a[href]'   => sub { return $_[0]->{href} },
+    'img[src]'  => sub { return $_[0]->{src} },
+  } );
 
 =head2 max_conn
 

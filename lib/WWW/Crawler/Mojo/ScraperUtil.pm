@@ -5,8 +5,8 @@ use Mojo::Base -base;
 use Encode qw(find_encoding);
 use Exporter 'import';
 
-our @EXPORT_OK = qw(collect_urls_css html_handlers guess_encoding
-  encoder decoded_body resolve_href);
+our @EXPORT_OK = qw(collect_urls_css html_handler_presets reduce_html_handlers
+  guess_encoding encoder decoded_body resolve_href);
 
 my $charset_re = qr{\bcharset\s*=\s*['"]?([a-zA-Z0-9_\-]+)['"]?}i;
 
@@ -37,103 +37,105 @@ sub guess_encoding {
   return _guess_encoding_css($res->body)  if ($type =~ qr{text/css});
 }
 
-my $handlers = {
-  'script[src]'  => sub { $_[0]->{src} },
-  'link[href]'   => sub { $_[0]->{href} },
-  'a[href]'      => sub { $_[0]->{href} },
-  'img[src]'     => sub { $_[0]->{src} },
-  'area'         => sub { $_[0]->{href}, $_[0]->{ping} },
-  'embed[src]'   => sub { $_[0]->{src} },
-  'frame[src]'   => sub { $_[0]->{src} },
-  'iframe[src]'  => sub { $_[0]->{src} },
-  'input[src]'   => sub { $_[0]->{src} },
-  'object[data]' => sub { $_[0]->{data} },
-  'form' => sub {
-    my $dom = shift;
-    my (%seed, $submit);
+sub html_handler_presets {
+  return {
+    'script[src]'  => sub { $_[0]->{src} },
+    'link[href]'   => sub { $_[0]->{href} },
+    'a[href]'      => sub { $_[0]->{href} },
+    'img[src]'     => sub { $_[0]->{src} },
+    'area'         => sub { $_[0]->{href}, $_[0]->{ping} },
+    'embed[src]'   => sub { $_[0]->{src} },
+    'frame[src]'   => sub { $_[0]->{src} },
+    'iframe[src]'  => sub { $_[0]->{src} },
+    'input[src]'   => sub { $_[0]->{src} },
+    'object[data]' => sub { $_[0]->{data} },
+    'form' => sub {
+      my $dom = shift;
+      my (%seed, $submit);
 
-    $dom->find("[name],[type='submit'],[type='image']")->each(
-      sub {
-        my $e = shift;
-        $seed{my $name = $e->{name}} ||= [] if $e->{name};
+      $dom->find("[name],[type='submit'],[type='image']")->each(
+        sub {
+          my $e = shift;
+          $seed{my $name = $e->{name}} ||= [] if $e->{name};
 
-        if ($e->tag eq 'select' && $name) {
-          my $found = 0;
-          if (exists $e->{multiple}) {
-            $e->find('option[selected]')->each(
-              sub {
-                push(@{$seed{$name}}, shift->{value});
-                $found++;
-              }
-            );
+          if ($e->tag eq 'select' && $name) {
+            my $found = 0;
+            if (exists $e->{multiple}) {
+              $e->find('option[selected]')->each(
+                sub {
+                  push(@{$seed{$name}}, shift->{value});
+                  $found++;
+                }
+              );
+            }
+            elsif (my $opts = $e->at('option[selected]')) {
+              push(@{$seed{$name}}, $opts->{value});
+              $found++;
+            }
+            if (!$found) {
+              $e->find('option:nth-child(1)')->each(
+                sub {
+                  push(@{$seed{$name}}, shift->{value});
+                }
+              );
+            }
           }
-          elsif (my $opts = $e->at('option[selected]')) {
-            push(@{$seed{$name}}, $opts->{value});
-            $found++;
+          elsif ($e->tag eq 'textarea') {
+            push(@{$seed{$name}}, $e->text);
           }
-          if (!$found) {
-            $e->find('option:nth-child(1)')->each(
-              sub {
-                push(@{$seed{$name}}, shift->{value});
-              }
-            );
+
+          return unless (my $type = $e->{type});
+
+          if (!$submit && grep { $_ eq $type } qw{submit image}) {
+            $submit = 1;
+            push(@{$seed{$name}}, $e->{value}) if $name;
+          }
+          if ($name) {
+            if (grep { $_ eq $type } qw{text hidden number}) {
+              push(@{$seed{$name}}, $e->{value});
+            }
+            elsif (grep { $_ eq $type } qw{checkbox}) {
+              push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
+            }
+            elsif (grep { $_ eq $type } qw{radio}) {
+              push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
+            }
           }
         }
-        elsif ($e->tag eq 'textarea') {
-          push(@{$seed{$name}}, $e->text);
-        }
+      );
 
-        return unless (my $type = $e->{type});
+      return [
+        $dom->{action} || '',
+        uc($dom->{method} || 'GET'),
+        Mojo::Parameters->new(%seed)
+      ];
+    },
+    'meta[content]' => sub {
+      return $1
+        if ($_[0] =~ qr{http\-equiv="?Refresh"?}i
+        && (($_[0]->{content} || '') =~ qr{URL=(.+)}i)[0]);
+      return;
+    },
+    'style' => sub {
+      collect_urls_css(shift->content);
+    },
+    '[style]' => sub {
+      collect_urls_css(shift->{style});
+    },
+    'urlset[xmlns^=http://www.sitemaps.org/schemas/sitemap/]' => sub {
+      @{$_->find('url loc')->map(sub { $_->content })->to_array};
+    }
+  };
+}
 
-        if (!$submit && grep { $_ eq $type } qw{submit image}) {
-          $submit = 1;
-          push(@{$seed{$name}}, $e->{value}) if $name;
-        }
-        if ($name) {
-          if (grep { $_ eq $type } qw{text hidden number}) {
-            push(@{$seed{$name}}, $e->{value});
-          }
-          elsif (grep { $_ eq $type } qw{checkbox}) {
-            push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
-          }
-          elsif (grep { $_ eq $type } qw{radio}) {
-            push(@{$seed{$name}}, $e->{value}) if (exists $e->{checked});
-          }
-        }
-      }
-    );
-
-    return [
-      $dom->{action} || '',
-      uc($dom->{method} || 'GET'),
-      Mojo::Parameters->new(%seed)
-    ];
-  },
-  'meta[content]' => sub {
-    return $1
-      if ($_[0] =~ qr{http\-equiv="?Refresh"?}i
-      && (($_[0]->{content} || '') =~ qr{URL=(.+)}i)[0]);
-    return;
-  },
-  'style' => sub {
-    collect_urls_css(shift->content);
-  },
-  '[style]' => sub {
-    collect_urls_css(shift->{style});
-  },
-  'urlset[xmlns^=http://www.sitemaps.org/schemas/sitemap/]' => sub {
-    @{$_->find('url loc')->map(sub { $_->content })->to_array};
-  }
-};
-
-sub html_handlers {
-  my $contexts = ref $_[0] ? $_[0] : [$_[0]];
+sub reduce_html_handlers {
+  my $handlers = $_[0];
+  my $contexts = ref $_[1] ? $_[1] : [$_[1]];
   my $ret;
-  for (keys %$handlers) {
-    my $cb = $handlers->{$_};
+  for my $sel (keys %$handlers) {
+    my $cb = $handlers->{$sel};
     for my $cont (@$contexts) {
-      my $key = ($cont ? $cont . ' ' : '') . $_;
-      $ret->{$key} = sub {
+      $ret->{($cont ? $cont . ' ' : '') . $sel} = sub {
         return if ($_[0]->xml && _wrong_dom_detection($_[0]));
         return $cb->($_[0]);
         }
@@ -214,12 +216,17 @@ guess_encoding and encoder.
 
 Generates L<Encode> instance for given name. Defaults to L<Encode::utf8>.
 
-=head2 html_handlers
+=head2 html_handler_presets
 
-HTML element handler presets on scraping. Optional argument narrows the preset
-selector into certain containers.
+Returns common html handler in hash reference.
 
-    my $handlers = html_handlers(['#header', '#footer li']);
+    my $handlers = html_handlers();
+
+=head2 reduce_html_handlers
+
+Narrows html handler selectors by prefixing container CSS snippets.
+
+    my $handlers = html_handlers($handlers, ['#header', '#footer li']);
     
     $handlers->{img} = sub {
         my $dom = shift;
