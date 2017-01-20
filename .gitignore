@@ -2,6 +2,7 @@
 !.gitignore
 !.perltidyrc
 !.travis.yml
+!.appveyor.yml
 *~
 blib
 Makefile*
