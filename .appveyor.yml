@@ -2,7 +2,7 @@ version: '{build}'
 shallow_clone: true
 
 install:
-  - choco install strawberryperl
+  - choco install --allowemptychecksum strawberryperl
   - SET PATH=C:\Perl5\bin;C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin;%PATH%
   - perl -v
   - if not exist C:\Perl5 mkdir C:\Perl5
