@@ -160,7 +160,7 @@ You can fulfill any prerequisites such as login form submittion so that a login 
 
 ## Broad crawling
 
-Althogh the module is only well tested for "focused crawl" at this point,
+Although the module is only well tested for "focused crawl" at this point,
 you can also use it for endless crawling by taking special care of memory usage including;
 
 * Restrict queue size by yourself.
