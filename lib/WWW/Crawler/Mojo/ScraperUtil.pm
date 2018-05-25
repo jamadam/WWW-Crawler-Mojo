@@ -146,7 +146,7 @@ sub reduce_html_handlers {
 
 sub resolve_href {
   my ($base, $href) = @_;
-  $href =~ s{\s}{}g;
+  $href =~ s{^\s|\s$|\n}{}g;
   $href = ref $href ? $href : Mojo::URL->new($href);
   $base = ref $base ? $base : Mojo::URL->new($base);
   my $abs        = $href->fragment(undef)->to_abs($base);
