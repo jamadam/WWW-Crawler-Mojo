@@ -85,6 +85,8 @@ sub process_job {
 
   $self->emit('req', $job, $tx->req);
 
+  return if $job->closed;
+
   $self->ua->start(
     $tx => sub {
       my ($ua, $tx) = @_;
@@ -315,6 +317,9 @@ arguments.
 
     $bot->on(req => sub {
         my ($bot, $job, $req) = @_;
+
+        # skip this URL if it matches
+        $job->closed if $job->url =~ m/something/;
 
         # DO NOTHING
     });
