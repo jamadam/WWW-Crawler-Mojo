@@ -38,7 +38,7 @@ sub init {
   $self->on('empty', sub { say "Queue is drained out."; $self->stop })
     unless $self->has_subscribers('empty');
   $self->on('error',
-    sub { say "An error occured during crawling $_[0]: $_[1]" })
+    sub { say sprintf("An error occured during crawling %s: %s", $_[2]->url, $_[1]) })
     unless $self->has_subscribers('error');
   $self->on('res', sub { $_[1]->() }) unless $self->has_subscribers('res');
 
@@ -374,7 +374,7 @@ network errors or un-responsible servers.
 
     $bot->on(error => sub {
         my ($bot, $error, $job) = @_;
-        say "error: $_[1]";
+        say "error: $error";
         if (...) { # until failur occures 3 times
             $bot->requeue($job);
         }
