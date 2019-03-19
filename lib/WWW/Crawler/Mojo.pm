@@ -467,14 +467,6 @@ enqueue method.
         }
     });
 
-=head2 collect_urls_html
-
-Collects URLs out of HTML.
-
-    $bot->collect_urls_html($dom, sub {
-        my ($uri, $dom) = @_;
-    });
-
 =head1 EXAMPLE
 
 L<https://github.com/jamadam/WWW-Flatten>
