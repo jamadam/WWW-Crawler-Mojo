@@ -37,9 +37,12 @@ sub init {
 
   $self->on('empty', sub { say "Queue is drained out."; $self->stop })
     unless $self->has_subscribers('empty');
-  $self->on('error',
-    sub { say sprintf("An error occured during crawling %s: %s", $_[2]->url, $_[1]) })
-    unless $self->has_subscribers('error');
+  $self->on(
+    'error',
+    sub {
+      say sprintf("An error occured during crawling %s: %s", $_[2]->url, $_[1]);
+    }
+  ) unless $self->has_subscribers('error');
   $self->on('res', sub { $_[1]->() }) unless $self->has_subscribers('res');
 
   $self->ua->transactor->name($self->ua_name);
@@ -131,7 +134,7 @@ sub scrape {
     if ((my $base_tag = $res->dom->at('base[href]'))) {
       $base = resolve_href($base, $base_tag->attr('href'));
     }
-    my $dom = Mojo::DOM->new(decoded_body($res));
+    my $dom      = Mojo::DOM->new(decoded_body($res));
     my $handlers = reduce_html_handlers($self->html_handlers, $contexts);
     for my $selector (sort keys %{$handlers}) {
       $dom->find($selector)->each(
