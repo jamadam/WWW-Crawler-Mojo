@@ -40,7 +40,8 @@ sub init {
   $self->on(
     'error',
     sub {
-      say sprintf("An error occured during crawling %s: %s", $_[2]->url, $_[1]);
+      say
+        sprintf("An error occured during crawling %s: %s", $_[2]->url, $_[1]);
     }
   ) unless $self->has_subscribers('error');
   $self->on('res', sub { $_[1]->() }) unless $self->has_subscribers('res');
@@ -194,16 +195,14 @@ sub _make_child {
 
 sub enqueue {
   my ($self, @jobs) = @_;
-  return map {
-      $self->queue->enqueue(WWW::Crawler::Mojo::Job->upgrade($_))
-  } @jobs;
+  return
+    map { $self->queue->enqueue(WWW::Crawler::Mojo::Job->upgrade($_)) } @jobs;
 }
 
 sub requeue {
   my ($self, @jobs) = @_;
-  return map {
-      $self->queue->requeue(WWW::Crawler::Mojo::Job->upgrade($_))
-  } @jobs;
+  return
+    map { $self->queue->requeue(WWW::Crawler::Mojo::Job->upgrade($_)) } @jobs;
 }
 
 sub _urls_redirect {

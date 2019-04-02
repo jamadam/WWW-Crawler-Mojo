@@ -38,7 +38,7 @@ sub _enqueue {
   my ($self, $job, $requeue) = @_;
   my $digest = $job->digest;
   my $redund = $self->redundancy_storage;
-  return if !$requeue && $redund->{$digest};
+  return if !$requeue  && $redund->{$digest};
   return if $self->cap && $self->cap < $self->length;
   push(@{$self->jobs}, $job);
   $redund->{$digest} = 1;

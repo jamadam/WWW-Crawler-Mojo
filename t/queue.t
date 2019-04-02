@@ -12,7 +12,7 @@ use WWW::Crawler::Mojo::Job;
 
 use Test::More tests => 23;
 
-my $bot = WWW::Crawler::Mojo->new;
+my $bot  = WWW::Crawler::Mojo->new;
 my @jobs = $bot->enqueue('http://example.com/');
 is ref $jobs[0], 'WWW::Crawler::Mojo::Job';
 is scalar @jobs, 1;
