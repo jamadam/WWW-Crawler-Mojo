@@ -10,10 +10,12 @@ use WWW::Crawler::Mojo;
 use WWW::Crawler::Mojo::Queue::Memory;
 use WWW::Crawler::Mojo::Job;
 
-use Test::More tests => 21;
+use Test::More tests => 23;
 
 my $bot = WWW::Crawler::Mojo->new;
-$bot->enqueue('http://example.com/');
+my @jobs = $bot->enqueue('http://example.com/');
+is ref $jobs[0], 'WWW::Crawler::Mojo::Job';
+is scalar @jobs, 1;
 is ref $bot->queue->next, 'WWW::Crawler::Mojo::Job';
 is $bot->queue->next->url, 'http://example.com/';
 is $bot->queue->length, 1, 'right number';

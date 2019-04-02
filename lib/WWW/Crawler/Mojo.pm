@@ -194,12 +194,16 @@ sub _make_child {
 
 sub enqueue {
   my ($self, @jobs) = @_;
-  $self->queue->enqueue(WWW::Crawler::Mojo::Job->upgrade($_)) for @jobs;
+  return map {
+      $self->queue->enqueue(WWW::Crawler::Mojo::Job->upgrade($_))
+  } @jobs;
 }
 
 sub requeue {
   my ($self, @jobs) = @_;
-  $self->queue->requeue(WWW::Crawler::Mojo::Job->upgrade($_)) for @jobs;
+  return map {
+      $self->queue->requeue(WWW::Crawler::Mojo::Job->upgrade($_))
+  } @jobs;
 }
 
 sub _urls_redirect {
@@ -442,17 +446,18 @@ Stop crawling.
 
 =head2 enqueue
 
-Appends one or more URLs or L<WWW::Crawler::Mojo::Job> objects.
+Appends one or more URLs or L<WWW::Crawler::Mojo::Job> objects. Returns the jobs
+actually added.
 
-    $bot->enqueue('http://example.com/index1.html');
-
-OR
-
-    $bot->enqueue($job1, $job2);
+    my @jobs = $bot->enqueue('http://example.com/index1.html');
 
 OR
 
-    $bot->enqueue(
+    my @jobs = $bot->enqueue($job1, $job2);
+
+OR
+
+    my @jobs = $bot->enqueue(
         'http://example.com/index1.html',
         'http://example.com/index2.html',
         'http://example.com/index3.html',
@@ -461,7 +466,7 @@ OR
 =head2 requeue
 
 Appends one or more URLs or jobs for re-try. This accepts same arguments as
-enqueue method.
+enqueue method. Returns the jobs actually added.
 
     $self->on(error => sub {
         my ($self, $msg, $job) = @_;

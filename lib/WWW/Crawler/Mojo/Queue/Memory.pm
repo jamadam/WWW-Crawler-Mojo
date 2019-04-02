@@ -14,7 +14,7 @@ sub dequeue {
 }
 
 sub enqueue {
-  shift->_enqueue(@_);
+  return shift->_enqueue(@_);
 }
 
 sub length {
@@ -42,7 +42,7 @@ sub _enqueue {
   return if $self->cap && $self->cap < $self->length;
   push(@{$self->jobs}, $job);
   $redund->{$digest} = 1;
-  return $self;
+  return $job;
 }
 
 1;
