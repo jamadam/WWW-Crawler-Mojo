@@ -4,13 +4,14 @@ perl:
   - "5.20"
   - "5.18"
   - "5.16"
+addons:
+  mysql: "5.7"
 env:
   - "TEST_ONLINE=mysql://root@/www_crawler_mojo_test"
 install:
   - "cpanm -n Mojo::mysql"
   - "cpanm -n --installdeps ."
 before_script:
-  - sleep 15
   - mysql -e 'create database www_crawler_mojo_test;'
 notifications:
   email: sugama@jamadam.com
