@@ -1,6 +1,7 @@
 Revision history for WWW-Crawler-Mojo
 
-0.24 2019/04/02
+0.24 2019/08/16
+  - Fixed a bug where wrong schemas in links would not be omitted.
 
 0.23 2019/04/02
   - Now enqueue methods returns the actual jobs

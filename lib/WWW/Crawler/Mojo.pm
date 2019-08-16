@@ -174,7 +174,7 @@ sub _make_child {
 
   my $resolved = resolve_href($base, $url);
 
-  return unless ($resolved->scheme =~ qr{http|https|ftp|ws|wss});
+  return unless ($resolved->scheme =~ qr{^(http|https|ftp|ws|wss)$});
 
   my $child
     = $job->child(url => $resolved, literal_uri => $url, context => $context);
