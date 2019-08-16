@@ -10,6 +10,7 @@ install:
   - "cpanm -n Mojo::mysql"
   - "cpanm -n --installdeps ."
 before_script:
+  - sleep 15
   - mysql -e 'create database www_crawler_mojo_test;'
 notifications:
   email: sugama@jamadam.com
