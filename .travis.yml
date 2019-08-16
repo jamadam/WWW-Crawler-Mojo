@@ -9,7 +9,7 @@ addons:
 env:
   - "TEST_ONLINE=mysql://root@/www_crawler_mojo_test"
 install:
-  - "cpanm -n Mojo::mysql"
+  - "cpanm -n DBD::MariaDB"
   - "cpanm -n --installdeps ."
 before_script:
   - mysql -e 'create database www_crawler_mojo_test;'
