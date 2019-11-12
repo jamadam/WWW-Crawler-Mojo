@@ -176,19 +176,13 @@ sub _make_child {
 
   return unless ($resolved->scheme =~ qr{^(http|https|ftp|ws|wss)$});
 
+  $resolved->query->append($params) if ($params && $method eq 'GET');
+
   my $child
-    = $job->child(url => $resolved, literal_uri => $url, context => $context);
+    = $job->child(_url => $resolved, literal_uri => $url, _context => $context);
 
   $child->method($method) if $method;
-
-  if ($params) {
-    if ($method eq 'GET') {
-      $child->url->query->append($params);
-    }
-    else {
-      $child->tx_params($params);
-    }
-  }
+  $child->tx_params($params) if ($params && $method eq 'POST');
 
   return $child;
 }
