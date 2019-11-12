@@ -178,8 +178,8 @@ sub _make_child {
 
   $resolved->query->append($params) if ($params && $method eq 'GET');
 
-  my $child
-    = $job->child(_url => $resolved, literal_uri => $url, _context => $context);
+  my $child = $job->child(_url => $resolved, literal_uri => $url,
+    _context => $context);
 
   $child->method($method) if $method;
   $child->tx_params($params) if ($params && $method eq 'POST');
