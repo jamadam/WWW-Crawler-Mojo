@@ -24,9 +24,9 @@ sub context {
     $self->_context("$_[0]");
     $self->_dom(1) if ref $_[0] && ref $_[0] eq 'Mojo::DOM';
   }
-  if ($self->_context) {
-    return Mojo::DOM->new($self->_context)->[0] if $self->_dom;
-    return $self->_context;
+  if (my $c = $self->_context) {
+    return Mojo::DOM->new($c)->[0] if $self->_dom;
+    return Mojo::URL->new($c);
   }
 }
 
