@@ -32,14 +32,12 @@ sub context {
 
 sub new {
   my ($class, %args) = (@_);
-  $args{_url} = $args{url}    if $args{url};
+  $args{_url} = (delete $args{url}) if $args{url};
   $args{_url} = "$args{_url}" if $args{_url};
-  delete $args{url};
 
-  $args{_context} = $args{context} if $args{context};
+  $args{_context} = (delete $args{context}) if $args{context};
   $args{_dom} = 1 if ref $args{_context} && ref $args{_context} eq 'Mojo::DOM';
   $args{_context} = "$args{_context}" if $args{_context};
-  delete $args{context};
 
   $class->SUPER::new(%args);
 }
