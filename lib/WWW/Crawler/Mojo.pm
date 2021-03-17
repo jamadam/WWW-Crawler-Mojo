@@ -8,7 +8,7 @@ use WWW::Crawler::Mojo::UserAgent;
 use WWW::Crawler::Mojo::ScraperUtil qw{
   collect_urls_css html_handler_presets reduce_html_handlers resolve_href decoded_body};
 use Mojo::Message::Request;
-our $VERSION = '0.26';
+our $VERSION = '0.27';
 
 has clock_speed       => 0.25;
 has html_handlers     => sub { html_handler_presets() };
@@ -218,15 +218,15 @@ WWW::Crawler::Mojo - A web crawling framework for Perl
     use strict;
     use warnings;
     use WWW::Crawler::Mojo;
-    
+
     my $bot = WWW::Crawler::Mojo->new;
-    
+
     $bot->on(res => sub {
         my ($bot, $scrape, $job, $res) = @_;
-        
+
         $bot->enqueue($_) for $scrape->('#context');
     });
-    
+
     $bot->enqueue('http://example.com/');
     $bot->crawl;
 
